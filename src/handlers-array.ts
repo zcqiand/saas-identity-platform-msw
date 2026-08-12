@@ -7,7 +7,7 @@
 // (mock handlers). After each codegen run, this file is regenerated and
 // this wrapper re-imports getTitleMock. If orval renames the factory, update
 // this wrapper.
-import { getTitleMock } from "./handlers.msw";
+import { getTitleMock } from "./handlers.msw.msw";
 
 export const handlers = getTitleMock();
 export default handlers;

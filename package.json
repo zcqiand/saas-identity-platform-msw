@@ -11,7 +11,11 @@
     "./browser": "./src/browser.ts",
     "./node": "./src/node.ts"
   },
-  "files": ["src", "tsconfig.json", "orval.config.ts"],
+  "files": [
+    "src",
+    "tsconfig.json",
+    "orval.config.ts"
+  ],
   "scripts": {
     "gen:handlers": "orval",
     "build": "npm run gen:handlers",
@@ -22,11 +26,14 @@
     "@faker-js/faker": "^9.0.0",
     "@orval/msw": "^6.20.0",
     "@types/node": "^22.10.0",
+    "axios": "^1.19.0",
     "msw": "^2.7.0",
     "orval": "^7.5.0",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0",
     "vitest": "^2.1.0"
   },
-  "engines": { "node": ">=20" }
+  "engines": {
+    "node": ">=20"
+  }
 }
