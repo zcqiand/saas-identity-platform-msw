@@ -1,0 +1,32 @@
+{
+  "name": "@saas/identity-platform-msw",
+  "version": "0.1.0",
+  "description": "SaaS Identity Platform — MSW mock layer. Consumes shared OpenAPI and emits MSW handlers + cross-frontend fixture data.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./handlers": "./src/handlers-array.ts",
+    "./fixtures": "./src/fixtures/seed.ts",
+    "./browser": "./src/browser.ts",
+    "./node": "./src/node.ts"
+  },
+  "files": ["src", "tsconfig.json", "orval.config.ts"],
+  "scripts": {
+    "gen:handlers": "orval",
+    "build": "npm run gen:handlers",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@faker-js/faker": "^9.0.0",
+    "@orval/msw": "^6.20.0",
+    "@types/node": "^22.10.0",
+    "msw": "^2.7.0",
+    "orval": "^7.5.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
+  },
+  "engines": { "node": ">=20" }
+}
