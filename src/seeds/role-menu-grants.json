@@ -1,0 +1,63 @@
+[
+  {
+    "roleId": "00000000-0000-0000-0000-000000000001-role-admin",
+    "tenantId": "00000000-0000-0000-0000-000000000001",
+    "menuIds": [
+      "m-lab-dash",
+      "grp-res",
+      "m-contracts",
+      "grp-biz",
+      "m-receipts",
+      "m-task",
+      "m-entry",
+      "m-review",
+      "m-approve",
+      "m-issue",
+      "m-archive",
+      "grp-stat",
+      "m-summary",
+      "grp-insp",
+      "m-insp-spec",
+      "m-insp-obj",
+      "m-insp-param",
+      "m-insp-std",
+      "grp-master",
+      "m-report-names",
+      "m-param-ifs",
+      "m-models",
+      "m-specs",
+      "m-grades",
+      "m-brands",
+      "m-calc-rules",
+      "m-tech-req"
+    ],
+    "updatedAt": "2026-08-12T10:00:00Z"
+  },
+  {
+    "roleId": "00000000-0000-0000-0000-000000000001-role-member",
+    "tenantId": "00000000-0000-0000-0000-000000000001",
+    "menuIds": ["m-lab-dash", "m-receipts"],
+    "updatedAt": "2026-08-12T10:00:00Z"
+  },
+  {
+    "roleId": "00000000-0000-0000-0000-000000000002-role-admin",
+    "tenantId": "00000000-0000-0000-0000-000000000002",
+    "menuIds": [
+      "m-erp-01",
+      "m-erp-02",
+      "m-erp-03",
+      "m-erp-04",
+      "m-erp-05",
+      "m-erp-06",
+      "m-erp-settings",
+      "m-crm-dash",
+      "m-crm-customers",
+      "m-crm-leads",
+      "m-crm-opps",
+      "m-crm-contacts",
+      "m-crm-followups",
+      "m-crm-reports"
+    ],
+    "updatedAt": "2026-08-10T14:00:00Z"
+  }
+]

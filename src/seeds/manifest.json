@@ -1,0 +1,28 @@
+{
+  "version": "0.4.0",
+  "extracted_at": "2026-08-13T00:00:00Z",
+  "source": "src/fixtures/seed.ts (v0.1.0 → v0.4.0 M04 合并 OAuthApp + M07 → M04); V008 补齐 3 张空表; app 清单从 backup/saas-identity-platform-shared/seeds/apps.json 对齐",
+  "tables": [
+    { "file": "tenants.json", "type": "Tenant[]", "count": 3, "note": "3 canonical demo tenants (acme/globex/initech), all UUIDs fixed" },
+    { "file": "roles.json", "type": "Role[]", "count": 4, "note": "tenant-scoped. admin role has 4 permissions; member has 1" },
+    { "file": "users.json", "type": "User[]", "count": 5, "note": "per-tenant. carol=invited, eve=suspended; 含 roleIds[] 字段（V008 补 SQL 列）" },
+    { "file": "api-keys.json", "type": "ApiKey[]", "count": 2, "note": "per-tenant. acme + globex prod keys" },
+    { "file": "apps.json", "type": "App[]", "count": 3, "note": "v0.4.0 M04 统一 (OAuth client + 菜单承载). lab(27 menus) + erp(7) + crm(7)。app id 用 backup 语义键 (app-lab/app-erp/app-crm)，不再 UUID" },
+    { "file": "menus.json", "type": "Menu[]", "count": 41, "note": "从 backup 全面导入：app-lab 27 条（含 5 个 group 容器：grp-res/grp-biz/grp-stat/grp-insp/grp-master）+ app-erp 7 条 + app-crm 7 条（新造）" },
+    { "file": "role-menu-grants.json", "type": "RoleMenuGrant[]", "count": 3, "note": "tenant-scoped. acme admin 看 lab 全部 27 个菜单；globex admin 看 erp + crm 全部 14 个；TypeSpec V008 补 tenantId 字段" },
+    { "file": "audit-events.json", "type": "AuditEvent[]", "count": 3, "note": "per-tenant. user_created/login_success/api_key_created" },
+    { "file": "memberships.json", "type": "TenantMembership[]", "count": 5, "note": "derived from users × tenant" },
+    { "file": "permissions.json", "type": "Permission[]", "count": 4, "note": "V008 补齐（msw 此前无 fixture，V003 SQL 表空）；4 个 code 与 roles.permissionIds 对齐" },
+    { "file": "role-permissions.json", "type": "RolePermission[]", "count": 13, "note": "V008 补齐；派生 roles × permissions (3 admin × 4 + 1 member × 1)" },
+    { "file": "audit-retention-policies.json", "type": "AuditRetentionPolicy[]", "count": 3, "note": "V008 补齐（每租户 1 行 90 天 retention）" }
+  ],
+  "notes": [
+    "v0.4.0 app 清单调整：3 个应用 = 建筑工程实验室管理系统 (app-lab) + ERP (app-erp) + CRM (app-crm)。原来 iam-console/oa-portal 弃用。",
+    "app id 采用 backup 风格语义键 (app-lab/app-erp/app-crm)，不再 UUID 字符串。TypeSpec @format(\"uuid\") 是 hint 而非强约束，运行时类型仍是 string。",
+    "menus.json 从 backup 全面导入 27 个 lab 菜单（5 group + 22 page）+ 7 erp + 7 新造 crm = 41 条。",
+    "backup 字段映射：sort→sortOrder、enabled(true→active, false→disabled)、无 path → group type、有 path → page type。",
+    "role-menu-grants.json 更新为按 app 分配：acme admin 看 app-lab 全部；globex admin 看 app-erp + app-crm。",
+    "时间戳统一为 ISO 字符串（Z 后缀 UTC），未做时区转换。",
+    "roleMenuGrants 引用 menu id（语义键如 m-lab-dash），FK 完整性由 fixtures.test.ts 守门。"
+  ]
+}
