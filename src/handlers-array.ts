@@ -8,6 +8,9 @@
 // this wrapper re-imports getTitleMock. If orval renames the factory, update
 // this wrapper.
 import { getTitleMock } from "./handlers.msw.msw";
+import { extraHandlers } from "./handlers-extra";
 
-export const handlers = getTitleMock();
+// Custom M07/M08/M09 handlers (deterministic fixtures) take precedence over
+// orval-generated faker handlers for those routes.
+export const handlers = [...extraHandlers, ...getTitleMock()];
 export default handlers;

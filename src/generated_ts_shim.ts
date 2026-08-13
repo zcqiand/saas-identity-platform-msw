@@ -94,13 +94,123 @@ export interface TenantMembership {
   joinedAt: string;
 }
 
-export interface OAuthApp {
+// === M04 — Apps (platform-level; unified OAuth client + menu host) ===
+export type AppStatus = "active" | "disabled";
+export type OAuthGrantType =
+  | "authorization_code"
+  | "refresh_token"
+  | "client_credentials"
+  | "password";
+
+export interface App {
   id: string;
-  clientId: string;
+  code: string;
   name: string;
+  description?: string;
+  icon?: string;
+  sortOrder: number;
+  status: AppStatus;
+  clientId: string;
+  clientSecret?: string;
   redirectUris: string[];
   scopes: string[];
-  grantTypes: string[];
+  grantTypes: OAuthGrantType[];
   isFirstParty: boolean;
   createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateAppRequest {
+  code: string;
+  name: string;
+  description?: string;
+  icon?: string;
+  sortOrder?: number;
+  status?: AppStatus;
+  clientId: string;
+  clientSecret?: string;
+  redirectUris: string[];
+  scopes?: string[];
+  grantTypes?: OAuthGrantType[];
+  isFirstParty?: boolean;
+}
+
+export interface UpdateAppRequest {
+  name?: string;
+  description?: string;
+  icon?: string;
+  sortOrder?: number;
+  status?: AppStatus;
+  redirectUris?: string[];
+  scopes?: string[];
+  grantTypes?: OAuthGrantType[];
+  isFirstParty?: boolean;
+}
+
+// === M08 — Menus (nested under an App) ===
+export type MenuType = "group" | "page" | "action";
+export type MenuStatus = "active" | "disabled";
+
+export interface Menu {
+  id: string;
+  appId: string;
+  parentId?: string;
+  code: string;
+  name: string;
+  path?: string;
+  icon?: string;
+  type: MenuType;
+  sortOrder: number;
+  status: MenuStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateMenuRequest {
+  parentId?: string;
+  code: string;
+  name: string;
+  path?: string;
+  icon?: string;
+  type?: MenuType;
+  sortOrder?: number;
+  status?: MenuStatus;
+}
+
+export interface UpdateMenuRequest {
+  parentId?: string;
+  name?: string;
+  path?: string;
+  icon?: string;
+  type?: MenuType;
+  sortOrder?: number;
+  status?: MenuStatus;
+}
+
+export interface ReorderMenuRequest {
+  orderedMenuIds: string[];
+}
+
+// === M09 — Role ↔ Menu grant ===
+export interface RoleMenuGrant {
+  roleId: string;
+  menuIds: string[];
+  updatedAt: string;
+}
+
+export interface SetRoleMenusRequest {
+  menuIds: string[];
+}
+
+export interface EffectiveMenuNode {
+  id: string;
+  appId: string;
+  parentId?: string;
+  code: string;
+  name: string;
+  path?: string;
+  icon?: string;
+  type: MenuType;
+  sortOrder: number;
+  children: EffectiveMenuNode[];
 }

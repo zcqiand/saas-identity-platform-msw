@@ -35,6 +35,45 @@ export const ApiKeyStatus = {
   expired: 'expired',
 } as const;
 
+export interface App {
+  id: string;
+  /**
+   * @minLength 2
+   * @maxLength 64
+   */
+  code: string;
+  /**
+   * @minLength 2
+   * @maxLength 255
+   */
+  name: string;
+  description?: string;
+  icon?: string;
+  sortOrder: number;
+  status: AppStatus;
+  /**
+   * @minLength 2
+   * @maxLength 128
+   */
+  clientId: string;
+  clientSecret?: string;
+  redirectUris: string[];
+  scopes: string[];
+  grantTypes: OAuthGrantType[];
+  isFirstParty: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type AppStatus = typeof AppStatus[keyof typeof AppStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AppStatus = {
+  active: 'active',
+  disabled: 'disabled',
+} as const;
+
 export type AuditAction = typeof AuditAction[keyof typeof AuditAction];
 
 
@@ -104,15 +143,50 @@ export interface CreateApiKeyResponse {
   secret: string;
 }
 
-export interface CreateOAuthAppRequest {
+export interface CreateAppRequest {
+  /**
+   * @minLength 2
+   * @maxLength 64
+   */
+  code: string;
   /**
    * @minLength 2
    * @maxLength 255
    */
   name: string;
+  description?: string;
+  icon?: string;
+  sortOrder?: number;
+  status?: AppStatus;
+  /**
+   * @minLength 2
+   * @maxLength 128
+   */
+  clientId: string;
+  clientSecret?: string;
   redirectUris: string[];
   scopes?: string[];
-  grantTypes?: string[];
+  grantTypes?: OAuthGrantType[];
+  isFirstParty?: boolean;
+}
+
+export interface CreateMenuRequest {
+  parentId?: string;
+  /**
+   * @minLength 2
+   * @maxLength 64
+   */
+  code: string;
+  /**
+   * @minLength 2
+   * @maxLength 255
+   */
+  name: string;
+  path?: string;
+  icon?: string;
+  type?: MenuType;
+  sortOrder?: number;
+  status?: MenuStatus;
 }
 
 export interface CreateRoleRequest {
@@ -164,6 +238,19 @@ export interface CurrentUser {
   currentTenantId?: string;
 }
 
+export interface EffectiveMenuNode {
+  id: string;
+  appId: string;
+  parentId?: string;
+  code: string;
+  name: string;
+  path?: string;
+  icon?: string;
+  type: MenuType;
+  sortOrder: number;
+  children: EffectiveMenuNode[];
+}
+
 export type ErrorResponseDetails = {[key: string]: unknown};
 
 export interface ErrorResponse {
@@ -205,29 +292,67 @@ export const MembershipStatus = {
   removed: 'removed',
 } as const;
 
-export interface OAuthApp {
+export interface Menu {
   id: string;
+  appId: string;
+  parentId?: string;
   /**
    * @minLength 2
-   * @maxLength 128
+   * @maxLength 64
    */
-  clientId: string;
+  code: string;
   /**
    * @minLength 2
    * @maxLength 255
    */
   name: string;
-  redirectUris: string[];
-  scopes: string[];
-  grantTypes: string[];
-  isFirstParty: boolean;
+  path?: string;
+  icon?: string;
+  type: MenuType;
+  sortOrder: number;
+  status: MenuStatus;
   createdAt: string;
+  updatedAt: string;
 }
+
+export type MenuStatus = typeof MenuStatus[keyof typeof MenuStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const MenuStatus = {
+  active: 'active',
+  disabled: 'disabled',
+} as const;
+
+export type MenuType = typeof MenuType[keyof typeof MenuType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const MenuType = {
+  group: 'group',
+  page: 'page',
+  action: 'action',
+} as const;
+
+export type OAuthGrantType = typeof OAuthGrantType[keyof typeof OAuthGrantType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const OAuthGrantType = {
+  authorization_code: 'authorization_code',
+  refresh_token: 'refresh_token',
+  client_credentials: 'client_credentials',
+  password: 'password',
+} as const;
 
 export interface OidcCallbackRequest {
   code: string;
   state: string;
   clientId: string;
+}
+
+export interface ReorderMenuRequest {
+  orderedMenuIds: string[];
 }
 
 export interface Role {
@@ -247,6 +372,17 @@ export interface Role {
   permissionIds: string[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface RoleMenuGrant {
+  roleId: string;
+  tenantId: string;
+  menuIds: string[];
+  updatedAt: string;
+}
+
+export interface SetRoleMenusRequest {
+  menuIds: string[];
 }
 
 export interface SwitchTenantResponse {
@@ -326,11 +462,26 @@ export interface TokenResponse {
   scope: string;
 }
 
-export interface UpdateOAuthAppRequest {
+export interface UpdateAppRequest {
   name?: string;
+  description?: string;
+  icon?: string;
+  sortOrder?: number;
+  status?: AppStatus;
   redirectUris?: string[];
   scopes?: string[];
-  grantTypes?: string[];
+  grantTypes?: OAuthGrantType[];
+  isFirstParty?: boolean;
+}
+
+export interface UpdateMenuRequest {
+  parentId?: string;
+  name?: string;
+  path?: string;
+  icon?: string;
+  type?: MenuType;
+  sortOrder?: number;
+  status?: MenuStatus;
 }
 
 export interface UpdateRoleRequest {
@@ -384,21 +535,24 @@ export const UserStatus = {
   disabled: 'disabled',
 } as const;
 
-export type AdminOAuthAppsListOAuthAppsParams = {
+export type AdminAppsListAppsParams = {
 page?: number;
 pageSize?: number;
 };
 
-export type AdminOAuthAppsListOAuthApps200 = {
-  items: OAuthApp[];
+export type AdminAppsListApps200 = {
+  items: App[];
   page: number;
   pageSize: number;
   total: number;
 };
 
-export type AdminOAuthAppsAuthorize200 = {
-  code: string;
-  state: string;
+export type AdminAppMenusMoveMenuBody = {
+  parentId?: string;
+};
+
+export type AdminAppsSetAppStatusBody = {
+  status: AppStatus;
 };
 
 export type AdminTenantsListTenantsParams = {
@@ -411,6 +565,13 @@ export type AdminTenantsListTenants200 = {
   page: number;
   pageSize: number;
   total: number;
+};
+
+export type MeGetMyMenus200 = {[key: string]: EffectiveMenuNode[]};
+
+export type OAuthAuthorize200 = {
+  code: string;
+  state: string;
 };
 
 export type TenantApiKeysListApiKeysParams = {

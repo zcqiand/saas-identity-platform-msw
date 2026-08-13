@@ -1,0 +1,53 @@
+[
+  {
+    "id": "app-lab",
+    "code": "lab-management",
+    "name": "建筑工程实验室管理系统",
+    "description": "建筑工程质量检测实验室信息化管理系统",
+    "icon": "FlaskConical",
+    "sortOrder": 1,
+    "status": "active",
+    "clientId": "lab-mgmt",
+    "clientSecret": "lab-mgmt-secret",
+    "redirectUris": ["http://localhost:3001/callback"],
+    "scopes": ["lab.read", "lab.write"],
+    "grantTypes": ["client_credentials", "authorization_code"],
+    "isFirstParty": true,
+    "createdAt": "2026-01-01T00:00:00Z",
+    "updatedAt": "2026-08-10T14:00:00Z"
+  },
+  {
+    "id": "app-erp",
+    "code": "erp",
+    "name": "企业资源计划系统",
+    "description": "企业核心资源计划与管理平台",
+    "icon": "Boxes",
+    "sortOrder": 2,
+    "status": "active",
+    "clientId": "erp",
+    "clientSecret": "erp-secret",
+    "redirectUris": ["http://localhost:3010/callback"],
+    "scopes": ["erp.read", "erp.write"],
+    "grantTypes": ["client_credentials", "authorization_code"],
+    "isFirstParty": true,
+    "createdAt": "2026-01-01T00:00:00Z",
+    "updatedAt": "2026-08-10T14:00:00Z"
+  },
+  {
+    "id": "app-crm",
+    "code": "crm",
+    "name": "客户关系管理系统",
+    "description": "客户/商机/合同全生命周期管理",
+    "icon": "Users",
+    "sortOrder": 3,
+    "status": "active",
+    "clientId": "crm",
+    "clientSecret": "crm-secret",
+    "redirectUris": ["http://localhost:3020/callback"],
+    "scopes": ["crm.read", "crm.write"],
+    "grantTypes": ["client_credentials", "authorization_code"],
+    "isFirstParty": true,
+    "createdAt": "2026-01-01T00:00:00Z",
+    "updatedAt": "2026-08-10T14:00:00Z"
+  }
+]

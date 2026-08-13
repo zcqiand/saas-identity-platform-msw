@@ -11,25 +11,33 @@ import type {
 } from 'axios';
 
 import type {
-  AdminOAuthAppsAuthorize200,
-  AdminOAuthAppsListOAuthApps200,
-  AdminOAuthAppsListOAuthAppsParams,
+  AdminAppMenusMoveMenuBody,
+  AdminAppsListApps200,
+  AdminAppsListAppsParams,
+  AdminAppsSetAppStatusBody,
   AdminTenantsListTenants200,
   AdminTenantsListTenantsParams,
   ApiKey,
+  App,
   AuthorizeCodeRequest,
   CreateApiKeyRequest,
   CreateApiKeyResponse,
-  CreateOAuthAppRequest,
+  CreateAppRequest,
+  CreateMenuRequest,
   CreateRoleRequest,
   CreateTenantRequest,
   CreateUserRequest,
   CurrentUser,
   LoginRequest,
   LoginResponse,
-  OAuthApp,
+  MeGetMyMenus200,
+  Menu,
+  OAuthAuthorize200,
   OidcCallbackRequest,
+  ReorderMenuRequest,
   Role,
+  RoleMenuGrant,
+  SetRoleMenusRequest,
   SwitchTenantResponse,
   Tenant,
   TenantApiKeysListApiKeys200,
@@ -54,7 +62,8 @@ import type {
   TenantUsersListUsersParams,
   TokenRequest,
   TokenResponse,
-  UpdateOAuthAppRequest,
+  UpdateAppRequest,
+  UpdateMenuRequest,
   UpdateRoleRequest,
   UpdateTenantRequest,
   UpdateUserRequest,
@@ -64,66 +73,127 @@ import type {
 
 
 
-  export const adminOAuthAppsListOAuthApps = <TData = AxiosResponse<AdminOAuthAppsListOAuthApps200>>(
-    params?: AdminOAuthAppsListOAuthAppsParams, options?: AxiosRequestConfig
+  export const adminAppsListApps = <TData = AxiosResponse<AdminAppsListApps200>>(
+    params?: AdminAppsListAppsParams, options?: AxiosRequestConfig
  ): Promise<TData> => {
     return axios.get(
-      `/api/v1/admin/oauth-apps`,{
+      `/api/v1/admin/apps`,{
     ...options,
         params: {...params, ...options?.params},}
     );
   }
 
-export const adminOAuthAppsCreateOAuthApp = <TData = AxiosResponse<OAuthApp>>(
-    createOAuthAppRequest: CreateOAuthAppRequest, options?: AxiosRequestConfig
+export const adminAppsCreateApp = <TData = AxiosResponse<App>>(
+    createAppRequest: CreateAppRequest, options?: AxiosRequestConfig
  ): Promise<TData> => {
     return axios.post(
-      `/api/v1/admin/oauth-apps`,
-      createOAuthAppRequest,options
+      `/api/v1/admin/apps`,
+      createAppRequest,options
     );
   }
 
-export const adminOAuthAppsAuthorize = <TData = AxiosResponse<AdminOAuthAppsAuthorize200>>(
-    authorizeCodeRequest: AuthorizeCodeRequest, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.post(
-      `/api/v1/admin/oauth-apps/authorize`,
-      authorizeCodeRequest,options
-    );
-  }
-
-export const adminOAuthAppsToken = <TData = AxiosResponse<TokenResponse>>(
-    tokenRequest: TokenRequest, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.post(
-      `/api/v1/admin/oauth-apps/token`,
-      tokenRequest,options
-    );
-  }
-
-export const adminOAuthAppsGetOAuthApp = <TData = AxiosResponse<OAuthApp>>(
+export const adminAppsGetApp = <TData = AxiosResponse<App>>(
     appId: string, options?: AxiosRequestConfig
  ): Promise<TData> => {
     return axios.get(
-      `/api/v1/admin/oauth-apps/${appId}`,options
+      `/api/v1/admin/apps/${appId}`,options
     );
   }
 
-export const adminOAuthAppsUpdateOAuthApp = <TData = AxiosResponse<OAuthApp>>(
+export const adminAppsUpdateApp = <TData = AxiosResponse<App>>(
     appId: string,
-    updateOAuthAppRequest: UpdateOAuthAppRequest, options?: AxiosRequestConfig
+    updateAppRequest: UpdateAppRequest, options?: AxiosRequestConfig
  ): Promise<TData> => {
     return axios.patch(
-      `/api/v1/admin/oauth-apps/${appId}`,
-      updateOAuthAppRequest,options
+      `/api/v1/admin/apps/${appId}`,
+      updateAppRequest,options
     );
   }
 
-export const adminOAuthAppsDeleteOAuthApp = <TData = AxiosResponse<void>>(
+export const adminAppsDeleteApp = <TData = AxiosResponse<void>>(
     appId: string, options?: AxiosRequestConfig
  ): Promise<TData> => {
     return axios.delete(
-      `/api/v1/admin/oauth-apps/${appId}`,options
+      `/api/v1/admin/apps/${appId}`,options
+    );
+  }
+
+export const adminAppMenusListMenus = <TData = AxiosResponse<Menu[]>>(
+    appId: string, options?: AxiosRequestConfig
+ ): Promise<TData> => {
+    return axios.get(
+      `/api/v1/admin/apps/${appId}/menus`,options
+    );
+  }
+
+export const adminAppMenusCreateMenu = <TData = AxiosResponse<Menu>>(
+    appId: string,
+    createMenuRequest: CreateMenuRequest, options?: AxiosRequestConfig
+ ): Promise<TData> => {
+    return axios.post(
+      `/api/v1/admin/apps/${appId}/menus`,
+      createMenuRequest,options
+    );
+  }
+
+export const adminAppMenusGetMenu = <TData = AxiosResponse<Menu>>(
+    appId: string,
+    menuId: string, options?: AxiosRequestConfig
+ ): Promise<TData> => {
+    return axios.get(
+      `/api/v1/admin/apps/${appId}/menus/${menuId}`,options
+    );
+  }
+
+export const adminAppMenusUpdateMenu = <TData = AxiosResponse<Menu>>(
+    appId: string,
+    menuId: string,
+    updateMenuRequest: UpdateMenuRequest, options?: AxiosRequestConfig
+ ): Promise<TData> => {
+    return axios.patch(
+      `/api/v1/admin/apps/${appId}/menus/${menuId}`,
+      updateMenuRequest,options
+    );
+  }
+
+export const adminAppMenusDeleteMenu = <TData = AxiosResponse<void>>(
+    appId: string,
+    menuId: string, options?: AxiosRequestConfig
+ ): Promise<TData> => {
+    return axios.delete(
+      `/api/v1/admin/apps/${appId}/menus/${menuId}`,options
+    );
+  }
+
+export const adminAppMenusMoveMenu = <TData = AxiosResponse<Menu>>(
+    appId: string,
+    menuId: string,
+    adminAppMenusMoveMenuBody: AdminAppMenusMoveMenuBody, options?: AxiosRequestConfig
+ ): Promise<TData> => {
+    return axios.patch(
+      `/api/v1/admin/apps/${appId}/menus/${menuId}/parent`,
+      adminAppMenusMoveMenuBody,options
+    );
+  }
+
+export const adminAppMenusReorderMenus = <TData = AxiosResponse<Menu[]>>(
+    appId: string,
+    menuId: string,
+    reorderMenuRequest: ReorderMenuRequest, options?: AxiosRequestConfig
+ ): Promise<TData> => {
+    return axios.put(
+      `/api/v1/admin/apps/${appId}/menus/${menuId}/reorder`,
+      reorderMenuRequest,options
+    );
+  }
+
+export const adminAppsSetAppStatus = <TData = AxiosResponse<App>>(
+    appId: string,
+    adminAppsSetAppStatusBody: AdminAppsSetAppStatusBody, options?: AxiosRequestConfig
+ ): Promise<TData> => {
+    return axios.patch(
+      `/api/v1/admin/apps/${appId}/status`,
+      adminAppsSetAppStatusBody,options
     );
   }
 
@@ -215,6 +285,14 @@ export const meWhoami = <TData = AxiosResponse<CurrentUser>>(
     );
   }
 
+export const meGetMyMenus = <TData = AxiosResponse<MeGetMyMenus200>>(
+     options?: AxiosRequestConfig
+ ): Promise<TData> => {
+    return axios.get(
+      `/api/v1/me/menus`,options
+    );
+  }
+
 export const meListMyTenants = <TData = AxiosResponse<TenantMembership[]>>(
      options?: AxiosRequestConfig
  ): Promise<TData> => {
@@ -228,6 +306,24 @@ export const meSwitchTenant = <TData = AxiosResponse<SwitchTenantResponse>>(
  ): Promise<TData> => {
     return axios.post(
       `/api/v1/me/tenants/${tenantId}/switch`,undefined,options
+    );
+  }
+
+export const oAuthAuthorize = <TData = AxiosResponse<OAuthAuthorize200>>(
+    authorizeCodeRequest: AuthorizeCodeRequest, options?: AxiosRequestConfig
+ ): Promise<TData> => {
+    return axios.post(
+      `/api/v1/oauth/authorize`,
+      authorizeCodeRequest,options
+    );
+  }
+
+export const oAuthToken = <TData = AxiosResponse<TokenResponse>>(
+    tokenRequest: TokenRequest, options?: AxiosRequestConfig
+ ): Promise<TData> => {
+    return axios.post(
+      `/api/v1/oauth/token`,
+      tokenRequest,options
     );
   }
 
@@ -371,6 +467,35 @@ export const tenantRolesDeleteRole = <TData = AxiosResponse<void>>(
     );
   }
 
+export const tenantRoleMenusListRoleMenus = <TData = AxiosResponse<RoleMenuGrant>>(
+    tenantId: string,
+    roleId: string, options?: AxiosRequestConfig
+ ): Promise<TData> => {
+    return axios.get(
+      `/api/v1/tenants/${tenantId}/roles/${roleId}/menus`,options
+    );
+  }
+
+export const tenantRoleMenusSetRoleMenus = <TData = AxiosResponse<RoleMenuGrant>>(
+    tenantId: string,
+    roleId: string,
+    setRoleMenusRequest: SetRoleMenusRequest, options?: AxiosRequestConfig
+ ): Promise<TData> => {
+    return axios.put(
+      `/api/v1/tenants/${tenantId}/roles/${roleId}/menus`,
+      setRoleMenusRequest,options
+    );
+  }
+
+export const tenantRoleMenusClearRoleMenus = <TData = AxiosResponse<void>>(
+    tenantId: string,
+    roleId: string, options?: AxiosRequestConfig
+ ): Promise<TData> => {
+    return axios.delete(
+      `/api/v1/tenants/${tenantId}/roles/${roleId}/menus`,options
+    );
+  }
+
 export const tenantRolesSetPermissions = <TData = AxiosResponse<Role>>(
     tenantId: string,
     roleId: string,
@@ -464,13 +589,19 @@ export const tenantUsersChangeUserStatus = <TData = AxiosResponse<User>>(
     );
   }
 
-export type AdminOAuthAppsListOAuthAppsResult = AxiosResponse<AdminOAuthAppsListOAuthApps200>
-export type AdminOAuthAppsCreateOAuthAppResult = AxiosResponse<OAuthApp>
-export type AdminOAuthAppsAuthorizeResult = AxiosResponse<AdminOAuthAppsAuthorize200>
-export type AdminOAuthAppsTokenResult = AxiosResponse<TokenResponse>
-export type AdminOAuthAppsGetOAuthAppResult = AxiosResponse<OAuthApp>
-export type AdminOAuthAppsUpdateOAuthAppResult = AxiosResponse<OAuthApp>
-export type AdminOAuthAppsDeleteOAuthAppResult = AxiosResponse<void>
+export type AdminAppsListAppsResult = AxiosResponse<AdminAppsListApps200>
+export type AdminAppsCreateAppResult = AxiosResponse<App>
+export type AdminAppsGetAppResult = AxiosResponse<App>
+export type AdminAppsUpdateAppResult = AxiosResponse<App>
+export type AdminAppsDeleteAppResult = AxiosResponse<void>
+export type AdminAppMenusListMenusResult = AxiosResponse<Menu[]>
+export type AdminAppMenusCreateMenuResult = AxiosResponse<Menu>
+export type AdminAppMenusGetMenuResult = AxiosResponse<Menu>
+export type AdminAppMenusUpdateMenuResult = AxiosResponse<Menu>
+export type AdminAppMenusDeleteMenuResult = AxiosResponse<void>
+export type AdminAppMenusMoveMenuResult = AxiosResponse<Menu>
+export type AdminAppMenusReorderMenusResult = AxiosResponse<Menu[]>
+export type AdminAppsSetAppStatusResult = AxiosResponse<App>
 export type AdminTenantsListTenantsResult = AxiosResponse<AdminTenantsListTenants200>
 export type AdminTenantsCreateTenantResult = AxiosResponse<Tenant>
 export type AdminTenantsGetTenantResult = AxiosResponse<Tenant>
@@ -481,8 +612,11 @@ export type AuthLogoutResult = AxiosResponse<void>
 export type AuthOidcCallbackResult = AxiosResponse<TokenResponse>
 export type AuthRefreshTokenResult = AxiosResponse<TokenResponse>
 export type MeWhoamiResult = AxiosResponse<CurrentUser>
+export type MeGetMyMenusResult = AxiosResponse<MeGetMyMenus200>
 export type MeListMyTenantsResult = AxiosResponse<TenantMembership[]>
 export type MeSwitchTenantResult = AxiosResponse<SwitchTenantResponse>
+export type OAuthAuthorizeResult = AxiosResponse<OAuthAuthorize200>
+export type OAuthTokenResult = AxiosResponse<TokenResponse>
 export type TenantApiKeysListApiKeysResult = AxiosResponse<TenantApiKeysListApiKeys200>
 export type TenantApiKeysCreateApiKeyResult = AxiosResponse<CreateApiKeyResponse>
 export type TenantApiKeysRevokeApiKeyResult = AxiosResponse<ApiKey>
@@ -497,6 +631,9 @@ export type TenantRolesCreateRoleResult = AxiosResponse<Role>
 export type TenantRolesGetRoleResult = AxiosResponse<Role>
 export type TenantRolesUpdateRoleResult = AxiosResponse<Role>
 export type TenantRolesDeleteRoleResult = AxiosResponse<void>
+export type TenantRoleMenusListRoleMenusResult = AxiosResponse<RoleMenuGrant>
+export type TenantRoleMenusSetRoleMenusResult = AxiosResponse<RoleMenuGrant>
+export type TenantRoleMenusClearRoleMenusResult = AxiosResponse<void>
 export type TenantRolesSetPermissionsResult = AxiosResponse<Role>
 export type TenantUsersListUsersResult = AxiosResponse<TenantUsersListUsers200>
 export type TenantUsersCreateUserResult = AxiosResponse<User>

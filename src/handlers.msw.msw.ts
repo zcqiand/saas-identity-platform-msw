@@ -19,21 +19,28 @@ import type {
 
 import {
   ApiKeyStatus,
+  AppStatus,
   AuditAction,
   MembershipStatus,
+  MenuStatus,
+  MenuType,
+  OAuthGrantType,
   TenantStatus,
   UserStatus
 } from './handlers.msw.schemas';
 import type {
-  AdminOAuthAppsAuthorize200,
-  AdminOAuthAppsListOAuthApps200,
+  AdminAppsListApps200,
   AdminTenantsListTenants200,
   ApiKey,
+  App,
   CreateApiKeyResponse,
   CurrentUser,
   LoginResponse,
-  OAuthApp,
+  MeGetMyMenus200,
+  Menu,
+  OAuthAuthorize200,
   Role,
+  RoleMenuGrant,
   SwitchTenantResponse,
   Tenant,
   TenantApiKeysListApiKeys200,
@@ -50,17 +57,27 @@ import type {
 } from './handlers.msw.schemas';
 
 
-export const getAdminOAuthAppsListOAuthAppsResponseMock = (overrideResponse: Partial< AdminOAuthAppsListOAuthApps200 > = {}): AdminOAuthAppsListOAuthApps200 => ({items: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.string.uuid(), clientId: faker.string.alpha({length: {min: 2, max: 128}}), name: faker.string.alpha({length: {min: 2, max: 255}}), redirectUris: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), scopes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), grantTypes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), isFirstParty: faker.datatype.boolean(), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`})), page: faker.number.int({min: undefined, max: undefined}), pageSize: faker.number.int({min: undefined, max: undefined}), total: faker.number.int({min: undefined, max: undefined}), ...overrideResponse})
+export const getAdminAppsListAppsResponseMock = (overrideResponse: Partial< AdminAppsListApps200 > = {}): AdminAppsListApps200 => ({items: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.string.uuid(), code: faker.string.alpha({length: {min: 2, max: 64}}), name: faker.string.alpha({length: {min: 2, max: 255}}), description: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), icon: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sortOrder: faker.number.int({min: undefined, max: undefined}), status: faker.helpers.arrayElement(Object.values(AppStatus)), clientId: faker.string.alpha({length: {min: 2, max: 128}}), clientSecret: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), redirectUris: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), scopes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), grantTypes: faker.helpers.arrayElements(Object.values(OAuthGrantType)), isFirstParty: faker.datatype.boolean(), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`})), page: faker.number.int({min: undefined, max: undefined}), pageSize: faker.number.int({min: undefined, max: undefined}), total: faker.number.int({min: undefined, max: undefined}), ...overrideResponse})
 
-export const getAdminOAuthAppsCreateOAuthAppResponseMock = (overrideResponse: Partial< OAuthApp > = {}): OAuthApp => ({id: faker.string.uuid(), clientId: faker.string.alpha({length: {min: 2, max: 128}}), name: faker.string.alpha({length: {min: 2, max: 255}}), redirectUris: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), scopes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), grantTypes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), isFirstParty: faker.datatype.boolean(), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
+export const getAdminAppsCreateAppResponseMock = (overrideResponse: Partial< App > = {}): App => ({id: faker.string.uuid(), code: faker.string.alpha({length: {min: 2, max: 64}}), name: faker.string.alpha({length: {min: 2, max: 255}}), description: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), icon: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sortOrder: faker.number.int({min: undefined, max: undefined}), status: faker.helpers.arrayElement(Object.values(AppStatus)), clientId: faker.string.alpha({length: {min: 2, max: 128}}), clientSecret: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), redirectUris: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), scopes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), grantTypes: faker.helpers.arrayElements(Object.values(OAuthGrantType)), isFirstParty: faker.datatype.boolean(), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
 
-export const getAdminOAuthAppsAuthorizeResponseMock = (overrideResponse: Partial< AdminOAuthAppsAuthorize200 > = {}): AdminOAuthAppsAuthorize200 => ({code: faker.string.alpha({length: {min: 10, max: 20}}), state: faker.string.alpha({length: {min: 10, max: 20}}), ...overrideResponse})
+export const getAdminAppsGetAppResponseMock = (overrideResponse: Partial< App > = {}): App => ({id: faker.string.uuid(), code: faker.string.alpha({length: {min: 2, max: 64}}), name: faker.string.alpha({length: {min: 2, max: 255}}), description: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), icon: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sortOrder: faker.number.int({min: undefined, max: undefined}), status: faker.helpers.arrayElement(Object.values(AppStatus)), clientId: faker.string.alpha({length: {min: 2, max: 128}}), clientSecret: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), redirectUris: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), scopes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), grantTypes: faker.helpers.arrayElements(Object.values(OAuthGrantType)), isFirstParty: faker.datatype.boolean(), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
 
-export const getAdminOAuthAppsTokenResponseMock = (overrideResponse: Partial< TokenResponse > = {}): TokenResponse => ({accessToken: faker.string.alpha({length: {min: 10, max: 20}}), refreshToken: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), tokenType: faker.string.alpha({length: {min: 10, max: 20}}), expiresIn: faker.number.int({min: undefined, max: undefined}), scope: faker.string.alpha({length: {min: 10, max: 20}}), ...overrideResponse})
+export const getAdminAppsUpdateAppResponseMock = (overrideResponse: Partial< App > = {}): App => ({id: faker.string.uuid(), code: faker.string.alpha({length: {min: 2, max: 64}}), name: faker.string.alpha({length: {min: 2, max: 255}}), description: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), icon: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sortOrder: faker.number.int({min: undefined, max: undefined}), status: faker.helpers.arrayElement(Object.values(AppStatus)), clientId: faker.string.alpha({length: {min: 2, max: 128}}), clientSecret: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), redirectUris: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), scopes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), grantTypes: faker.helpers.arrayElements(Object.values(OAuthGrantType)), isFirstParty: faker.datatype.boolean(), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
 
-export const getAdminOAuthAppsGetOAuthAppResponseMock = (overrideResponse: Partial< OAuthApp > = {}): OAuthApp => ({id: faker.string.uuid(), clientId: faker.string.alpha({length: {min: 2, max: 128}}), name: faker.string.alpha({length: {min: 2, max: 255}}), redirectUris: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), scopes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), grantTypes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), isFirstParty: faker.datatype.boolean(), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
+export const getAdminAppMenusListMenusResponseMock = (): Menu[] => (Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.string.uuid(), appId: faker.string.uuid(), parentId: faker.helpers.arrayElement([faker.string.uuid(), undefined]), code: faker.string.alpha({length: {min: 2, max: 64}}), name: faker.string.alpha({length: {min: 2, max: 255}}), path: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), icon: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), type: faker.helpers.arrayElement(Object.values(MenuType)), sortOrder: faker.number.int({min: undefined, max: undefined}), status: faker.helpers.arrayElement(Object.values(MenuStatus)), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`})))
 
-export const getAdminOAuthAppsUpdateOAuthAppResponseMock = (overrideResponse: Partial< OAuthApp > = {}): OAuthApp => ({id: faker.string.uuid(), clientId: faker.string.alpha({length: {min: 2, max: 128}}), name: faker.string.alpha({length: {min: 2, max: 255}}), redirectUris: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), scopes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), grantTypes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), isFirstParty: faker.datatype.boolean(), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
+export const getAdminAppMenusCreateMenuResponseMock = (overrideResponse: Partial< Menu > = {}): Menu => ({id: faker.string.uuid(), appId: faker.string.uuid(), parentId: faker.helpers.arrayElement([faker.string.uuid(), undefined]), code: faker.string.alpha({length: {min: 2, max: 64}}), name: faker.string.alpha({length: {min: 2, max: 255}}), path: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), icon: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), type: faker.helpers.arrayElement(Object.values(MenuType)), sortOrder: faker.number.int({min: undefined, max: undefined}), status: faker.helpers.arrayElement(Object.values(MenuStatus)), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
+
+export const getAdminAppMenusGetMenuResponseMock = (overrideResponse: Partial< Menu > = {}): Menu => ({id: faker.string.uuid(), appId: faker.string.uuid(), parentId: faker.helpers.arrayElement([faker.string.uuid(), undefined]), code: faker.string.alpha({length: {min: 2, max: 64}}), name: faker.string.alpha({length: {min: 2, max: 255}}), path: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), icon: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), type: faker.helpers.arrayElement(Object.values(MenuType)), sortOrder: faker.number.int({min: undefined, max: undefined}), status: faker.helpers.arrayElement(Object.values(MenuStatus)), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
+
+export const getAdminAppMenusUpdateMenuResponseMock = (overrideResponse: Partial< Menu > = {}): Menu => ({id: faker.string.uuid(), appId: faker.string.uuid(), parentId: faker.helpers.arrayElement([faker.string.uuid(), undefined]), code: faker.string.alpha({length: {min: 2, max: 64}}), name: faker.string.alpha({length: {min: 2, max: 255}}), path: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), icon: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), type: faker.helpers.arrayElement(Object.values(MenuType)), sortOrder: faker.number.int({min: undefined, max: undefined}), status: faker.helpers.arrayElement(Object.values(MenuStatus)), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
+
+export const getAdminAppMenusMoveMenuResponseMock = (overrideResponse: Partial< Menu > = {}): Menu => ({id: faker.string.uuid(), appId: faker.string.uuid(), parentId: faker.helpers.arrayElement([faker.string.uuid(), undefined]), code: faker.string.alpha({length: {min: 2, max: 64}}), name: faker.string.alpha({length: {min: 2, max: 255}}), path: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), icon: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), type: faker.helpers.arrayElement(Object.values(MenuType)), sortOrder: faker.number.int({min: undefined, max: undefined}), status: faker.helpers.arrayElement(Object.values(MenuStatus)), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
+
+export const getAdminAppMenusReorderMenusResponseMock = (): Menu[] => (Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.string.uuid(), appId: faker.string.uuid(), parentId: faker.helpers.arrayElement([faker.string.uuid(), undefined]), code: faker.string.alpha({length: {min: 2, max: 64}}), name: faker.string.alpha({length: {min: 2, max: 255}}), path: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), icon: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), type: faker.helpers.arrayElement(Object.values(MenuType)), sortOrder: faker.number.int({min: undefined, max: undefined}), status: faker.helpers.arrayElement(Object.values(MenuStatus)), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`})))
+
+export const getAdminAppsSetAppStatusResponseMock = (overrideResponse: Partial< App > = {}): App => ({id: faker.string.uuid(), code: faker.string.alpha({length: {min: 2, max: 64}}), name: faker.string.alpha({length: {min: 2, max: 255}}), description: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), icon: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sortOrder: faker.number.int({min: undefined, max: undefined}), status: faker.helpers.arrayElement(Object.values(AppStatus)), clientId: faker.string.alpha({length: {min: 2, max: 128}}), clientSecret: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), redirectUris: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), scopes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), grantTypes: faker.helpers.arrayElements(Object.values(OAuthGrantType)), isFirstParty: faker.datatype.boolean(), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
 
 export const getAdminTenantsListTenantsResponseMock = (overrideResponse: Partial< AdminTenantsListTenants200 > = {}): AdminTenantsListTenants200 => ({items: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.string.uuid(), code: faker.string.alpha({length: {min: 2, max: 64}}), name: faker.string.alpha({length: {min: 2, max: 255}}), status: faker.helpers.arrayElement(Object.values(TenantStatus)), settings: faker.helpers.arrayElement([{themeColor: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), locale: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), maxUsers: faker.helpers.arrayElement([faker.number.int({min: undefined, max: undefined}), undefined])}, undefined]), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`})), page: faker.number.int({min: undefined, max: undefined}), pageSize: faker.number.int({min: undefined, max: undefined}), total: faker.number.int({min: undefined, max: undefined}), ...overrideResponse})
 
@@ -78,9 +95,17 @@ export const getAuthRefreshTokenResponseMock = (overrideResponse: Partial< Token
 
 export const getMeWhoamiResponseMock = (overrideResponse: Partial< CurrentUser > = {}): CurrentUser => ({id: faker.string.uuid(), email: faker.internet.email(), displayName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), memberships: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.string.uuid(), userId: faker.string.uuid(), tenantId: faker.string.uuid(), roleIds: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), status: faker.helpers.arrayElement(Object.values(MembershipStatus)), joinedAt: `${faker.date.past().toISOString().split('.')[0]}Z`})), currentTenantId: faker.helpers.arrayElement([faker.string.uuid(), undefined]), ...overrideResponse})
 
+export const getMeGetMyMenusResponseMock = (): MeGetMyMenus200 => ({
+        [faker.string.alphanumeric(5)]: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.string.uuid(), appId: faker.string.uuid(), parentId: faker.helpers.arrayElement([faker.string.uuid(), undefined]), code: faker.string.alpha({length: {min: 10, max: 20}}), name: faker.string.alpha({length: {min: 10, max: 20}}), path: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), icon: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), type: faker.helpers.arrayElement(Object.values(MenuType)), sortOrder: faker.number.int({min: undefined, max: undefined}), children: []}))
+      })
+
 export const getMeListMyTenantsResponseMock = (): TenantMembership[] => (Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.string.uuid(), userId: faker.string.uuid(), tenantId: faker.string.uuid(), roleIds: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), status: faker.helpers.arrayElement(Object.values(MembershipStatus)), joinedAt: `${faker.date.past().toISOString().split('.')[0]}Z`})))
 
 export const getMeSwitchTenantResponseMock = (overrideResponse: Partial< SwitchTenantResponse > = {}): SwitchTenantResponse => ({accessToken: faker.string.alpha({length: {min: 10, max: 20}}), refreshToken: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), expiresAt: `${faker.date.past().toISOString().split('.')[0]}Z`, tenantId: faker.string.uuid(), ...overrideResponse})
+
+export const getOAuthAuthorizeResponseMock = (overrideResponse: Partial< OAuthAuthorize200 > = {}): OAuthAuthorize200 => ({code: faker.string.alpha({length: {min: 10, max: 20}}), state: faker.string.alpha({length: {min: 10, max: 20}}), ...overrideResponse})
+
+export const getOAuthTokenResponseMock = (overrideResponse: Partial< TokenResponse > = {}): TokenResponse => ({accessToken: faker.string.alpha({length: {min: 10, max: 20}}), refreshToken: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), tokenType: faker.string.alpha({length: {min: 10, max: 20}}), expiresIn: faker.number.int({min: undefined, max: undefined}), scope: faker.string.alpha({length: {min: 10, max: 20}}), ...overrideResponse})
 
 export const getTenantApiKeysListApiKeysResponseMock = (overrideResponse: Partial< TenantApiKeysListApiKeys200 > = {}): TenantApiKeysListApiKeys200 => ({items: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.string.uuid(), tenantId: faker.string.uuid(), name: faker.string.alpha({length: {min: 2, max: 128}}), prefix: faker.string.alpha({length: {min: 8, max: 16}}), status: faker.helpers.arrayElement(Object.values(ApiKeyStatus)), scopes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, lastUsedAt: faker.helpers.arrayElement([`${faker.date.past().toISOString().split('.')[0]}Z`, undefined]), expiresAt: faker.helpers.arrayElement([`${faker.date.past().toISOString().split('.')[0]}Z`, undefined]), revokedAt: faker.helpers.arrayElement([`${faker.date.past().toISOString().split('.')[0]}Z`, undefined])})), page: faker.number.int({min: undefined, max: undefined}), pageSize: faker.number.int({min: undefined, max: undefined}), total: faker.number.int({min: undefined, max: undefined}), ...overrideResponse})
 
@@ -112,6 +137,10 @@ export const getTenantRolesGetRoleResponseMock = (overrideResponse: Partial< Rol
 
 export const getTenantRolesUpdateRoleResponseMock = (overrideResponse: Partial< Role > = {}): Role => ({id: faker.string.uuid(), tenantId: faker.string.uuid(), code: faker.string.alpha({length: {min: 1, max: 64}}), name: faker.string.alpha({length: {min: 1, max: 255}}), description: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), permissionIds: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
 
+export const getTenantRoleMenusListRoleMenusResponseMock = (overrideResponse: Partial< RoleMenuGrant > = {}): RoleMenuGrant => ({roleId: faker.string.uuid(), tenantId: faker.string.uuid(), menuIds: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
+
+export const getTenantRoleMenusSetRoleMenusResponseMock = (overrideResponse: Partial< RoleMenuGrant > = {}): RoleMenuGrant => ({roleId: faker.string.uuid(), tenantId: faker.string.uuid(), menuIds: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
+
 export const getTenantRolesSetPermissionsResponseMock = (overrideResponse: Partial< Role > = {}): Role => ({id: faker.string.uuid(), tenantId: faker.string.uuid(), code: faker.string.alpha({length: {min: 1, max: 64}}), name: faker.string.alpha({length: {min: 1, max: 255}}), description: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), permissionIds: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
 
 export const getTenantUsersListUsersResponseMock = (overrideResponse: Partial< TenantUsersListUsers200 > = {}): TenantUsersListUsers200 => ({items: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.string.uuid(), tenantId: faker.string.uuid(), username: faker.string.alpha({length: {min: 1, max: 64}}), email: faker.internet.email(), displayName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), status: faker.helpers.arrayElement(Object.values(UserStatus)), roleIds: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`})), page: faker.number.int({min: undefined, max: undefined}), pageSize: faker.number.int({min: undefined, max: undefined}), total: faker.number.int({min: undefined, max: undefined}), ...overrideResponse})
@@ -129,84 +158,154 @@ export const getTenantUsersAssignRolesResponseMock = (overrideResponse: Partial<
 export const getTenantUsersChangeUserStatusResponseMock = (overrideResponse: Partial< User > = {}): User => ({id: faker.string.uuid(), tenantId: faker.string.uuid(), username: faker.string.alpha({length: {min: 1, max: 64}}), email: faker.internet.email(), displayName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), status: faker.helpers.arrayElement(Object.values(UserStatus)), roleIds: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
 
 
-export const getAdminOAuthAppsListOAuthAppsMockHandler = (overrideResponse?: AdminOAuthAppsListOAuthApps200 | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<AdminOAuthAppsListOAuthApps200> | AdminOAuthAppsListOAuthApps200), options?: RequestHandlerOptions) => {
-  return http.get('*/api/v1/admin/oauth-apps', async (info) => {await delay(1000);
+export const getAdminAppsListAppsMockHandler = (overrideResponse?: AdminAppsListApps200 | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<AdminAppsListApps200> | AdminAppsListApps200), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/admin/apps', async (info) => {await delay(1000);
   
     return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getAdminOAuthAppsListOAuthAppsResponseMock()),
+    : getAdminAppsListAppsResponseMock()),
       { status: 200,
         headers: { 'Content-Type': 'application/json' }
       })
   }, options)
 }
 
-export const getAdminOAuthAppsCreateOAuthAppMockHandler = (overrideResponse?: OAuthApp | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<OAuthApp> | OAuthApp), options?: RequestHandlerOptions) => {
-  return http.post('*/api/v1/admin/oauth-apps', async (info) => {await delay(1000);
+export const getAdminAppsCreateAppMockHandler = (overrideResponse?: App | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<App> | App), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/admin/apps', async (info) => {await delay(1000);
   
     return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getAdminOAuthAppsCreateOAuthAppResponseMock()),
+    : getAdminAppsCreateAppResponseMock()),
       { status: 200,
         headers: { 'Content-Type': 'application/json' }
       })
   }, options)
 }
 
-export const getAdminOAuthAppsAuthorizeMockHandler = (overrideResponse?: AdminOAuthAppsAuthorize200 | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<AdminOAuthAppsAuthorize200> | AdminOAuthAppsAuthorize200), options?: RequestHandlerOptions) => {
-  return http.post('*/api/v1/admin/oauth-apps/authorize', async (info) => {await delay(1000);
+export const getAdminAppsGetAppMockHandler = (overrideResponse?: App | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<App> | App), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/admin/apps/:appId', async (info) => {await delay(1000);
   
     return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getAdminOAuthAppsAuthorizeResponseMock()),
+    : getAdminAppsGetAppResponseMock()),
       { status: 200,
         headers: { 'Content-Type': 'application/json' }
       })
   }, options)
 }
 
-export const getAdminOAuthAppsTokenMockHandler = (overrideResponse?: TokenResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<TokenResponse> | TokenResponse), options?: RequestHandlerOptions) => {
-  return http.post('*/api/v1/admin/oauth-apps/token', async (info) => {await delay(1000);
+export const getAdminAppsUpdateAppMockHandler = (overrideResponse?: App | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<App> | App), options?: RequestHandlerOptions) => {
+  return http.patch('*/api/v1/admin/apps/:appId', async (info) => {await delay(1000);
   
     return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getAdminOAuthAppsTokenResponseMock()),
+    : getAdminAppsUpdateAppResponseMock()),
       { status: 200,
         headers: { 'Content-Type': 'application/json' }
       })
   }, options)
 }
 
-export const getAdminOAuthAppsGetOAuthAppMockHandler = (overrideResponse?: OAuthApp | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<OAuthApp> | OAuthApp), options?: RequestHandlerOptions) => {
-  return http.get('*/api/v1/admin/oauth-apps/:appId', async (info) => {await delay(1000);
-  
-    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getAdminOAuthAppsGetOAuthAppResponseMock()),
-      { status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      })
-  }, options)
-}
-
-export const getAdminOAuthAppsUpdateOAuthAppMockHandler = (overrideResponse?: OAuthApp | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<OAuthApp> | OAuthApp), options?: RequestHandlerOptions) => {
-  return http.patch('*/api/v1/admin/oauth-apps/:appId', async (info) => {await delay(1000);
-  
-    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getAdminOAuthAppsUpdateOAuthAppResponseMock()),
-      { status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      })
-  }, options)
-}
-
-export const getAdminOAuthAppsDeleteOAuthAppMockHandler = (overrideResponse?: void | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void), options?: RequestHandlerOptions) => {
-  return http.delete('*/api/v1/admin/oauth-apps/:appId', async (info) => {await delay(1000);
+export const getAdminAppsDeleteAppMockHandler = (overrideResponse?: void | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void), options?: RequestHandlerOptions) => {
+  return http.delete('*/api/v1/admin/apps/:appId', async (info) => {await delay(1000);
   if (typeof overrideResponse === 'function') {await overrideResponse(info); }
     return new HttpResponse(null,
       { status: 204,
         
+      })
+  }, options)
+}
+
+export const getAdminAppMenusListMenusMockHandler = (overrideResponse?: Menu[] | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Menu[]> | Menu[]), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/admin/apps/:appId/menus', async (info) => {await delay(1000);
+  
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getAdminAppMenusListMenusResponseMock()),
+      { status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      })
+  }, options)
+}
+
+export const getAdminAppMenusCreateMenuMockHandler = (overrideResponse?: Menu | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<Menu> | Menu), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/admin/apps/:appId/menus', async (info) => {await delay(1000);
+  
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getAdminAppMenusCreateMenuResponseMock()),
+      { status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      })
+  }, options)
+}
+
+export const getAdminAppMenusGetMenuMockHandler = (overrideResponse?: Menu | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Menu> | Menu), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/admin/apps/:appId/menus/:menuId', async (info) => {await delay(1000);
+  
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getAdminAppMenusGetMenuResponseMock()),
+      { status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      })
+  }, options)
+}
+
+export const getAdminAppMenusUpdateMenuMockHandler = (overrideResponse?: Menu | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<Menu> | Menu), options?: RequestHandlerOptions) => {
+  return http.patch('*/api/v1/admin/apps/:appId/menus/:menuId', async (info) => {await delay(1000);
+  
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getAdminAppMenusUpdateMenuResponseMock()),
+      { status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      })
+  }, options)
+}
+
+export const getAdminAppMenusDeleteMenuMockHandler = (overrideResponse?: void | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void), options?: RequestHandlerOptions) => {
+  return http.delete('*/api/v1/admin/apps/:appId/menus/:menuId', async (info) => {await delay(1000);
+  if (typeof overrideResponse === 'function') {await overrideResponse(info); }
+    return new HttpResponse(null,
+      { status: 204,
+        
+      })
+  }, options)
+}
+
+export const getAdminAppMenusMoveMenuMockHandler = (overrideResponse?: Menu | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<Menu> | Menu), options?: RequestHandlerOptions) => {
+  return http.patch('*/api/v1/admin/apps/:appId/menus/:menuId/parent', async (info) => {await delay(1000);
+  
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getAdminAppMenusMoveMenuResponseMock()),
+      { status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      })
+  }, options)
+}
+
+export const getAdminAppMenusReorderMenusMockHandler = (overrideResponse?: Menu[] | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<Menu[]> | Menu[]), options?: RequestHandlerOptions) => {
+  return http.put('*/api/v1/admin/apps/:appId/menus/:menuId/reorder', async (info) => {await delay(1000);
+  
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getAdminAppMenusReorderMenusResponseMock()),
+      { status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      })
+  }, options)
+}
+
+export const getAdminAppsSetAppStatusMockHandler = (overrideResponse?: App | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<App> | App), options?: RequestHandlerOptions) => {
+  return http.patch('*/api/v1/admin/apps/:appId/status', async (info) => {await delay(1000);
+  
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getAdminAppsSetAppStatusResponseMock()),
+      { status: 200,
+        headers: { 'Content-Type': 'application/json' }
       })
   }, options)
 }
@@ -327,6 +426,18 @@ export const getMeWhoamiMockHandler = (overrideResponse?: CurrentUser | ((info: 
   }, options)
 }
 
+export const getMeGetMyMenusMockHandler = (overrideResponse?: MeGetMyMenus200 | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<MeGetMyMenus200> | MeGetMyMenus200), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/me/menus', async (info) => {await delay(1000);
+  
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getMeGetMyMenusResponseMock()),
+      { status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      })
+  }, options)
+}
+
 export const getMeListMyTenantsMockHandler = (overrideResponse?: TenantMembership[] | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<TenantMembership[]> | TenantMembership[]), options?: RequestHandlerOptions) => {
   return http.get('*/api/v1/me/tenants', async (info) => {await delay(1000);
   
@@ -345,6 +456,30 @@ export const getMeSwitchTenantMockHandler = (overrideResponse?: SwitchTenantResp
     return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
     : getMeSwitchTenantResponseMock()),
+      { status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      })
+  }, options)
+}
+
+export const getOAuthAuthorizeMockHandler = (overrideResponse?: OAuthAuthorize200 | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<OAuthAuthorize200> | OAuthAuthorize200), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/oauth/authorize', async (info) => {await delay(1000);
+  
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getOAuthAuthorizeResponseMock()),
+      { status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      })
+  }, options)
+}
+
+export const getOAuthTokenMockHandler = (overrideResponse?: TokenResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<TokenResponse> | TokenResponse), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/oauth/token', async (info) => {await delay(1000);
+  
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getOAuthTokenResponseMock()),
       { status: 200,
         headers: { 'Content-Type': 'application/json' }
       })
@@ -517,6 +652,40 @@ export const getTenantRolesDeleteRoleMockHandler = (overrideResponse?: void | ((
   }, options)
 }
 
+export const getTenantRoleMenusListRoleMenusMockHandler = (overrideResponse?: RoleMenuGrant | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<RoleMenuGrant> | RoleMenuGrant), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/tenants/:tenantId/roles/:roleId/menus', async (info) => {await delay(1000);
+  
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getTenantRoleMenusListRoleMenusResponseMock()),
+      { status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      })
+  }, options)
+}
+
+export const getTenantRoleMenusSetRoleMenusMockHandler = (overrideResponse?: RoleMenuGrant | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<RoleMenuGrant> | RoleMenuGrant), options?: RequestHandlerOptions) => {
+  return http.put('*/api/v1/tenants/:tenantId/roles/:roleId/menus', async (info) => {await delay(1000);
+  
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getTenantRoleMenusSetRoleMenusResponseMock()),
+      { status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      })
+  }, options)
+}
+
+export const getTenantRoleMenusClearRoleMenusMockHandler = (overrideResponse?: void | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void), options?: RequestHandlerOptions) => {
+  return http.delete('*/api/v1/tenants/:tenantId/roles/:roleId/menus', async (info) => {await delay(1000);
+  if (typeof overrideResponse === 'function') {await overrideResponse(info); }
+    return new HttpResponse(null,
+      { status: 204,
+        
+      })
+  }, options)
+}
+
 export const getTenantRolesSetPermissionsMockHandler = (overrideResponse?: Role | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<Role> | Role), options?: RequestHandlerOptions) => {
   return http.put('*/api/v1/tenants/:tenantId/roles/:roleId/permissions', async (info) => {await delay(1000);
   
@@ -623,13 +792,19 @@ export const getTenantUsersChangeUserStatusMockHandler = (overrideResponse?: Use
   }, options)
 }
 export const getTitleMock = () => [
-  getAdminOAuthAppsListOAuthAppsMockHandler(),
-  getAdminOAuthAppsCreateOAuthAppMockHandler(),
-  getAdminOAuthAppsAuthorizeMockHandler(),
-  getAdminOAuthAppsTokenMockHandler(),
-  getAdminOAuthAppsGetOAuthAppMockHandler(),
-  getAdminOAuthAppsUpdateOAuthAppMockHandler(),
-  getAdminOAuthAppsDeleteOAuthAppMockHandler(),
+  getAdminAppsListAppsMockHandler(),
+  getAdminAppsCreateAppMockHandler(),
+  getAdminAppsGetAppMockHandler(),
+  getAdminAppsUpdateAppMockHandler(),
+  getAdminAppsDeleteAppMockHandler(),
+  getAdminAppMenusListMenusMockHandler(),
+  getAdminAppMenusCreateMenuMockHandler(),
+  getAdminAppMenusGetMenuMockHandler(),
+  getAdminAppMenusUpdateMenuMockHandler(),
+  getAdminAppMenusDeleteMenuMockHandler(),
+  getAdminAppMenusMoveMenuMockHandler(),
+  getAdminAppMenusReorderMenusMockHandler(),
+  getAdminAppsSetAppStatusMockHandler(),
   getAdminTenantsListTenantsMockHandler(),
   getAdminTenantsCreateTenantMockHandler(),
   getAdminTenantsGetTenantMockHandler(),
@@ -640,8 +815,11 @@ export const getTitleMock = () => [
   getAuthOidcCallbackMockHandler(),
   getAuthRefreshTokenMockHandler(),
   getMeWhoamiMockHandler(),
+  getMeGetMyMenusMockHandler(),
   getMeListMyTenantsMockHandler(),
   getMeSwitchTenantMockHandler(),
+  getOAuthAuthorizeMockHandler(),
+  getOAuthTokenMockHandler(),
   getTenantApiKeysListApiKeysMockHandler(),
   getTenantApiKeysCreateApiKeyMockHandler(),
   getTenantApiKeysRevokeApiKeyMockHandler(),
@@ -656,6 +834,9 @@ export const getTitleMock = () => [
   getTenantRolesGetRoleMockHandler(),
   getTenantRolesUpdateRoleMockHandler(),
   getTenantRolesDeleteRoleMockHandler(),
+  getTenantRoleMenusListRoleMenusMockHandler(),
+  getTenantRoleMenusSetRoleMenusMockHandler(),
+  getTenantRoleMenusClearRoleMenusMockHandler(),
   getTenantRolesSetPermissionsMockHandler(),
   getTenantUsersListUsersMockHandler(),
   getTenantUsersCreateUserMockHandler(),
