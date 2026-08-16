@@ -5,6 +5,11 @@
 // "@saas/identity-platform-msw/node" if you need it (test setup only).
 export { handlers } from "./handlers-array";
 export {
+  // 原始可写数组（handler 会 push/splice；saas-nextjs 路由也用这些做 server-side tree）
+  apps,
+  menus,
+  roleMenuGrants,
+  // helpers + identity constants
   default as fixtures,
   getTenant,
   listTenants,

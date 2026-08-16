@@ -563,6 +563,23 @@ export const auditExtraHandlers = [
   ),
 ];
 
+// === M04.F01 公共读侧 - App 目录（免鉴权） ===
+// 供接入方（lab 各前端）按 appCode 取应用展示信息；
+// 只返回展示字段（AppPublicInfo），不暴露 OAuth 集成字段。
+export const publicAppsExtraHandlers = [
+  http.get(`${BASE}/apps/:code`, ({ params }) => {
+    const a = apps.find((x) => x.code === String(params.code));
+    if (!a || a.status !== "active") {
+      return HttpResponse.json(
+        { code: "NOT_FOUND", message: "App not found" },
+        { status: 404 },
+      );
+    }
+    const { id, code, name, description, icon, status } = a;
+    return HttpResponse.json({ id, code, name, description, icon, status });
+  }),
+];
+
 export const extraHandlers = [
   ...authExtraHandlers,
   ...tenantsExtraHandlers,
@@ -571,6 +588,7 @@ export const extraHandlers = [
   ...apiKeysExtraHandlers,
   ...auditExtraHandlers,
   ...appsExtraHandlers,
+  ...publicAppsExtraHandlers,
   ...menusExtraHandlers,
   ...roleMenuExtraHandlers,
   ...meExtraHandlers,

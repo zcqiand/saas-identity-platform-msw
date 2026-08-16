@@ -19,6 +19,7 @@ import type {
   AdminTenantsListTenantsParams,
   ApiKey,
   App,
+  AppPublicInfo,
   AuthorizeCodeRequest,
   CreateApiKeyRequest,
   CreateApiKeyResponse,
@@ -239,6 +240,14 @@ export const adminTenantsDeleteTenant = <TData = AxiosResponse<void>>(
  ): Promise<TData> => {
     return axios.delete(
       `/api/v1/admin/tenants/${id}`,options
+    );
+  }
+
+export const appsGetApp = <TData = AxiosResponse<AppPublicInfo>>(
+    code: string, options?: AxiosRequestConfig
+ ): Promise<TData> => {
+    return axios.get(
+      `/api/v1/apps/${code}`,options
     );
   }
 
@@ -607,6 +616,7 @@ export type AdminTenantsCreateTenantResult = AxiosResponse<Tenant>
 export type AdminTenantsGetTenantResult = AxiosResponse<Tenant>
 export type AdminTenantsUpdateTenantResult = AxiosResponse<Tenant>
 export type AdminTenantsDeleteTenantResult = AxiosResponse<void>
+export type AppsGetAppResult = AxiosResponse<AppPublicInfo>
 export type AuthLoginResult = AxiosResponse<LoginResponse>
 export type AuthLogoutResult = AxiosResponse<void>
 export type AuthOidcCallbackResult = AxiosResponse<TokenResponse>

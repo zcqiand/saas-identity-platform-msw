@@ -33,6 +33,7 @@ import type {
   AdminTenantsListTenants200,
   ApiKey,
   App,
+  AppPublicInfo,
   CreateApiKeyResponse,
   CurrentUser,
   LoginResponse,
@@ -86,6 +87,8 @@ export const getAdminTenantsCreateTenantResponseMock = (overrideResponse: Partia
 export const getAdminTenantsGetTenantResponseMock = (overrideResponse: Partial< Tenant > = {}): Tenant => ({id: faker.string.uuid(), code: faker.string.alpha({length: {min: 2, max: 64}}), name: faker.string.alpha({length: {min: 2, max: 255}}), status: faker.helpers.arrayElement(Object.values(TenantStatus)), settings: faker.helpers.arrayElement([{themeColor: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), locale: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), maxUsers: faker.helpers.arrayElement([faker.number.int({min: undefined, max: undefined}), undefined])}, undefined]), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
 
 export const getAdminTenantsUpdateTenantResponseMock = (overrideResponse: Partial< Tenant > = {}): Tenant => ({id: faker.string.uuid(), code: faker.string.alpha({length: {min: 2, max: 64}}), name: faker.string.alpha({length: {min: 2, max: 255}}), status: faker.helpers.arrayElement(Object.values(TenantStatus)), settings: faker.helpers.arrayElement([{themeColor: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), locale: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), maxUsers: faker.helpers.arrayElement([faker.number.int({min: undefined, max: undefined}), undefined])}, undefined]), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
+
+export const getAppsGetAppResponseMock = (overrideResponse: Partial< AppPublicInfo > = {}): AppPublicInfo => ({id: faker.string.uuid(), code: faker.string.alpha({length: {min: 2, max: 64}}), name: faker.string.alpha({length: {min: 2, max: 255}}), description: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), icon: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), status: faker.helpers.arrayElement(Object.values(AppStatus)), ...overrideResponse})
 
 export const getAuthLoginResponseMock = (overrideResponse: Partial< LoginResponse > = {}): LoginResponse => ({accessToken: faker.string.alpha({length: {min: 10, max: 20}}), refreshToken: faker.string.alpha({length: {min: 10, max: 20}}), tokenType: faker.string.alpha({length: {min: 10, max: 20}}), expiresIn: faker.number.int({min: undefined, max: undefined}), userId: faker.string.uuid(), currentTenantId: faker.string.uuid(), ...overrideResponse})
 
@@ -364,6 +367,18 @@ export const getAdminTenantsDeleteTenantMockHandler = (overrideResponse?: void |
     return new HttpResponse(null,
       { status: 204,
         
+      })
+  }, options)
+}
+
+export const getAppsGetAppMockHandler = (overrideResponse?: AppPublicInfo | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<AppPublicInfo> | AppPublicInfo), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/apps/:code', async (info) => {await delay(1000);
+  
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getAppsGetAppResponseMock()),
+      { status: 200,
+        headers: { 'Content-Type': 'application/json' }
       })
   }, options)
 }
@@ -810,6 +825,7 @@ export const getTitleMock = () => [
   getAdminTenantsGetTenantMockHandler(),
   getAdminTenantsUpdateTenantMockHandler(),
   getAdminTenantsDeleteTenantMockHandler(),
+  getAppsGetAppMockHandler(),
   getAuthLoginMockHandler(),
   getAuthLogoutMockHandler(),
   getAuthOidcCallbackMockHandler(),

@@ -65,6 +65,23 @@ export interface App {
   updatedAt: string;
 }
 
+export interface AppPublicInfo {
+  id: string;
+  /**
+   * @minLength 2
+   * @maxLength 64
+   */
+  code: string;
+  /**
+   * @minLength 2
+   * @maxLength 255
+   */
+  name: string;
+  description?: string;
+  icon?: string;
+  status: AppStatus;
+}
+
 export type AppStatus = typeof AppStatus[keyof typeof AppStatus];
 
 
