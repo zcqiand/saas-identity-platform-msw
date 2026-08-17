@@ -31,9 +31,10 @@ import {
 const BASE = "/api/v1";
 const NOW = () => new Date().toISOString();
 
-// Demo 密码：所有 seed user 共享 demo123，方便前端 demo 登录。
-// 真后端（aspnetcore/springboot）实现各自的密码校验。
-const DEMO_PASSWORD = "demo123";
+// Demo 密码：所有 seed user 共享同一密码，方便前端 demo 登录。
+// 与 lab-management-system-msw 的 DEMO_PASSWORD 对齐（统一 "dev123456"），
+// 让跨仓（lab-react + saas-react 切换 backend）登录体验一致。
+const DEMO_PASSWORD = "dev123456";
 
 function uuidLike(prefix: string): string {
   // 生成看起来像 uuid 的字符串（用 Date.now + 随机，避免碰撞）
