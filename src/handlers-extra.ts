@@ -36,6 +36,17 @@ const NOW = () => new Date().toISOString();
 // 让跨仓（lab-react + saas-react 切换 backend）登录体验一致。
 const DEMO_PASSWORD = "dev123456";
 
+// OAuth 2.0 server 内存映射（authExtraHandlers 数组内 handler 用）。
+// 放在数组外：数组字面量不能含 const 声明。
+const oauthCodes = new Map<
+  string,
+  { appId: string; userId: string; tenantId: string; scope: string; redirectUri: string }
+>();
+const oauthRefreshTokens = new Map<
+  string,
+  { appId: string; userId: string; tenantId: string; scope: string }
+>();
+
 function uuidLike(prefix: string): string {
   // 生成看起来像 uuid 的字符串（用 Date.now + 随机，避免碰撞）
   const ts = Date.now().toString(16).padStart(12, "0");
@@ -294,6 +305,190 @@ export const authExtraHandlers = [
       );
     }
     return HttpResponse.json(user);
+  }),
+
+  // === OAuth 2.0 server 端点（POST 与 saas-shared OpenAPI 一致）===
+  // authorize/token 都按 clientId 找 App 记录，校验 redirect_uri / scope / tenantId；
+  // code 一次性、refresh_token 用于换新对。
+  // dev 阶段不严验 client_secret（生产 saas springboot/aspnetcore 真后端验）。
+
+  http.post(`*${BASE}/oauth/authorize`, async ({ request }) => {
+    const body = (await request.json()) as {
+      clientId?: string;
+      redirectUri?: string;
+      responseType?: string;
+      scope?: string;
+      state?: string;
+      tenantId?: string;
+    };
+    if (
+      !body.clientId ||
+      !body.redirectUri ||
+      !body.responseType ||
+      !body.scope ||
+      !body.state ||
+      !body.tenantId
+    ) {
+      return HttpResponse.json(
+        {
+          code: "INVALID_REQUEST",
+          message: "OAuth 2.0 authorize: 缺必填字段（clientId/redirectUri/responseType/scope/state/tenantId）",
+        },
+        { status: 400 },
+      );
+    }
+    if (body.responseType !== "code") {
+      return HttpResponse.json(
+        { code: "UNSUPPORTED_RESPONSE_TYPE", message: "仅支持 responseType=code" },
+        { status: 400 },
+      );
+    }
+    const app = apps.find((a) => a.clientId === body.clientId);
+    if (!app) {
+      return HttpResponse.json(
+        { code: "INVALID_CLIENT", message: "clientId 未注册或不可用" },
+        { status: 400 },
+      );
+    }
+    if (!app.redirectUris.includes(body.redirectUri)) {
+      return HttpResponse.json(
+        { code: "INVALID_REDIRECT_URI", message: "redirectUri 不在该 client 的白名单" },
+        { status: 400 },
+      );
+    }
+    // dev mock：tenant 范围不在 App 上建模（saas-shared App 模型只到 redirectUris/scopes/grantTypes），
+    // 用「该 tenant 下是否有用户」隐式校验 tenant 有效性。生产 saas 会在 App 上加 tenants 字段显式建模。
+    // dev mock：用 clientId 直接绑定到第一个匹配用户（生产 saas 走真实用户登录流程）
+    const devUser = users.find((u) => u.tenantId === body.tenantId);
+    if (!devUser) {
+      return HttpResponse.json(
+        { code: "NO_USER", message: "dev mock: 该 tenant 下找不到用户" },
+        { status: 400 },
+      );
+    }
+    // 生成一次性 code 存映射
+    const code = `saas-code-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    oauthCodes.set(code, {
+      appId: app.id,
+      userId: devUser.id,
+      tenantId: body.tenantId,
+      scope: body.scope,
+      redirectUri: body.redirectUri,
+    });
+    return HttpResponse.json({ code, state: body.state });
+  }),
+
+  http.post(`*${BASE}/oauth/token`, async ({ request }) => {
+    const body = (await request.json()) as {
+      grantType?: string;
+      code?: string;
+      refreshToken?: string;
+      clientId?: string;
+      clientSecret?: string;
+      tenantId?: string;
+      redirectUri?: string;
+    };
+    if (!body.grantType || !body.clientId || !body.tenantId) {
+      return HttpResponse.json(
+        {
+          code: "INVALID_REQUEST",
+          message: "OAuth 2.0 token: 缺必填字段（grantType/clientId/tenantId）",
+        },
+        { status: 400 },
+      );
+    }
+    const app = apps.find((a) => a.clientId === body.clientId);
+    if (!app) {
+      return HttpResponse.json(
+        { code: "INVALID_CLIENT", message: "clientId 未注册或不可用" },
+        { status: 400 },
+      );
+    }
+
+    if (body.grantType === "authorization_code") {
+      if (!body.code || !body.redirectUri) {
+        return HttpResponse.json(
+          { code: "INVALID_REQUEST", message: "authorization_code: 缺 code 或 redirectUri" },
+          { status: 400 },
+        );
+      }
+      const entry = oauthCodes.get(body.code);
+      if (!entry) {
+        return HttpResponse.json(
+          { code: "INVALID_GRANT", message: "code 不存在或已被使用" },
+          { status: 400 },
+        );
+      }
+      if (entry.redirectUri !== body.redirectUri) {
+        return HttpResponse.json(
+          { code: "INVALID_GRANT", message: "redirectUri 与 authorize 时不一致" },
+          { status: 400 },
+        );
+      }
+      if (entry.tenantId !== body.tenantId) {
+        return HttpResponse.json(
+          { code: "INVALID_GRANT", message: "tenantId 与 authorize 时不一致" },
+          { status: 400 },
+        );
+      }
+      // dev mock：暂不严验 clientSecret（生产真后端验）
+      // code 一次性：取出后立即删除（防重放）
+      oauthCodes.delete(body.code);
+      // 签 accessToken + refreshToken（用 crypto 随机避免毫秒级重复）
+      const nonce = Math.random().toString(36).slice(2);
+      const accessToken = `saas-jwt-${entry.userId}-${nonce}`;
+      const refreshToken = `saas-rt-${entry.userId}-${nonce}-${Math.random().toString(36).slice(2)}`;
+      oauthRefreshTokens.set(refreshToken, {
+        appId: entry.appId,
+        userId: entry.userId,
+        tenantId: entry.tenantId,
+        scope: entry.scope,
+      });
+      return HttpResponse.json({
+        accessToken,
+        refreshToken,
+        tokenType: "Bearer",
+        expiresIn: 3600,
+        scope: entry.scope,
+      });
+    }
+
+    if (body.grantType === "refresh_token") {
+      if (!body.refreshToken) {
+        return HttpResponse.json(
+          { code: "INVALID_REQUEST", message: "refresh_token: 缺 refreshToken" },
+          { status: 400 },
+        );
+      }
+      const entry = oauthRefreshTokens.get(body.refreshToken);
+      if (!entry) {
+        return HttpResponse.json(
+          { code: "INVALID_GRANT", message: "refreshToken 不存在或已被使用" },
+          { status: 400 },
+        );
+      }
+      // 旧 refreshToken 立即失效（防重放）
+      oauthRefreshTokens.delete(body.refreshToken);
+      const nonce = Math.random().toString(36).slice(2);
+      const accessToken = `saas-jwt-${entry.userId}-${nonce}`;
+      const newRefresh = `saas-rt-${entry.userId}-${nonce}-${Math.random().toString(36).slice(2)}`;
+      oauthRefreshTokens.set(newRefresh, entry);
+      return HttpResponse.json({
+        accessToken,
+        refreshToken: newRefresh,
+        tokenType: "Bearer",
+        expiresIn: 3600,
+        scope: entry.scope,
+      });
+    }
+
+    return HttpResponse.json(
+      {
+        code: "UNSUPPORTED_GRANT_TYPE",
+        message: "仅支持 grantType=authorization_code | refresh_token",
+      },
+      { status: 400 },
+    );
   }),
 ];
 

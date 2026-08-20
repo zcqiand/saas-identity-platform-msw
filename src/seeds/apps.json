@@ -9,7 +9,11 @@
     "status": "active",
     "clientId": "lab-mgmt",
     "clientSecret": "lab-mgmt-secret",
-    "redirectUris": ["http://localhost:3001/callback"],
+    "redirectUris": [
+      "http://localhost:3001/callback",
+      "http://localhost:5173/login",
+      "http://localhost:5174/login"
+    ],
     "scopes": ["lab.read", "lab.write"],
     "grantTypes": ["client_credentials", "authorization_code"],
     "isFirstParty": true,

@@ -13,7 +13,7 @@
 | ID       | 功能 | 类型 | 状态 |
 |----------|------|------|------|
 | M99.F01  | Fixture data consistency | 接口 | 规划 |
-| M99.F02  | MSW handlers emit from OpenAPI | 接口 | 规划 |
+| M99.F02  | MSW handlers emit OAuth 2.0 server（/oauth/authorize + /oauth/token + code/refresh 映射） | 接口 | 开发中 |
 
 ## 子项级（M0x.F0y.I0y）
 
