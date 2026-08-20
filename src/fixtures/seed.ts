@@ -68,14 +68,25 @@ export const getApiKey = (tenantId: string, keyId: string) =>
 export const listApiKeys = (tenantId: string) =>
   apiKeys.filter((k) => k.tenantId === tenantId);
 
-export const getApp = (id: string) => apps.find((a) => a.id === id);
+// URL `:appId` 既可能是内部 id（`app-lab`）也可能是 code（`lab-management`）。
+// 两者都映射到同一个 App 记录（[src/seeds/apps.json](seeds/apps.json)）。
+// ADR-0014 相关无关；saas 镜像早期未统一约定导致 seed 内 id 而 URL 用 code。
+function resolveAppId(idOrCode: string): string {
+  return apps.find((a) => a.id === idOrCode || a.code === idOrCode)?.id ?? idOrCode;
+}
+
+export { resolveAppId };
+
+export const getApp = (idOrCode: string) =>
+  apps.find((a) => a.id === idOrCode || a.code === idOrCode);
 export const getAppByClientId = (clientId: string) =>
   apps.find((a) => a.clientId === clientId);
 export const listApps = () => apps;
 
 export const getMenu = (id: string) => menus.find((m) => m.id === id);
+// `appId` 入参兼容内部 id 与 URL code；统一 resolve 到内部 id 再过滤
 export const listMenus = (appId: string) =>
-  menus.filter((m) => m.appId === appId);
+  menus.filter((m) => m.appId === resolveAppId(appId));
 
 export const getRoleMenuGrant = (roleId: string) =>
   roleMenuGrants.find((g) => g.roleId === roleId);

@@ -14,6 +14,7 @@ import {
   auditEvents,
   TENANT_IDS,
   APP_IDS,
+  resolveAppId,
   getApp,
   getMenu,
   getTenant,
@@ -106,7 +107,7 @@ export const appsExtraHandlers = [
   }),
 
   http.delete(`${BASE}/admin/apps/:appId`, ({ params }) => {
-    const i = apps.findIndex((a) => a.id === params.appId);
+    const i = apps.findIndex((a) => a.id === resolveAppId(String(params.appId)));
     if (i < 0) return HttpResponse.json({ code: "NOT_FOUND", message: "App not found" }, { status: 404 });
     apps.splice(i, 1);
     return new HttpResponse(null, { status: 204 });
@@ -130,7 +131,8 @@ export const menusExtraHandlers = [
 
   http.get(`${BASE}/admin/apps/:appId/menus/:menuId`, ({ params }) => {
     const m = getMenu(String(params.menuId));
-    if (!m || m.appId !== params.appId)
+    const resolvedAppId = resolveAppId(String(params.appId));
+    if (!m || m.appId !== resolvedAppId)
       return HttpResponse.json({ code: "NOT_FOUND", message: "Menu not found" }, { status: 404 });
     return HttpResponse.json(m);
   }),
@@ -139,7 +141,7 @@ export const menusExtraHandlers = [
     const body = (await request.json()) as Record<string, unknown>;
     const newMenu = {
       id: `00000000-0000-0000-0000-${Date.now().toString(16).padStart(12, "0").slice(-12)}`,
-      appId: String(params.appId),
+      appId: resolveAppId(String(params.appId)),
       parentId: body.parentId as string | undefined,
       code: String(body.code ?? ""),
       name: String(body.name ?? ""),
@@ -157,7 +159,8 @@ export const menusExtraHandlers = [
 
   http.patch(`${BASE}/admin/apps/:appId/menus/:menuId`, async ({ params, request }) => {
     const m = getMenu(String(params.menuId));
-    if (!m || m.appId !== params.appId)
+    const resolvedAppId = resolveAppId(String(params.appId));
+    if (!m || m.appId !== resolvedAppId)
       return HttpResponse.json({ code: "NOT_FOUND", message: "Menu not found" }, { status: 404 });
     const body = (await request.json()) as Record<string, unknown>;
     Object.assign(m, body, { updatedAt: NOW() });
@@ -165,7 +168,8 @@ export const menusExtraHandlers = [
   }),
 
   http.delete(`${BASE}/admin/apps/:appId/menus/:menuId`, ({ params }) => {
-    const i = menus.findIndex((m) => m.id === params.menuId && m.appId === params.appId);
+    const resolvedAppId = resolveAppId(String(params.appId));
+    const i = menus.findIndex((m) => m.id === params.menuId && m.appId === resolvedAppId);
     if (i < 0) return HttpResponse.json({ code: "NOT_FOUND", message: "Menu not found" }, { status: 404 });
     menus.splice(i, 1);
     return new HttpResponse(null, { status: 204 });
@@ -173,19 +177,21 @@ export const menusExtraHandlers = [
 
   http.put(`${BASE}/admin/apps/:appId/menus/:menuId/reorder`, async ({ params, request }) => {
     const m = getMenu(String(params.menuId));
-    if (!m || m.appId !== params.appId)
+    const resolvedAppId = resolveAppId(String(params.appId));
+    if (!m || m.appId !== resolvedAppId)
       return HttpResponse.json({ code: "NOT_FOUND", message: "Menu not found" }, { status: 404 });
     const body = (await request.json()) as { orderedMenuIds: string[] };
     body.orderedMenuIds.forEach((mid, idx) => {
       const target = menus.find((x) => x.id === mid);
       if (target) target.sortOrder = idx;
     });
-    return HttpResponse.json(listMenus(String(params.appId)));
+    return HttpResponse.json(listMenus(resolvedAppId));
   }),
 
   http.patch(`${BASE}/admin/apps/:appId/menus/:menuId/parent`, async ({ params, request }) => {
     const m = getMenu(String(params.menuId));
-    if (!m || m.appId !== params.appId)
+    const resolvedAppId = resolveAppId(String(params.appId));
+    if (!m || m.appId !== resolvedAppId)
       return HttpResponse.json({ code: "NOT_FOUND", message: "Menu not found" }, { status: 404 });
     const body = (await request.json()) as { parentId?: string };
     m.parentId = body.parentId;
