@@ -8,7 +8,6 @@
     ".": "./src/index.ts",
     "./handlers": "./src/handlers-array.ts",
     "./fixtures": "./src/fixtures/seed.ts",
-    "./browser": "./src/browser.ts",
     "./node": "./src/node.ts"
   },
   "files": [
