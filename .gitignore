@@ -4,6 +4,11 @@ generated/
 coverage/
 *.log
 
+# vitest/esbuild transform 遗留（package.json "type":"module" 下 ESM 失败时
+# esbuild 会把 src/**/*.ts 转成 src/**/*.js 留在仓里；本仓 library + dev server
+# 不发 JS 产物，这些 .js 全是 transform 垃圾）
+src/**/*.js
+
 # Claude 临时文件
 .claude/
 .superpowers/

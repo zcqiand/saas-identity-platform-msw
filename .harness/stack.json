@@ -11,5 +11,5 @@
     "L4": { "name": "测试", "cmd": ["npx", "--no", "vitest", "run"], "fix": "先让测试变绿" }
   },
   "trace_cmd": ["npx", "--no", "vitest", "run"],
-  "trace_env": { "TRACE_MAP": "1" }
+  "trace_env": { "TRACE_MAP": "1", "PORT": "5174" }
 }

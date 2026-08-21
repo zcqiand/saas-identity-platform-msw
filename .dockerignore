@@ -1,0 +1,9 @@
+node_modules
+npm-debug.log
+dist
+coverage
+.state
+.harness/common.lock.json
+*.md
+.github
+tests
