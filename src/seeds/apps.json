@@ -1,6 +1,6 @@
 [
   {
-    "id": "app-lab",
+    "id": "lab-management",
     "code": "lab-management",
     "name": "建筑工程实验室管理系统",
     "description": "建筑工程质量检测实验室信息化管理系统",
@@ -12,10 +12,17 @@
     "redirectUris": [
       "http://localhost:3001/callback",
       "http://localhost:5173/login",
-      "http://localhost:5174/login"
+      "http://localhost:5174/login",
+      "https://lab-nextjs.xiangru.uk/login"
     ],
-    "scopes": ["lab.read", "lab.write"],
-    "grantTypes": ["client_credentials", "authorization_code"],
+    "scopes": [
+      "lab.read",
+      "lab.write"
+    ],
+    "grantTypes": [
+      "client_credentials",
+      "authorization_code"
+    ],
     "isFirstParty": true,
     "createdAt": "2026-01-01T00:00:00Z",
     "updatedAt": "2026-08-10T14:00:00Z"
@@ -30,9 +37,17 @@
     "status": "active",
     "clientId": "erp",
     "clientSecret": "erp-secret",
-    "redirectUris": ["http://localhost:3010/callback"],
-    "scopes": ["erp.read", "erp.write"],
-    "grantTypes": ["client_credentials", "authorization_code"],
+    "redirectUris": [
+      "http://localhost:3010/callback"
+    ],
+    "scopes": [
+      "erp.read",
+      "erp.write"
+    ],
+    "grantTypes": [
+      "client_credentials",
+      "authorization_code"
+    ],
     "isFirstParty": true,
     "createdAt": "2026-01-01T00:00:00Z",
     "updatedAt": "2026-08-10T14:00:00Z"
@@ -47,9 +62,17 @@
     "status": "active",
     "clientId": "crm",
     "clientSecret": "crm-secret",
-    "redirectUris": ["http://localhost:3020/callback"],
-    "scopes": ["crm.read", "crm.write"],
-    "grantTypes": ["client_credentials", "authorization_code"],
+    "redirectUris": [
+      "http://localhost:3020/callback"
+    ],
+    "scopes": [
+      "crm.read",
+      "crm.write"
+    ],
+    "grantTypes": [
+      "client_credentials",
+      "authorization_code"
+    ],
     "isFirstParty": true,
     "createdAt": "2026-01-01T00:00:00Z",
     "updatedAt": "2026-08-10T14:00:00Z"
