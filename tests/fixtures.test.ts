@@ -94,11 +94,12 @@ describe("M99.F01 fixture data consistency", () => {
 describe("M99.F02 apps+menus+grants fixture consistency", () => {
   it("apps are platform-level (no tenantId)", () => {
     expect(apps.length).toBe(3);
-    expect(apps.map((a) => a.id).sort()).toEqual(["app-crm", "app-erp", "app-lab"]);
+    expect(apps.map((a) => a.id).sort()).toEqual(["app-crm", "app-erp", "lab-management"]);
     for (const a of apps) {
       expect((a as { tenantId?: unknown }).tenantId).toBeUndefined();
       // v0.4.0: app id 是 backup 风格语义键，不再 UUID
-      expect(a.id).toMatch(/^app-(lab|erp|crm)$/);
+      // （lab 用应用 code 本身 lab-management，erp/crm 保留 app- 前缀）
+      expect(a.id).toMatch(/^(lab-management|app-erp|app-crm)$/);
     }
   });
 
@@ -130,7 +131,7 @@ describe("M99.F02 apps+menus+grants fixture consistency", () => {
     for (const m of menus) expect(appIds.has(m.appId)).toBe(true);
     const byApp = { lab: 0, erp: 0, crm: 0 } as Record<string, number>;
     for (const m of menus) {
-      if (m.appId === "app-lab") byApp.lab++;
+      if (m.appId === "lab-management") byApp.lab++;
       else if (m.appId === "app-erp") byApp.erp++;
       else if (m.appId === "app-crm") byApp.crm++;
     }

@@ -68,7 +68,7 @@ export const getApiKey = (tenantId: string, keyId: string) =>
 export const listApiKeys = (tenantId: string) =>
   apiKeys.filter((k) => k.tenantId === tenantId);
 
-// URL `:appId` 既可能是内部 id（`app-lab`）也可能是 code（`lab-management`）。
+// URL `:appId` 既可能是内部 id（`lab-management`）也可能是 code（`lab-management`）。
 // 两者都映射到同一个 App 记录（[src/seeds/apps.json](seeds/apps.json)）。
 // ADR-0014 相关无关；saas 镜像早期未统一约定导致 seed 内 id 而 URL 用 code。
 function resolveAppId(idOrCode: string): string {

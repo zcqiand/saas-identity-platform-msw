@@ -1,7 +1,7 @@
 [
   {
     "id": "m-lab-dash",
-    "appId": "app-lab",
+    "appId": "lab-management",
     "parentId": null,
     "code": "m-lab-dash",
     "name": "仪表盘",
@@ -15,7 +15,7 @@
   },
   {
     "id": "grp-res",
-    "appId": "app-lab",
+    "appId": "lab-management",
     "parentId": null,
     "code": "grp-res",
     "name": "资源管理",
@@ -29,7 +29,7 @@
   },
   {
     "id": "grp-biz",
-    "appId": "app-lab",
+    "appId": "lab-management",
     "parentId": null,
     "code": "grp-biz",
     "name": "实验过程管理",
@@ -43,7 +43,7 @@
   },
   {
     "id": "grp-stat",
-    "appId": "app-lab",
+    "appId": "lab-management",
     "parentId": null,
     "code": "grp-stat",
     "name": "统计报表",
@@ -57,7 +57,7 @@
   },
   {
     "id": "grp-insp",
-    "appId": "app-lab",
+    "appId": "lab-management",
     "parentId": null,
     "code": "grp-insp",
     "name": "检测能力",
@@ -71,7 +71,7 @@
   },
   {
     "id": "grp-master",
-    "appId": "app-lab",
+    "appId": "lab-management",
     "parentId": null,
     "code": "grp-master",
     "name": "基础数据",
@@ -85,7 +85,7 @@
   },
   {
     "id": "m-contracts",
-    "appId": "app-lab",
+    "appId": "lab-management",
     "parentId": "grp-res",
     "code": "m-contracts",
     "name": "合同管理",
@@ -99,7 +99,7 @@
   },
   {
     "id": "m-receipts",
-    "appId": "app-lab",
+    "appId": "lab-management",
     "parentId": "grp-biz",
     "code": "m-receipts",
     "name": "接样管理",
@@ -113,7 +113,7 @@
   },
   {
     "id": "m-task",
-    "appId": "app-lab",
+    "appId": "lab-management",
     "parentId": "grp-biz",
     "code": "m-task",
     "name": "任务安排",
@@ -127,7 +127,7 @@
   },
   {
     "id": "m-entry",
-    "appId": "app-lab",
+    "appId": "lab-management",
     "parentId": "grp-biz",
     "code": "m-entry",
     "name": "数据录入",
@@ -141,7 +141,7 @@
   },
   {
     "id": "m-review",
-    "appId": "app-lab",
+    "appId": "lab-management",
     "parentId": "grp-biz",
     "code": "m-review",
     "name": "报告审核",
@@ -155,7 +155,7 @@
   },
   {
     "id": "m-approve",
-    "appId": "app-lab",
+    "appId": "lab-management",
     "parentId": "grp-biz",
     "code": "m-approve",
     "name": "报告批准",
@@ -169,7 +169,7 @@
   },
   {
     "id": "m-issue",
-    "appId": "app-lab",
+    "appId": "lab-management",
     "parentId": "grp-biz",
     "code": "m-issue",
     "name": "报告发放",
@@ -183,7 +183,7 @@
   },
   {
     "id": "m-archive",
-    "appId": "app-lab",
+    "appId": "lab-management",
     "parentId": "grp-biz",
     "code": "m-archive",
     "name": "报告归档",
@@ -197,7 +197,7 @@
   },
   {
     "id": "m-report-names",
-    "appId": "app-lab",
+    "appId": "lab-management",
     "parentId": "grp-master",
     "code": "m-report-names",
     "name": "报告名称",
@@ -211,7 +211,7 @@
   },
   {
     "id": "m-param-ifs",
-    "appId": "app-lab",
+    "appId": "lab-management",
     "parentId": "grp-master",
     "code": "m-param-ifs",
     "name": "参数界面",
@@ -225,7 +225,7 @@
   },
   {
     "id": "m-models",
-    "appId": "app-lab",
+    "appId": "lab-management",
     "parentId": "grp-master",
     "code": "m-models",
     "name": "型号维护",
@@ -239,7 +239,7 @@
   },
   {
     "id": "m-specs",
-    "appId": "app-lab",
+    "appId": "lab-management",
     "parentId": "grp-master",
     "code": "m-specs",
     "name": "规格维护",
@@ -253,7 +253,7 @@
   },
   {
     "id": "m-grades",
-    "appId": "app-lab",
+    "appId": "lab-management",
     "parentId": "grp-master",
     "code": "m-grades",
     "name": "等级维护",
@@ -267,7 +267,7 @@
   },
   {
     "id": "m-brands",
-    "appId": "app-lab",
+    "appId": "lab-management",
     "parentId": "grp-master",
     "code": "m-brands",
     "name": "牌号维护",
@@ -281,7 +281,7 @@
   },
   {
     "id": "m-calc-rules",
-    "appId": "app-lab",
+    "appId": "lab-management",
     "parentId": "grp-master",
     "code": "m-calc-rules",
     "name": "计算规则",
@@ -295,7 +295,7 @@
   },
   {
     "id": "m-tech-req",
-    "appId": "app-lab",
+    "appId": "lab-management",
     "parentId": "grp-master",
     "code": "m-tech-req",
     "name": "技术要求",
@@ -309,7 +309,7 @@
   },
   {
     "id": "m-insp-spec",
-    "appId": "app-lab",
+    "appId": "lab-management",
     "parentId": "grp-insp",
     "code": "m-insp-spec",
     "name": "检测专项",
@@ -323,7 +323,7 @@
   },
   {
     "id": "m-insp-obj",
-    "appId": "app-lab",
+    "appId": "lab-management",
     "parentId": "grp-insp",
     "code": "m-insp-obj",
     "name": "检测项目",
@@ -337,7 +337,7 @@
   },
   {
     "id": "m-insp-param",
-    "appId": "app-lab",
+    "appId": "lab-management",
     "parentId": "grp-insp",
     "code": "m-insp-param",
     "name": "检测参数",
@@ -351,7 +351,7 @@
   },
   {
     "id": "m-insp-std",
-    "appId": "app-lab",
+    "appId": "lab-management",
     "parentId": "grp-insp",
     "code": "m-insp-std",
     "name": "检测标准",
@@ -365,7 +365,7 @@
   },
   {
     "id": "m-summary",
-    "appId": "app-lab",
+    "appId": "lab-management",
     "parentId": "grp-stat",
     "code": "m-summary",
     "name": "统计汇总",
