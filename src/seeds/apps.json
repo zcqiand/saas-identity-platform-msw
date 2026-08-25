@@ -13,7 +13,8 @@
       "http://localhost:3001/callback",
       "http://localhost:5173/login",
       "http://localhost:5174/login",
-      "https://lab-nextjs.xiangru.uk/login"
+      "https://lab-nextjs.xiangru.uk/login",
+      "https://lab-react.xiangru.uk/login"
     ],
     "scopes": [
       "lab.read",
