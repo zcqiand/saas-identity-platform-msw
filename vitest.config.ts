@@ -12,6 +12,7 @@ export default defineConfig({
     globals: false,
     environment: "node",
     include: ["tests/**/*.test.ts"],
+    setupFiles: ["./tests/setup.ts"],
     testTimeout: 10000,
     reporters: ["default", new FnReporter() as any],
   },

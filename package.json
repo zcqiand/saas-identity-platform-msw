@@ -8,7 +8,8 @@
     ".": "./src/index.ts",
     "./handlers": "./src/handlers-array.ts",
     "./fixtures": "./src/fixtures/seed.ts",
-    "./node": "./src/node.ts"
+    "./node": "./src/node.ts",
+    "./lib/jwt-signer": "./src/lib/jwt-signer.ts"
   },
   "files": [
     "src",
@@ -29,6 +30,7 @@
     "axios": "^1.19.0",
     "cors": "^2.8.5",
     "express": "^4.21.0",
+    "jose": "^5.10.0",
     "msw": "^2.7.0"
   },
   "devDependencies": {
@@ -36,6 +38,7 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^22.10.0",
+    "dotenv": "^16.4.5",
     "orval": "^7.5.0",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0",

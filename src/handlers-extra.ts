@@ -3,6 +3,8 @@
 // orval-generated handlers use faker data which would defeat cross-frontend
 // test stability, so we intercept these endpoints before the orval handlers.
 import { http, HttpResponse } from "msw";
+import { jwtVerify } from "jose";
+import { signAccessToken } from "./lib/jwt-signer";
 import {
   apps,
   menus,
@@ -285,8 +287,11 @@ export const authExtraHandlers = [
       occurredAt: NOW(),
     });
     return HttpResponse.json({
-      accessToken: `mock-jwt-${user.id}`,
-      refreshToken: `mock-refresh-${user.id}`,
+      accessToken: await signAccessToken({
+        sub: user.id,
+        tenant_id: user.tenantId,
+      }),
+      refreshToken: `saas-rt-${user.id}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`,
       tokenType: "Bearer",
       expiresIn: 3600,
       userId: user.id,
@@ -300,17 +305,39 @@ export const authExtraHandlers = [
   }),
 
   // GET /me：给前端一个还原 user 信息的接口（刷新页面后 bootstrap）
-  http.get(`${BASE}/me`, ({ request }) => {
+  http.get(`${BASE}/me`, async ({ request }) => {
     const auth = request.headers.get("Authorization") ?? "";
-    const userId = auth.replace("Bearer mock-jwt-", "");
-    const user = userId ? users.find((u) => u.id === userId) : undefined;
-    if (!user) {
+    const token = auth.replace(/^Bearer\s+/, "");
+    if (!token) {
       return HttpResponse.json(
         { code: "UNAUTHENTICATED", message: "Missing or invalid token" },
         { status: 401 },
       );
     }
-    return HttpResponse.json(user);
+    try {
+      const { payload } = await jwtVerify(
+        token,
+        new TextEncoder().encode(process.env.JWT_SIGNING_KEY ?? ""),
+        {
+          issuer: process.env.JWT_ISSUER ?? "saas-identity-platform",
+          audience: process.env.JWT_AUDIENCE ?? "saas-identity-platform-clients",
+        },
+      );
+      const userId = String(payload.sub ?? "");
+      const user = users.find((u) => u.id === userId);
+      if (!user) {
+        return HttpResponse.json(
+          { code: "UNAUTHENTICATED", message: "Token subject not found" },
+          { status: 401 },
+        );
+      }
+      return HttpResponse.json(user);
+    } catch {
+      return HttpResponse.json(
+        { code: "UNAUTHENTICATED", message: "Invalid token" },
+        { status: 401 },
+      );
+    }
   }),
 
   // === OAuth 2.0 server 端点（POST 与 saas-shared OpenAPI 一致）===
@@ -440,10 +467,13 @@ export const authExtraHandlers = [
       // dev mock：暂不严验 clientSecret（生产真后端验）
       // code 一次性：取出后立即删除（防重放）
       oauthCodes.delete(body.code);
-      // 签 accessToken + refreshToken（用 crypto 随机避免毫秒级重复）
-      const nonce = Math.random().toString(36).slice(2);
-      const accessToken = `saas-jwt-${entry.userId}-${nonce}`;
-      const refreshToken = `saas-rt-${entry.userId}-${nonce}-${Math.random().toString(36).slice(2)}`;
+      // HS256 真签 access token (Phase 1A v0.4.0)；refreshToken 仍随机字符串
+      const accessToken = await signAccessToken({
+        sub: entry.userId,
+        tenant_id: entry.tenantId,
+        scope: entry.scope,
+      });
+      const refreshToken = `saas-rt-${entry.userId}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
       oauthRefreshTokens.set(refreshToken, {
         appId: entry.appId,
         userId: entry.userId,
@@ -475,9 +505,12 @@ export const authExtraHandlers = [
       }
       // 旧 refreshToken 立即失效（防重放）
       oauthRefreshTokens.delete(body.refreshToken);
-      const nonce = Math.random().toString(36).slice(2);
-      const accessToken = `saas-jwt-${entry.userId}-${nonce}`;
-      const newRefresh = `saas-rt-${entry.userId}-${nonce}-${Math.random().toString(36).slice(2)}`;
+      const accessToken = await signAccessToken({
+        sub: entry.userId,
+        tenant_id: entry.tenantId,
+        scope: entry.scope,
+      });
+      const newRefresh = `saas-rt-${entry.userId}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
       oauthRefreshTokens.set(newRefresh, entry);
       return HttpResponse.json({
         accessToken,

@@ -198,7 +198,8 @@ describe("M99.F02.I02 OAuth 2.0 server — /oauth/token", () => {
       expiresIn: number;
       scope: string;
     };
-    expect(body.accessToken).toMatch(/^saas-jwt-/);
+    // Phase 1A v0.4.0：accessToken 改 HS256 真签发（RFC 7519 三段 base64url），refreshToken 仍 opaque。
+    expect(body.accessToken).toMatch(/^eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/);
     expect(body.refreshToken).toMatch(/^saas-rt-/);
     expect(body.tokenType).toBe("Bearer");
     expect(body.expiresIn).toBe(3600);
