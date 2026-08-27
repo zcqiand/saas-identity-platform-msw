@@ -14,14 +14,36 @@
 //
 // dev mock 不验 clientSecret（生产 saas springboot/aspnetcore 真后端验）。
 import { setupServer } from "msw/node";
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
-import { authExtraHandlers } from "../src/handlers-extra";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { authExtraHandlers, saasSessionsForTest } from "../src/handlers-extra";
 
 const server = setupServer(...authExtraHandlers);
 
-beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
-afterEach(() => server.resetHandlers());
+// M04.F03.I01/I02 (PLAN-2026-001 T-7): authorize/token 必须先验 saas session.
+// 测试 helper：注入 alice 的 session cookie (id 字段随意,  server 端 Map 用 sid)
+const ALICE_USER_ID = "00000000-0000-0000-0000-000000000001-user-alice";
+const ALICE_TENANT = "00000000-0000-0000-0000-000000000001";
+
+beforeAll(() => server.listen({ onUnhandledRequest: "bypass" }));
 afterAll(() => server.close());
+
+beforeEach(() => {
+  saasSessionsForTest.clear();
+  saasSessionsForTest.set("test-sid-alice", {
+    userId: ALICE_USER_ID,
+    tenantId: ALICE_TENANT,
+    expiresAt: Date.now() + 24 * 3600 * 1000,
+  });
+});
+
+async function withSession(
+  url: string,
+  init: RequestInit = {},
+): Promise<Response> {
+  const headers = new Headers(init.headers ?? {});
+  headers.set("Cookie", "saasSession=test-sid-alice");
+  return fetch(url, { ...init, headers });
+}
 
 // 用 saas-shared seed 里的实际数据：apps.json 中第一个 active app 是 lab-mgmt，
 // redirectUris 配的是 lab-management-system-nextjs 的 callback。
@@ -33,7 +55,7 @@ const VALID_SCOPE = "openid profile email";
 const VALID_STATE = "abc-123";
 
 async function callAuthorize(body: Record<string, unknown> = {}) {
-  return fetch("http://localhost/api/v1/oauth/authorize", {
+  return withSession("http://localhost/api/v1/oauth/authorize", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -102,7 +124,7 @@ describe("M99.F02.I02 OAuth 2.0 server — /oauth/token", () => {
   }
 
   it("grantType=password → 400 UNSUPPORTED_GRANT_TYPE", async () => {
-    const res = await fetch("http://localhost/api/v1/oauth/token", {
+    const res = await withSession("http://localhost/api/v1/oauth/token", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -118,7 +140,7 @@ describe("M99.F02.I02 OAuth 2.0 server — /oauth/token", () => {
   });
 
   it("authorization_code 缺 code → 400", async () => {
-    const res = await fetch("http://localhost/api/v1/oauth/token", {
+    const res = await withSession("http://localhost/api/v1/oauth/token", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -133,7 +155,7 @@ describe("M99.F02.I02 OAuth 2.0 server — /oauth/token", () => {
   });
 
   it("code 不存在 → 400 INVALID_GRANT", async () => {
-    const res = await fetch("http://localhost/api/v1/oauth/token", {
+    const res = await withSession("http://localhost/api/v1/oauth/token", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -150,7 +172,7 @@ describe("M99.F02.I02 OAuth 2.0 server — /oauth/token", () => {
 
   it("code 一次性：用完第二次再调 INVALID_GRANT", async () => {
     const { code, redirectUri } = await freshCodeAndRedirect();
-    const first = await fetch("http://localhost/api/v1/oauth/token", {
+    const first = await withSession("http://localhost/api/v1/oauth/token", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -162,7 +184,7 @@ describe("M99.F02.I02 OAuth 2.0 server — /oauth/token", () => {
       }),
     });
     expect(first.status).toBe(200);
-    const second = await fetch("http://localhost/api/v1/oauth/token", {
+    const second = await withSession("http://localhost/api/v1/oauth/token", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -179,7 +201,7 @@ describe("M99.F02.I02 OAuth 2.0 server — /oauth/token", () => {
 
   it("正常 authorization_code → TokenResponse {accessToken, refreshToken, tokenType, expiresIn, scope}", async () => {
     const { code, redirectUri } = await freshCodeAndRedirect();
-    const res = await fetch("http://localhost/api/v1/oauth/token", {
+    const res = await withSession("http://localhost/api/v1/oauth/token", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -209,7 +231,7 @@ describe("M99.F02.I02 OAuth 2.0 server — /oauth/token", () => {
   it("refresh_token 流转 → 新 accessToken + 新 refreshToken，旧 refreshToken 失效", async () => {
     // 先走一次 authorization_code 拿到 refreshToken
     const { code, redirectUri } = await freshCodeAndRedirect();
-    const tokRes = await fetch("http://localhost/api/v1/oauth/token", {
+    const tokRes = await withSession("http://localhost/api/v1/oauth/token", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -222,7 +244,7 @@ describe("M99.F02.I02 OAuth 2.0 server — /oauth/token", () => {
     });
     const oldTokens = (await tokRes.json()) as { accessToken: string; refreshToken: string };
     // 用 refreshToken 换新
-    const refRes = await fetch("http://localhost/api/v1/oauth/token", {
+    const refRes = await withSession("http://localhost/api/v1/oauth/token", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -237,7 +259,7 @@ describe("M99.F02.I02 OAuth 2.0 server — /oauth/token", () => {
     expect(newTokens.accessToken).not.toBe(oldTokens.accessToken);
     expect(newTokens.refreshToken).not.toBe(oldTokens.refreshToken);
     // 旧 refreshToken 失效（防重放）
-    const replay = await fetch("http://localhost/api/v1/oauth/token", {
+    const replay = await withSession("http://localhost/api/v1/oauth/token", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
