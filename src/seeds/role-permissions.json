@@ -1,15 +1,54 @@
 [
-  { "roleId": "00000000-0000-0000-0000-000000000001-role-admin", "permissionCode": "users.read" },
-  { "roleId": "00000000-0000-0000-0000-000000000001-role-admin", "permissionCode": "users.write" },
-  { "roleId": "00000000-0000-0000-0000-000000000001-role-admin", "permissionCode": "roles.read" },
-  { "roleId": "00000000-0000-0000-0000-000000000001-role-admin", "permissionCode": "roles.write" },
-  { "roleId": "00000000-0000-0000-0000-000000000001-role-member", "permissionCode": "users.read" },
-  { "roleId": "00000000-0000-0000-0000-000000000002-role-admin", "permissionCode": "users.read" },
-  { "roleId": "00000000-0000-0000-0000-000000000002-role-admin", "permissionCode": "users.write" },
-  { "roleId": "00000000-0000-0000-0000-000000000002-role-admin", "permissionCode": "roles.read" },
-  { "roleId": "00000000-0000-0000-0000-000000000002-role-admin", "permissionCode": "roles.write" },
-  { "roleId": "00000000-0000-0000-0000-000000000003-role-admin", "permissionCode": "users.read" },
-  { "roleId": "00000000-0000-0000-0000-000000000003-role-admin", "permissionCode": "users.write" },
-  { "roleId": "00000000-0000-0000-0000-000000000003-role-admin", "permissionCode": "roles.read" },
-  { "roleId": "00000000-0000-0000-0000-000000000003-role-admin", "permissionCode": "roles.write" }
+  {
+    "roleId": "00000000-0000-0000-0000-a00000000001",
+    "permissionCode": "users.read"
+  },
+  {
+    "roleId": "00000000-0000-0000-0000-a00000000001",
+    "permissionCode": "users.write"
+  },
+  {
+    "roleId": "00000000-0000-0000-0000-a00000000001",
+    "permissionCode": "roles.read"
+  },
+  {
+    "roleId": "00000000-0000-0000-0000-a00000000001",
+    "permissionCode": "roles.write"
+  },
+  {
+    "roleId": "00000000-0000-0000-0000-a00000000002",
+    "permissionCode": "users.read"
+  },
+  {
+    "roleId": "00000000-0000-0000-0000-a00000000003",
+    "permissionCode": "users.read"
+  },
+  {
+    "roleId": "00000000-0000-0000-0000-a00000000003",
+    "permissionCode": "users.write"
+  },
+  {
+    "roleId": "00000000-0000-0000-0000-a00000000003",
+    "permissionCode": "roles.read"
+  },
+  {
+    "roleId": "00000000-0000-0000-0000-a00000000003",
+    "permissionCode": "roles.write"
+  },
+  {
+    "roleId": "00000000-0000-0000-0000-a00000000004",
+    "permissionCode": "users.read"
+  },
+  {
+    "roleId": "00000000-0000-0000-0000-a00000000004",
+    "permissionCode": "users.write"
+  },
+  {
+    "roleId": "00000000-0000-0000-0000-a00000000004",
+    "permissionCode": "roles.read"
+  },
+  {
+    "roleId": "00000000-0000-0000-0000-a00000000004",
+    "permissionCode": "roles.write"
+  }
 ]

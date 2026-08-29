@@ -16,6 +16,7 @@ import {
   auditEvents,
   TENANT_IDS,
   APP_IDS,
+  ROLE_IDS,
   resolveAppId,
   getApp,
   getMenu,
@@ -277,9 +278,7 @@ export const meExtraHandlers = [
         { status: 401 },
       );
     }
-    const acmeAdminGrant = roleMenuGrants.find(
-      (g) => g.roleId === "00000000-0000-0000-0000-000000000001-role-admin",
-    );
+    const acmeAdminGrant = roleMenuGrants.find((g) => g.roleId === ROLE_IDS.acmeAdmin);
     const allowed = new Set(acmeAdminGrant?.menuIds ?? []);
     const tree = (parentId: string | undefined, appId: string): Array<Record<string, unknown>> =>
       menus

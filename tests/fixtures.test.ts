@@ -22,6 +22,7 @@ import {
   listMenus,
   listUsers,
   getRoleMenuGrant,
+  ROLE_IDS,
 } from "../src/fixtures/seed";
 
 const SEEDS_DIR = resolve(import.meta.dirname, "../src/seeds");
@@ -94,12 +95,12 @@ describe("M99.F01 fixture data consistency", () => {
 describe("M99.F02 apps+menus+grants fixture consistency", () => {
   it("apps are platform-level (no tenantId)", () => {
     expect(apps.length).toBe(3);
-    expect(apps.map((a) => a.id).sort()).toEqual(["app-crm", "app-erp", "lab-management"]);
+    expect(apps.map((a) => a.id).sort()).toEqual([APP_IDS.crm, APP_IDS.erp, APP_IDS.lab].sort());
     for (const a of apps) {
       expect((a as { tenantId?: unknown }).tenantId).toBeUndefined();
-      // v0.4.0: app id 是 backup 风格语义键，不再 UUID
-      // （lab 用应用 code 本身 lab-management，erp/crm 保留 app- 前缀）
-      expect(a.id).toMatch(/^(lab-management|app-erp|app-crm)$/);
+      // 2026-08-29: app id 收敛为 canonical UUID（shared V016），与 PG 逐字相同
+      // 语义仍可读：11111111-…-1111/1112/1113 分别是 lab / erp / crm
+      expect(a.id).toMatch(/^11111111-1111-1111-1111-11111111111[123]$/);
     }
   });
 
@@ -131,9 +132,9 @@ describe("M99.F02 apps+menus+grants fixture consistency", () => {
     for (const m of menus) expect(appIds.has(m.appId)).toBe(true);
     const byApp = { lab: 0, erp: 0, crm: 0 } as Record<string, number>;
     for (const m of menus) {
-      if (m.appId === "lab-management") byApp.lab++;
-      else if (m.appId === "app-erp") byApp.erp++;
-      else if (m.appId === "app-crm") byApp.crm++;
+      if (m.appId === APP_IDS.lab) byApp.lab++;
+      else if (m.appId === APP_IDS.erp) byApp.erp++;
+      else if (m.appId === APP_IDS.crm) byApp.crm++;
     }
     expect(byApp).toEqual({ lab: 27, erp: 7, crm: 7 });
   });
@@ -170,7 +171,7 @@ describe("M99.F02 apps+menus+grants fixture consistency", () => {
   });
 
   it("getRoleMenuGrant returns the role's grant or undefined", () => {
-    const acmeAdmin = getRoleMenuGrant(`${TENANT_IDS.acme}-role-admin`);
+    const acmeAdmin = getRoleMenuGrant(ROLE_IDS.acmeAdmin);
     expect(acmeAdmin).toBeDefined();
     expect(acmeAdmin?.menuIds.length).toBeGreaterThan(0);
     expect(getRoleMenuGrant("does-not-exist")).toBeUndefined();

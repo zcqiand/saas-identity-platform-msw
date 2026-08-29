@@ -42,6 +42,28 @@ export const MENU_IDS: Readonly<Record<string, string>> = Object.freeze(
   Object.fromEntries(_MENUS.map((m) => [toCamel(m.code), m.id])),
 );
 
+// USER_IDS / ROLE_IDS 同样派生自 JSON。
+// 2026-08-29 补：种子 ID 收敛到可读 UUID（shared V016）之前，handler 与测试里散着
+// `${TENANT_IDS.acme}-role-admin` 这类拼串，收敛后全部失效。派生常量让「ID 长什么样」
+// 只由 JSON 决定，调用方不再拼字符串 —— 下次改 ID 规范时这里零改动。
+export const USER_IDS: Readonly<Record<string, string>> = Object.freeze(
+  Object.fromEntries(_USERS.map((u) => [u.username, u.id])),
+);
+
+const _TENANT_CODE_BY_ID: Readonly<Record<string, string>> = Object.freeze(
+  Object.fromEntries(_TENANTS.map((t) => [t.id, t.code])),
+);
+
+/** key = `<租户 code><角色 code 首字母大写>`，如 `acmeAdmin` / `globexAdmin`。 */
+export const ROLE_IDS: Readonly<Record<string, string>> = Object.freeze(
+  Object.fromEntries(
+    _ROLES.map((r) => [
+      `${_TENANT_CODE_BY_ID[r.tenantId]}${r.code.charAt(0).toUpperCase()}${r.code.slice(1)}`,
+      r.id,
+    ]),
+  ),
+);
+
 // === Tables (named value exports for handlers/fixtures to read+write) ===
 export const tenants = _TENANTS;
 export const roles = _ROLES;

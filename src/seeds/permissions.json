@@ -1,6 +1,26 @@
 [
-  { "code": "users.read", "name": "Read users", "description": "查看租户用户列表" },
-  { "code": "users.write", "name": "Write users", "description": "创建/修改/删除租户用户" },
-  { "code": "roles.read", "name": "Read roles", "description": "查看租户角色" },
-  { "code": "roles.write", "name": "Write roles", "description": "创建/修改/删除租户角色" }
+  {
+    "code": "users.read",
+    "name": "Read users",
+    "description": "查看租户用户列表",
+    "id": "00000000-0000-0000-0000-f00000000001"
+  },
+  {
+    "code": "users.write",
+    "name": "Write users",
+    "description": "创建/修改/删除租户用户",
+    "id": "00000000-0000-0000-0000-f00000000002"
+  },
+  {
+    "code": "roles.read",
+    "name": "Read roles",
+    "description": "查看租户角色",
+    "id": "00000000-0000-0000-0000-f00000000003"
+  },
+  {
+    "code": "roles.write",
+    "name": "Write roles",
+    "description": "创建/修改/删除租户角色",
+    "id": "00000000-0000-0000-0000-f00000000004"
+  }
 ]

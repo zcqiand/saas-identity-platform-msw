@@ -30,6 +30,8 @@ import {
   TENANT_IDS as _TENANT_IDS,
   APP_IDS as _APP_IDS,
   MENU_IDS as _MENU_IDS,
+  USER_IDS as _USER_IDS,
+  ROLE_IDS as _ROLE_IDS,
 } from "../seeds";
 
 // JSON imports are readonly at type level. Cast to mutable so handlers
@@ -48,6 +50,8 @@ export const memberships = _memberships as unknown as TenantMembership[];
 export const TENANT_IDS = _TENANT_IDS;
 export const APP_IDS = _APP_IDS;
 export const MENU_IDS = _MENU_IDS;
+export const USER_IDS = _USER_IDS;
+export const ROLE_IDS = _ROLE_IDS;
 
 // === Lookup helpers ===
 export const getTenant = (id: string) => tenants.find((t) => t.id === id);

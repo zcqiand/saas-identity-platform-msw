@@ -16,13 +16,14 @@
 import { setupServer } from "msw/node";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { authExtraHandlers, saasSessionsForTest } from "../src/handlers-extra";
+import { TENANT_IDS, USER_IDS } from "../src/fixtures/seed";
 
 const server = setupServer(...authExtraHandlers);
 
 // M04.F03.I01/I02 (PLAN-2026-001 T-7): authorize/token 必须先验 saas session.
 // 测试 helper：注入 alice 的 session cookie (id 字段随意,  server 端 Map 用 sid)
-const ALICE_USER_ID = "00000000-0000-0000-0000-000000000001-user-alice";
-const ALICE_TENANT = "00000000-0000-0000-0000-000000000001";
+const ALICE_USER_ID = USER_IDS.alice;
+const ALICE_TENANT = TENANT_IDS.acme;
 
 beforeAll(() => server.listen({ onUnhandledRequest: "bypass" }));
 afterAll(() => server.close());

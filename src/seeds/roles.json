@@ -1,37 +1,54 @@
 [
   {
-    "id": "00000000-0000-0000-0000-000000000001-role-admin",
+    "id": "00000000-0000-0000-0000-a00000000001",
     "tenantId": "00000000-0000-0000-0000-000000000001",
     "code": "admin",
     "name": "Administrator",
-    "permissionIds": ["users.read", "users.write", "roles.read", "roles.write"],
+    "permissionIds": [
+      "users.read",
+      "users.write",
+      "roles.read",
+      "roles.write"
+    ],
     "createdAt": "2026-01-15T08:00:00Z",
     "updatedAt": "2026-01-15T08:00:00Z"
   },
   {
-    "id": "00000000-0000-0000-0000-000000000001-role-member",
+    "id": "00000000-0000-0000-0000-a00000000002",
     "tenantId": "00000000-0000-0000-0000-000000000001",
     "code": "member",
     "name": "Member",
-    "permissionIds": ["users.read"],
+    "permissionIds": [
+      "users.read"
+    ],
     "createdAt": "2026-01-15T08:00:00Z",
     "updatedAt": "2026-01-15T08:00:00Z"
   },
   {
-    "id": "00000000-0000-0000-0000-000000000002-role-admin",
+    "id": "00000000-0000-0000-0000-a00000000003",
     "tenantId": "00000000-0000-0000-0000-000000000002",
     "code": "admin",
     "name": "Administrator",
-    "permissionIds": ["users.read", "users.write", "roles.read", "roles.write"],
+    "permissionIds": [
+      "users.read",
+      "users.write",
+      "roles.read",
+      "roles.write"
+    ],
     "createdAt": "2026-02-20T09:00:00Z",
     "updatedAt": "2026-02-20T09:00:00Z"
   },
   {
-    "id": "00000000-0000-0000-0000-000000000003-role-admin",
+    "id": "00000000-0000-0000-0000-a00000000004",
     "tenantId": "00000000-0000-0000-0000-000000000003",
     "code": "admin",
     "name": "Administrator",
-    "permissionIds": ["users.read", "users.write", "roles.read", "roles.write"],
+    "permissionIds": [
+      "users.read",
+      "users.write",
+      "roles.read",
+      "roles.write"
+    ],
     "createdAt": "2026-03-10T10:00:00Z",
     "updatedAt": "2026-03-10T10:00:00Z"
   }
