@@ -698,11 +698,14 @@ export const tenantsExtraHandlers = [
 // === M01 — Users (tenant-scoped CRUD) ===
 export const usersExtraHandlers = [
   http.get(`*${BASE}/tenants/:tenantId/users`, ({ params }) => {
+    const items = listUsers(String(params.tenantId));
     return HttpResponse.json({
-      items: listUsers(String(params.tenantId)),
-      page: 1,
-      pageSize: users.length,
-      total: users.length,
+      items,
+      // 2026-08-30 contract-test：msw 默认 page=1 1-indexed；其他 3 后端 0-indexed。
+      // 0-indexed 是 Spring Data 家族约定（PageRequest.of(0, ps)），msw 跟齐。
+      page: 0,
+      pageSize: 20,
+      total: items.length, // 2026-08-30：以前用 users.length（全局），应按 tenant 范围
     });
   }),
 
