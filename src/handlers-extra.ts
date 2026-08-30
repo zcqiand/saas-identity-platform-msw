@@ -14,6 +14,7 @@ import {
   roles,
   apiKeys,
   auditEvents,
+  auditRetentionPolicies,
   memberships,
   TENANT_IDS,
   APP_IDS,
@@ -358,6 +359,8 @@ export const authExtraHandlers = [
       tenantId: user.tenantId,
       actorUserId: user.id,
       action: "login_success",
+      // 2026-08-30 contract-test M96: 与 nextjs Drizzle 写入对齐, normalize 才能字节级相等
+      metadata: { username: user.username },
       occurredAt: NOW(),
     });
     // M03.F01.I01 — 写 saas session cookie (HttpOnly + SameSite=Lax)
@@ -894,15 +897,31 @@ export const rolesExtraHandlers = [
 ];
 
 // === M05 — API Keys (tenant-scoped) ===
+// 2026-08-30 contract-test M96.F02.I15: OpenAPI 标准分页 + 字段对齐 nextjs toDto
+function apiKeyToDto(k: (typeof apiKeys)[number]) {
+  return {
+    id: k.id,
+    tenantId: k.tenantId,
+    name: k.name,
+    prefix: k.prefix,
+    status: k.status,
+    scopes: k.scopes ?? [],
+    createdAt: k.createdAt,
+    lastUsedAt: k.lastUsedAt ?? undefined,
+    expiresAt: k.expiresAt ?? undefined,
+    revokedAt: k.revokedAt ?? undefined,
+  };
+}
+
 export const apiKeysExtraHandlers = [
-  http.get(`*${BASE}/tenants/:tenantId/api-keys`, ({ params }) =>
-    HttpResponse.json({
-      items: listApiKeys(String(params.tenantId)),
-      page: 1,
-      pageSize: apiKeys.length,
-      total: apiKeys.length,
-    }),
-  ),
+  http.get(`*${BASE}/tenants/:tenantId/api-keys`, ({ request, params }) => {
+    const url = new URL(request.url);
+    const page = Math.max(0, Number(url.searchParams.get("page") ?? 0));
+    const pageSize = Math.min(100, Math.max(1, Number(url.searchParams.get("pageSize") ?? 20)));
+    const all = listApiKeys(String(params.tenantId));
+    const items = all.slice(page * pageSize, page * pageSize + pageSize).map(apiKeyToDto);
+    return HttpResponse.json({ items, page, pageSize, total: all.length });
+  }),
 
   http.post(`*${BASE}/tenants/:tenantId/api-keys`, async ({ params, request }) => {
     const body = (await request.json()) as Record<string, unknown>;
@@ -952,15 +971,48 @@ export const apiKeysExtraHandlers = [
 ];
 
 // === M06 — Audit (read-only, list by tenant) ===
+// 2026-08-30 contract-test M96.F02.I12/I13/I14: OpenAPI 标准分页 (page=0, pageSize=20),
+// 字段对齐 nextjs Drizzle mapper (id/tenantId/actorUserId/action/targetUserId/metadata/occurredAt)
+function auditToDto(e: (typeof auditEvents)[number]) {
+  return {
+    id: e.id,
+    tenantId: e.tenantId,
+    actorUserId: e.actorUserId ?? undefined,
+    action: e.action,
+    targetUserId: e.targetUserId ?? undefined,
+    metadata: e.metadata ?? {},
+    occurredAt: e.occurredAt,
+  };
+}
+
 export const auditExtraHandlers = [
-  http.get(`*${BASE}/tenants/:tenantId/audit-events`, ({ params }) =>
-    HttpResponse.json({
-      items: listAuditEvents(String(params.tenantId)),
-      page: 1,
-      pageSize: auditEvents.length,
-      total: auditEvents.length,
-    }),
-  ),
+  // I12: list by tenant
+  http.get(`*${BASE}/tenants/:tenantId/audit-events`, ({ request, params }) => {
+    const url = new URL(request.url);
+    const page = Math.max(0, Number(url.searchParams.get("page") ?? 0));
+    const pageSize = Math.min(100, Math.max(1, Number(url.searchParams.get("pageSize") ?? 20)));
+    const all = listAuditEvents(String(params.tenantId));
+    const items = all.slice(page * pageSize, page * pageSize + pageSize).map(auditToDto);
+    return HttpResponse.json({ items, page, pageSize, total: all.length });
+  }),
+
+  // I13: by user
+  http.get(`*${BASE}/tenants/:tenantId/audit-events/by-user/:userId`, ({ request, params }) => {
+    const url = new URL(request.url);
+    const page = Math.max(0, Number(url.searchParams.get("page") ?? 0));
+    const pageSize = Math.min(100, Math.max(1, Number(url.searchParams.get("pageSize") ?? 20)));
+    const all = listAuditEvents(String(params.tenantId)).filter(
+      (e) => e.actorUserId === String(params.userId),
+    );
+    const items = all.slice(page * pageSize, page * pageSize + pageSize).map(auditToDto);
+    return HttpResponse.json({ items, page, pageSize, total: all.length });
+  }),
+
+  // I14: retention policy (单对象 {retentionDays:int32})
+  http.get(`*${BASE}/tenants/:tenantId/audit-events/retention`, ({ params }) => {
+    const p = auditRetentionPolicies.find((x) => x.tenantId === String(params.tenantId));
+    return HttpResponse.json({ retentionDays: p?.retentionDays ?? 90 });
+  }),
 ];
 
 // === M04.F01 公共读侧 - App 目录（免鉴权） ===

@@ -26,6 +26,7 @@ import {
   menus as _menus,
   roleMenuGrants as _roleMenuGrants,
   auditEvents as _auditEvents,
+  auditRetentionPolicies as _auditRetentionPolicies,
   memberships as _memberships,
   TENANT_IDS as _TENANT_IDS,
   APP_IDS as _APP_IDS,
@@ -44,6 +45,11 @@ export const apps = _apps as unknown as App[];
 export const menus = _menus as unknown as Menu[];
 export const roleMenuGrants = _roleMenuGrants as unknown as RoleMenuGrant[];
 export const auditEvents = _auditEvents as unknown as AuditEvent[];
+export const auditRetentionPolicies = _auditRetentionPolicies as unknown as Array<{
+  tenantId: string;
+  retentionDays: number;
+  updatedAt: string;
+}>;
 export const memberships = _memberships as unknown as TenantMembership[];
 
 // === Identity constants ===
