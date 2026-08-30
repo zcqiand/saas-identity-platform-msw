@@ -316,7 +316,23 @@ export const meExtraHandlers = [
         .filter((m) => m.appId === appId && m.parentId == parentId && m.status === "active")
         .filter((m) => allowed.has(m.id) || parentId == null) // group 节点若不在 grant 中也保留作容器
         .sort((a, b) => a.sortOrder - b.sortOrder)
-        .map((m) => ({ ...m, children: tree(m.id, m.appId) }));
+        .map((m) => {
+          // 2026-08-30 contract-test: 只取 OpenAPI 字段 (id/appId/parentId/code/name/path/icon/type/sortOrder + children),
+          // 不带 status/createdAt/updatedAt. 与 nextjs Drizzle 选择的字段对齐.
+          const { id, appId: aId, parentId, code, name, path, icon, type, sortOrder } = m;
+          return {
+            id,
+            appId: aId,
+            parentId,
+            code,
+            name,
+            path,
+            icon,
+            type,
+            sortOrder,
+            children: tree(m.id, m.appId),
+          };
+        });
 
     // OpenAPI: getMyMenus(): Record<appCode, EffectiveMenuNode[]> — 全部 app map
     // 2026-08-30 contract-test：与 aspnetcore/springboot 对齐（nextjs 也将改返 map）。
