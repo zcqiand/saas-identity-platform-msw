@@ -830,14 +830,20 @@ export const usersExtraHandlers = [
 
 // === M02 — Roles (tenant-scoped CRUD) ===
 export const rolesExtraHandlers = [
-  http.get(`*${BASE}/tenants/:tenantId/roles`, ({ params }) =>
-    HttpResponse.json({
-      items: listRoles(String(params.tenantId)),
-      page: 1,
-      pageSize: roles.length,
-      total: roles.length,
-    }),
-  ),
+  http.get(`*${BASE}/tenants/:tenantId/roles`, ({ request, params }) => {
+    // 与 OpenAPI 一致: page=0-indexed, pageSize 默认 20
+    const url = new URL(request.url);
+    const page = Math.max(0, Number(url.searchParams.get("page") ?? 0));
+    const pageSize = Math.min(100, Math.max(1, Number(url.searchParams.get("pageSize") ?? 20)));
+    const all = listRoles(String(params.tenantId));
+    const items = all.slice(page * pageSize, page * pageSize + pageSize);
+    return HttpResponse.json({
+      items,
+      page,
+      pageSize,
+      total: all.length,
+    });
+  }),
 
   http.get(`*${BASE}/tenants/:tenantId/roles/:roleId`, ({ params }) => {
     const r = getRole(String(params.tenantId), String(params.roleId));
