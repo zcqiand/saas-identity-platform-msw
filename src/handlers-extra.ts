@@ -246,7 +246,12 @@ export const roleMenuExtraHandlers = [
   http.get(`*${BASE}/tenants/:tenantId/roles/:roleId/menus`, ({ params }) => {
     const grant = getRoleMenuGrant(String(params.roleId));
     return HttpResponse.json(
-      grant ?? { roleId: String(params.roleId), menuIds: [], updatedAt: NOW() },
+      grant ?? {
+        roleId: String(params.roleId),
+        tenantId: String(params.tenantId),
+        menuIds: [],
+        updatedAt: NOW(),
+      },
     );
   }),
 
