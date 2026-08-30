@@ -28,6 +28,11 @@ const OVERRIDDEN_PATHS = new Set<string>([
   "POST */api/v1/oauth/authorize",
   "POST */api/v1/oauth/token",
   "GET */api/v1/me/menus",
+  // 2026-08-30：orval 自动生成用 faker.date.past() 写随机 joinedAt，
+  // 与契约测试要求 deterministic 不符（shared V016 写 2026-01-20）。
+  // 切到 seed-based handler，参见 handlers-extra.ts meTenantsExtraHandlers。
+  "GET */api/v1/me/tenants",
+  "GET */api/v1/me",
 ]);
 function handlerKey(h: { method?: unknown; path?: unknown }): string {
   // MSW v2 handler.info.method/path 类型混合 (string | RegExp | HttpCustomPredicate);

@@ -14,9 +14,11 @@ import {
   roles,
   apiKeys,
   auditEvents,
+  memberships,
   TENANT_IDS,
   APP_IDS,
   ROLE_IDS,
+  USER_IDS,
   resolveAppId,
   getApp,
   getMenu,
@@ -387,6 +389,38 @@ export const authExtraHandlers = [
         );
       }
       return HttpResponse.json(user);
+    } catch {
+      return HttpResponse.json(
+        { code: "UNAUTHENTICATED", message: "Invalid token" },
+        { status: 401 },
+      );
+    }
+  }),
+
+  // GET /me/tenants：从 canonical seed（memberships.json）返回当前用户的所有成员关系。
+  // 2026-08-30：覆盖 orval 自动生成（faker.date.past() 写随机 joinedAt，违反
+  // 契约测试 deterministic 要求 + 与 shared V016 不一致）。
+  http.get(`*${BASE}/me/tenants`, async ({ request }) => {
+    const auth = request.headers.get("Authorization") ?? "";
+    const token = auth.replace(/^Bearer\s+/, "");
+    if (!token) {
+      return HttpResponse.json(
+        { code: "UNAUTHENTICATED", message: "Missing or invalid token" },
+        { status: 401 },
+      );
+    }
+    try {
+      const { payload } = await jwtVerify(
+        token,
+        new TextEncoder().encode(process.env.JWT_SIGNING_KEY ?? ""),
+        {
+          issuer: process.env.JWT_ISSUER ?? "saas-identity-platform",
+          audience: process.env.JWT_AUDIENCE ?? "saas-identity-platform-clients",
+        },
+      );
+      const userId = String(payload.sub ?? "");
+      const mine = memberships.filter((m) => m.userId === userId);
+      return HttpResponse.json(mine);
     } catch {
       return HttpResponse.json(
         { code: "UNAUTHENTICATED", message: "Invalid token" },
