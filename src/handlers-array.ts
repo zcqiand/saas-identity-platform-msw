@@ -33,6 +33,10 @@ const OVERRIDDEN_PATHS = new Set<string>([
   // 切到 seed-based handler，参见 handlers-extra.ts meTenantsExtraHandlers。
   "GET */api/v1/me/tenants",
   "GET */api/v1/me",
+  // 2026-08-30：orval 兜底 /apps/{code} 用 faker 随机 id，契约要求从 apps.json
+  // 取真实 AppPublicInfo。切到 publicAppsExtraHandlers。
+  // 路径字面量是 `:code`（orval 用冒号），不是 `{code}`（OpenAPI 用花括号）。
+  "GET */api/v1/apps/:code",
 ]);
 function handlerKey(h: { method?: unknown; path?: unknown }): string {
   // MSW v2 handler.info.method/path 类型混合 (string | RegExp | HttpCustomPredicate);

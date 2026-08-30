@@ -271,25 +271,49 @@ export const roleMenuExtraHandlers = [
 // 真实实现应基于 currentUser + memberships，但 msw 不持有 session，
 // 故此处固定返回 acme admin 可见的所有 active 菜单。
 export const meExtraHandlers = [
-  http.get(`*${BASE}/me/menus`, ({ request }) => {
-    // M09.F03.I01 (PLAN-2026-001 T-7) — 验 saas session
+  http.get(`*${BASE}/me/menus`, async ({ request }) => {
+    // M09.F03.I01 (PLAN-2026-001 T-7) — 验 saas session 或 Bearer token
+    // 2026-08-30 contract-test：其他 3 后端（nextjs/aspnetcore/springboot）走 Bearer，
+    // msw 必须同步。saas session 是 ADR-0013 的 dev 改造通道，Bearer 是生产契约面；
+    // 两条都接受，不破坏现有 session 流程。
     const session = parseSessionFromCookie(request);
-    if (!session) {
+    let userId: string | null = session?.userId ?? null;
+    if (!userId) {
+      const auth = request.headers.get("Authorization") ?? "";
+      const token = auth.replace(/^Bearer\s+/, "");
+      if (token) {
+        try {
+          const { payload } = await jwtVerify(
+            token,
+            new TextEncoder().encode(process.env.JWT_SIGNING_KEY ?? ""),
+            {
+              issuer: process.env.JWT_ISSUER ?? "saas-identity-platform",
+              audience: process.env.JWT_AUDIENCE ?? "saas-identity-platform-clients",
+            },
+          );
+          userId = String(payload.sub ?? "");
+        } catch {
+          // fall through to 401
+        }
+      }
+    }
+    if (!userId) {
       return HttpResponse.json(
-        { code: "UNAUTHORIZED", message: "saas session required" },
+        { code: "UNAUTHORIZED", message: "saas session or Bearer token required" },
         { status: 401 },
       );
     }
     const acmeAdminGrant = roleMenuGrants.find((g) => g.roleId === ROLE_IDS.acmeAdmin);
     const allowed = new Set(acmeAdminGrant?.menuIds ?? []);
-    const tree = (parentId: string | undefined, appId: string): Array<Record<string, unknown>> =>
+    const tree = (parentId: string | null | undefined, appId: string): Array<Record<string, unknown>> =>
       menus
-        .filter((m) => m.appId === appId && m.parentId === parentId && m.status === "active")
-        .filter((m) => allowed.has(m.id) || !parentId) // group 节点若不在 grant 中也保留作容器
+        .filter((m) => m.appId === appId && m.parentId == parentId && m.status === "active")
+        .filter((m) => allowed.has(m.id) || parentId == null) // group 节点若不在 grant 中也保留作容器
         .sort((a, b) => a.sortOrder - b.sortOrder)
         .map((m) => ({ ...m, children: tree(m.id, m.appId) }));
 
-    // 按 app 分组
+    // OpenAPI: getMyMenus(): Record<appCode, EffectiveMenuNode[]> — 全部 app map
+    // 2026-08-30 contract-test：与 aspnetcore/springboot 对齐（nextjs 也将改返 map）。
     const result: Record<string, Array<Record<string, unknown>>> = {};
     for (const a of apps) {
       if (a.status !== "active") continue;
@@ -388,7 +412,24 @@ export const authExtraHandlers = [
           { status: 401 },
         );
       }
-      return HttpResponse.json(user);
+      // 2026-08-30 contract-test：OpenAPI /me 返回 CurrentUser（id/email/memberships/
+      // currentTenantId），不是 User。oracle 修齐 3 个真后端（nextjs/aspnetcore/springboot）。
+      const userMemberships = memberships.filter((m) => m.userId === userId);
+      const currentTenantId =
+        typeof payload.tenant_id === "string" ? payload.tenant_id : userMemberships[0]?.tenantId;
+      return HttpResponse.json({
+        id: user.id,
+        email: user.email,
+        memberships: userMemberships.map((m) => ({
+          id: m.id,
+          userId: m.userId,
+          tenantId: m.tenantId,
+          roleIds: m.roleIds,
+          status: m.status,
+          joinedAt: m.joinedAt,
+        })),
+        currentTenantId,
+      });
     } catch {
       return HttpResponse.json(
         { code: "UNAUTHENTICATED", message: "Invalid token" },
