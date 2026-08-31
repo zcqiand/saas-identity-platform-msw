@@ -1,4 +1,9 @@
 // saas-msw HTTP 后端服务入口（ADR-0012 B 强度 / M99.F03）
+// dotenv 必须在第一行 — process.env.JWT_SIGNING_KEY (M99.F02.I01 jwt-signer.ts)
+// 启动时 fail-fast 要 >=32B (HS256 RFC 7518 硬约束)。
+// .env.example 已进仓含真值; .env.local 不在 msw .gitignore 里, 本地可加覆盖。
+// 家族四仓共享同一 JWT_SIGNING_KEY (ADR-0015 §Decision.5), MSW 签的 token 在真后端 dev profile 也验签通过。
+import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
 import { createMiddleware } from '@mswjs/http-middleware'
