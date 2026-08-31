@@ -929,6 +929,24 @@ function apiKeyToDto(k: (typeof apiKeys)[number]) {
   };
 }
 
+// M06.F02 写端点助手 — msw 是 oracle，发 audit 用相同形状（actorUserId=undefined，
+// targetUserId=null, metadata={apiKeyId}）让 contract-test M96.F02.I18 在 4 后端都绿。
+function emitApiKeyAudit(
+  tenantId: string,
+  action: "api_key_created" | "api_key_revoked",
+  apiKeyId: string,
+): void {
+  auditEvents.push({
+    id: `${tenantId}-evt-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+    tenantId,
+    actorUserId: undefined,
+    action,
+    targetUserId: undefined,
+    metadata: { apiKeyId },
+    occurredAt: NOW(),
+  });
+}
+
 export const apiKeysExtraHandlers = [
   http.get(`*${BASE}/tenants/:tenantId/api-keys`, ({ request, params }) => {
     const url = new URL(request.url);
@@ -959,14 +977,20 @@ export const apiKeysExtraHandlers = [
       createdAt: NOW(),
     };
     apiKeys.push(newKey);
-    // 真实后端会返回一次性 secret；mock 也返回一份方便前端显示
-    return HttpResponse.json({ ...newKey, secret: `secret-${id}` }, { status: 201 });
+    emitApiKeyAudit(newKey.tenantId, "api_key_created", id);
+    // CreateApiKeyResponse = { apiKey: ApiKey, secret: string } — 与 shared OpenAPI 对齐
+    return HttpResponse.json(
+      { apiKey: { ...newKey }, secret: `secret-${id}` },
+      { status: 201 },
+    );
   }),
 
   http.post(`*${BASE}/tenants/:tenantId/api-keys/:keyId/revoke`, ({ params }) => {
     const k = getApiKey(String(params.tenantId), String(params.keyId));
     if (!k) return HttpResponse.json({ code: "NOT_FOUND", message: "API Key not found" }, { status: 404 });
     k.status = "revoked";
+    k.revokedAt = NOW();
+    emitApiKeyAudit(k.tenantId, "api_key_revoked", k.id);
     return HttpResponse.json(k);
   }),
 
@@ -982,7 +1006,9 @@ export const apiKeysExtraHandlers = [
     };
     apiKeys.push(rotated);
     k.status = "revoked";
-    return HttpResponse.json({ ...rotated, secret: `secret-${id}` });
+    emitApiKeyAudit(rotated.tenantId, "api_key_revoked", k.id);
+    emitApiKeyAudit(rotated.tenantId, "api_key_created", id);
+    return HttpResponse.json({ apiKey: { ...rotated }, secret: `secret-${id}` });
   }),
 ];
 
@@ -1007,7 +1033,9 @@ export const auditExtraHandlers = [
     const url = new URL(request.url);
     const page = Math.max(0, Number(url.searchParams.get("page") ?? 0));
     const pageSize = Math.min(100, Math.max(1, Number(url.searchParams.get("pageSize") ?? 20)));
-    const all = listAuditEvents(String(params.tenantId));
+    const action = url.searchParams.get("action");
+    let all = listAuditEvents(String(params.tenantId));
+    if (action) all = all.filter((e) => e.action === action);
     const items = all.slice(page * pageSize, page * pageSize + pageSize).map(auditToDto);
     return HttpResponse.json({ items, page, pageSize, total: all.length });
   }),
