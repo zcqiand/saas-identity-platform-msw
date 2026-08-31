@@ -525,6 +525,16 @@ export const getTenantApiKeysCreateApiKeyMockHandler = (overrideResponse?: Creat
   }, options)
 }
 
+export const getTenantApiKeysDeleteApiKeyMockHandler = (overrideResponse?: void | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void), options?: RequestHandlerOptions) => {
+  return http.delete('*/api/v1/tenants/:tenantId/api-keys/:keyId', async (info) => {await delay(1000);
+  if (typeof overrideResponse === 'function') {await overrideResponse(info); }
+    return new HttpResponse(null,
+      { status: 204,
+        
+      })
+  }, options)
+}
+
 export const getTenantApiKeysRevokeApiKeyMockHandler = (overrideResponse?: ApiKey | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<ApiKey> | ApiKey), options?: RequestHandlerOptions) => {
   return http.post('*/api/v1/tenants/:tenantId/api-keys/:keyId/revoke', async (info) => {await delay(1000);
   
@@ -838,6 +848,7 @@ export const getTitleMock = () => [
   getOAuthTokenMockHandler(),
   getTenantApiKeysListApiKeysMockHandler(),
   getTenantApiKeysCreateApiKeyMockHandler(),
+  getTenantApiKeysDeleteApiKeyMockHandler(),
   getTenantApiKeysRevokeApiKeyMockHandler(),
   getTenantApiKeysRotateApiKeyMockHandler(),
   getTenantAuditListAuditEventsMockHandler(),

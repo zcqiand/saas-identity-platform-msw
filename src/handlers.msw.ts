@@ -357,6 +357,15 @@ export const tenantApiKeysCreateApiKey = <TData = AxiosResponse<CreateApiKeyResp
     );
   }
 
+export const tenantApiKeysDeleteApiKey = <TData = AxiosResponse<void>>(
+    tenantId: string,
+    keyId: string, options?: AxiosRequestConfig
+ ): Promise<TData> => {
+    return axios.delete(
+      `/api/v1/tenants/${tenantId}/api-keys/${keyId}`,options
+    );
+  }
+
 export const tenantApiKeysRevokeApiKey = <TData = AxiosResponse<ApiKey>>(
     tenantId: string,
     keyId: string, options?: AxiosRequestConfig
@@ -629,6 +638,7 @@ export type OAuthAuthorizeResult = AxiosResponse<OAuthAuthorize200>
 export type OAuthTokenResult = AxiosResponse<TokenResponse>
 export type TenantApiKeysListApiKeysResult = AxiosResponse<TenantApiKeysListApiKeys200>
 export type TenantApiKeysCreateApiKeyResult = AxiosResponse<CreateApiKeyResponse>
+export type TenantApiKeysDeleteApiKeyResult = AxiosResponse<void>
 export type TenantApiKeysRevokeApiKeyResult = AxiosResponse<ApiKey>
 export type TenantApiKeysRotateApiKeyResult = AxiosResponse<CreateApiKeyResponse>
 export type TenantAuditListAuditEventsResult = AxiosResponse<TenantAuditListAuditEvents200>

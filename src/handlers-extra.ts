@@ -259,7 +259,7 @@ export const roleMenuExtraHandlers = [
   http.put(`*${BASE}/tenants/:tenantId/roles/:roleId/menus`, async ({ params, request }) => {
     const body = (await request.json()) as { menuIds: string[] };
     const existing = roleMenuGrants.findIndex((g) => g.roleId === params.roleId);
-    const grant = { roleId: String(params.roleId), menuIds: body.menuIds, updatedAt: NOW() };
+    const grant = { tenantId: String(params.tenantId), roleId: String(params.roleId), menuIds: body.menuIds, updatedAt: NOW() };
     if (existing >= 0) roleMenuGrants[existing] = grant;
     else roleMenuGrants.push(grant);
     return HttpResponse.json(grant);
@@ -796,7 +796,7 @@ export const usersExtraHandlers = [
       tenantId: String(params.tenantId),
       username,
       email,
-      status: (body.status as "active" | "invited" | "suspended" | "disabled") ?? "invited",
+      status: (body.status as "active" | "invited" | "suspended" | "disabled") ?? "active",
       roleIds: (body.roleIds as string[]) ?? [],
       createdAt: NOW(),
       updatedAt: NOW(),
@@ -1009,6 +1009,25 @@ export const apiKeysExtraHandlers = [
     emitApiKeyAudit(rotated.tenantId, "api_key_revoked", k.id);
     emitApiKeyAudit(rotated.tenantId, "api_key_created", id);
     return HttpResponse.json({ apiKey: { ...rotated }, secret: `secret-${id}` });
+  }),
+
+  // M05.F01.I05 物理删除（区别于 I03 revoke 软删：直接删 in-memory apiKeys 元素，无审计事件）
+  // 与 I03 revoke 并存：revoke 保留元素（status=revoked+revokedAt）；本 op 元素消失。
+  // 幂等：重复删已不存在的 keyId 返 404。
+  // @entry M05.F01.I05
+  http.delete(`*${BASE}/tenants/:tenantId/api-keys/:keyId`, ({ params }) => {
+    const tenantId = String(params.tenantId);
+    const keyId = String(params.keyId);
+    const idx = apiKeys.findIndex((k) => k.tenantId === tenantId && k.id === keyId);
+    if (idx === -1) {
+      return HttpResponse.json(
+        { code: "NOT_FOUND", message: "API Key not found" },
+        { status: 404 },
+      );
+    }
+    apiKeys.splice(idx, 1);
+    // 不写 audit event（物理删不留痕；与 revoke 写 api_key_revoked 形成对照）
+    return new HttpResponse(null, { status: 204 });
   }),
 ];
 
