@@ -90,6 +90,16 @@ const oauthRefreshTokens = new Map<
   { appId: string; userId: string; tenantId: string; scope: string }
 >();
 
+// M03.F02.I04 — /auth/refresh 的 rotate 存储（2026-08-31 contract-test 第三期）。
+// login 签发的 refreshToken 入此 Map；refresh 一次性消费（rotate 删旧签新），
+// 与 nextjs oauthStore.rotateRefresh / springboot AuthService.refresh 同语义。
+const saasRefreshTokens = new Map<
+  string,
+  { userId: string; tenantId: string; scope: string }
+>();
+/** 测试专用：读 / 清 /auth/refresh 的 token 存储。 */
+export const saasRefreshTokensForTest = saasRefreshTokens;
+
 function uuidLike(prefix: string): string {
   // 生成看起来像 uuid 的字符串（用 Date.now + 随机，避免碰撞）
   const ts = Date.now().toString(16).padStart(12, "0");
@@ -101,14 +111,20 @@ function uuidLike(prefix: string): string {
 
 // === M07 — Apps ===
 export const appsExtraHandlers = [
-  http.get(`*${BASE}/admin/apps`, () =>
-    HttpResponse.json({
-      items: apps,
-      page: 1,
-      pageSize: apps.length,
+  // 2026-09-01 contract-test I44：分页对齐家族约定（page 0-indexed / pageSize 默认 20，
+  // 之前返 page:1 + pageSize:items.length 与 3 真后端分叉）
+  http.get(`*${BASE}/admin/apps`, ({ request }) => {
+    const url = new URL(request.url);
+    const page = Math.max(0, Number(url.searchParams.get("page") ?? 0));
+    const pageSize = Math.min(100, Math.max(1, Number(url.searchParams.get("pageSize") ?? 20)));
+    const items = apps.slice(page * pageSize, page * pageSize + pageSize);
+    return HttpResponse.json({
+      items,
+      page,
+      pageSize,
       total: apps.length,
-    }),
-  ),
+    });
+  }),
 
   http.get(`*${BASE}/admin/apps/:appId`, ({ params }) => {
     const a = getApp(String(params.appId));
@@ -118,18 +134,35 @@ export const appsExtraHandlers = [
   }),
 
   http.post(`*${BASE}/admin/apps`, async ({ request }) => {
-    const body = (await request.json()) as Record<string, unknown>;
+    // 2026-09-01 contract-test I64：缺必填字段 → 4xx，对齐 nextjs zod 契约面
+    // （CreateAppRequest 必填: code / name / clientId / redirectUris）
+    const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
+    if (
+      !body ||
+      !body.code ||
+      !body.name ||
+      !body.clientId ||
+      !Array.isArray(body.redirectUris)
+    ) {
+      return HttpResponse.json(
+        {
+          code: "INVALID_REQUEST",
+          message: "POST /admin/apps: 缺必填字段（code/name/clientId/redirectUris）",
+        },
+        { status: 400 },
+      );
+    }
     const newApp = {
       id: `app-${Date.now().toString(36)}`,
-      code: String(body.code ?? ""),
-      name: String(body.name ?? ""),
+      code: String(body.code),
+      name: String(body.name),
       description: body.description as string | undefined,
       icon: body.icon as string | undefined,
       sortOrder: Number(body.sortOrder ?? 0),
       status: (body.status as "active" | "disabled") ?? "active",
-      clientId: String(body.clientId ?? `app-${Date.now().toString(36)}`),
+      clientId: String(body.clientId),
       clientSecret: body.clientSecret as string | undefined,
-      redirectUris: (body.redirectUris as string[]) ?? [],
+      redirectUris: body.redirectUris as string[],
       scopes: (body.scopes as string[]) ?? [],
       grantTypes: (body.grantTypes as Array<"authorization_code" | "refresh_token" | "client_credentials" | "password">) ?? [],
       isFirstParty: Boolean(body.isFirstParty ?? false),
@@ -334,11 +367,17 @@ export const meExtraHandlers = [
           };
         });
 
-    // OpenAPI: getMyMenus(): Record<appCode, EffectiveMenuNode[]> — 全部 app map
-    // 2026-08-30 contract-test：与 aspnetcore/springboot 对齐（nextjs 也将改返 map）。
+    // 2026-09-01 contract-test I05：响应只含「该 app 下至少有一条 alice grant 内菜单的 app」，
+    // 不再返所有 active app（否则空菜单 app 也占位，与真后端不一致）。对齐 aspnetcore/springboot/nextjs。
+    // 单纯靠 tree() 判空不准 —— tree 里 `|| parentId == null` 让所有根菜单恒通过 filter，
+    // 所以「无 grant 命中」app 也会返回一条根菜单占位。改在 app 级别先做集合交集判断。
+    const allowedInApp = (appId: string): number =>
+      menus.filter((m) => m.appId === appId && m.status === "active" && allowed.has(m.id)).length;
+
     const result: Record<string, Array<Record<string, unknown>>> = {};
     for (const a of apps) {
       if (a.status !== "active") continue;
+      if (allowedInApp(a.id) === 0) continue;
       result[a.code] = tree(undefined, a.id);
     }
     return HttpResponse.json(result);
@@ -386,10 +425,17 @@ export const authExtraHandlers = [
       tenantId: user.tenantId,
       expiresAt: Date.now() + SAAS_SESSION_TTL_MS,
     });
+    // M03.F02.I04 — refreshToken 入 rotate 存储，供 /auth/refresh 一次性消费
+    const loginRefreshToken = `saas-rt-${user.id}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+    saasRefreshTokens.set(loginRefreshToken, {
+      userId: user.id,
+      tenantId: user.tenantId,
+      scope: "openid profile email",
+    });
     return HttpResponse.json(
       {
         accessToken: await signAccessToken({ sub: user.id, tenant_id: user.tenantId }),
-        refreshToken: `saas-rt-${user.id}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`,
+        refreshToken: loginRefreshToken,
         tokenType: "Bearer",
         expiresIn: 3600,
         userId: user.id,
@@ -407,6 +453,90 @@ export const authExtraHandlers = [
   http.post(`*${BASE}/auth/logout`, () => {
     // best-effort：不写 audit（AuditAction 枚举里没有 logout）
     return new HttpResponse(null, { status: 204 });
+  }),
+
+  // M03.F02.I04 — /auth/refresh：rotate 语义（旧 token 一次性），oracle 对齐
+  // nextjs oauthStore.rotateRefresh + springboot AuthService.refresh（2026-08-31 第三期）。
+  http.post(`*${BASE}/auth/refresh`, async ({ request }) => {
+    const body = (await request.json().catch(() => null)) as {
+      grantType?: string;
+      refreshToken?: string;
+    } | null;
+    if (body?.grantType !== "refresh_token" || !body.refreshToken) {
+      return HttpResponse.json(
+        { code: "BAD_REQUEST", message: "grantType must be refresh_token with refreshToken" },
+        { status: 400 },
+      );
+    }
+    const entry = saasRefreshTokens.get(body.refreshToken);
+    if (!entry) {
+      return HttpResponse.json(
+        { code: "INVALID_GRANT", message: "refreshToken 不存在或已被使用" },
+        { status: 400 },
+      );
+    }
+    saasRefreshTokens.delete(body.refreshToken); // rotate：旧 token 一次性
+    const newRefresh = `saas-rt-${entry.userId}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+    saasRefreshTokens.set(newRefresh, entry);
+    return HttpResponse.json({
+      accessToken: await signAccessToken({ sub: entry.userId, tenant_id: entry.tenantId }),
+      refreshToken: newRefresh,
+      tokenType: "Bearer",
+      expiresIn: 3600,
+      scope: entry.scope,
+    });
+  }),
+
+  // M03.F02.I03 — /auth/oidc/callback（2026-08-31 contract-test I25）。
+  // dev pseudo-OIDC：成功分支需真 IdP code，本 handler 只锁错误分支契约面
+  // （缺 code/state/clientId → 400 INVALID_REQUEST，对齐 nextjs zod 校验）。
+  // 成功分支走 oauthCodes（与 /oauth/token 同源）。
+  http.post(`*${BASE}/auth/oidc/callback`, async ({ request }) => {
+    const body = (await request.json().catch(() => null)) as {
+      code?: string;
+      state?: string;
+      clientId?: string;
+    } | null;
+    if (!body?.code || !body.state || !body.clientId) {
+      return HttpResponse.json(
+        { code: "INVALID_REQUEST", message: "OIDC callback: 缺必填字段（code/state/clientId）" },
+        { status: 400 },
+      );
+    }
+    const app = apps.find((a) => a.clientId === body.clientId);
+    if (!app) {
+      return HttpResponse.json(
+        { code: "INVALID_CLIENT", message: "clientId 未注册或不可用" },
+        { status: 400 },
+      );
+    }
+    const entry = oauthCodes.get(body.code);
+    if (!entry || entry.appId !== app.id) {
+      return HttpResponse.json(
+        { code: "INVALID_GRANT", message: "code 不存在或已被使用" },
+        { status: 400 },
+      );
+    }
+    oauthCodes.delete(body.code); // 一次性
+    const accessToken = await signAccessToken({
+      sub: entry.userId,
+      tenant_id: entry.tenantId,
+      scope: entry.scope,
+    });
+    const refreshToken = `saas-rt-${entry.userId}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+    oauthRefreshTokens.set(refreshToken, {
+      appId: entry.appId,
+      userId: entry.userId,
+      tenantId: entry.tenantId,
+      scope: entry.scope,
+    });
+    return HttpResponse.json({
+      accessToken,
+      refreshToken,
+      tokenType: "Bearer",
+      expiresIn: 3600,
+      scope: entry.scope,
+    });
   }),
 
   // GET /me：给前端一个还原 user 信息的接口（刷新页面后 bootstrap）
@@ -494,17 +624,94 @@ export const authExtraHandlers = [
     }
   }),
 
+  // M00.F02.I03 — POST /me/tenants/{t}/switch：切当前租户，返回新 tenant-scoped
+  // token 对。oracle 对齐 springboot MeService.switchTenant + nextjs switch route
+  // （2026-08-31 contract-test 第三期；覆盖 orval faker 兜底）。
+  // 非 member → 404（tenant 不存在或无成员关系同面）；无 Bearer → 401。
+  http.post(`*${BASE}/me/tenants/:tenantId/switch`, async ({ request, params }) => {
+    const auth = request.headers.get("Authorization") ?? "";
+    const token = auth.replace(/^Bearer\s+/, "");
+    if (!token) {
+      return HttpResponse.json(
+        { code: "UNAUTHENTICATED", message: "Missing or invalid token" },
+        { status: 401 },
+      );
+    }
+    try {
+      const { payload } = await jwtVerify(
+        token,
+        new TextEncoder().encode(process.env.JWT_SIGNING_KEY ?? ""),
+        {
+          issuer: process.env.JWT_ISSUER ?? "saas-identity-platform",
+          audience: process.env.JWT_AUDIENCE ?? "saas-identity-platform-clients",
+        },
+      );
+      const userId = String(payload.sub ?? "");
+      const tenantId = String(params.tenantId ?? "");
+      const m = memberships.find(
+        (x) => x.userId === userId && x.tenantId === tenantId && x.status !== "removed",
+      );
+      if (!m) {
+        return HttpResponse.json(
+          { code: "NOT_FOUND", message: "tenant 不存在或不是该租户成员" },
+          { status: 404 },
+        );
+      }
+      const expiresAt = new Date(Date.now() + 3600 * 1000).toISOString();
+      const newRefresh = `saas-rt-${userId}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+      saasRefreshTokens.set(newRefresh, {
+        userId,
+        tenantId,
+        scope: "openid profile email",
+      });
+      return HttpResponse.json({
+        accessToken: await signAccessToken({ sub: userId, tenant_id: tenantId }),
+        refreshToken: newRefresh,
+        expiresAt,
+        tenantId,
+      });
+    } catch {
+      return HttpResponse.json(
+        { code: "UNAUTHENTICATED", message: "Invalid token" },
+        { status: 401 },
+      );
+    }
+  }),
+
   // === OAuth 2.0 server 端点（POST 与 saas-shared OpenAPI 一致）===
   // authorize/token 都按 clientId 找 App 记录，校验 redirect_uri / scope / tenantId；
   // code 一次性、refresh_token 用于换新对。
   // dev 阶段不严验 client_secret（生产 saas springboot/aspnetcore 真后端验）。
 
   http.post(`*${BASE}/oauth/authorize`, async ({ request }) => {
-    // M04.F03.I01 (PLAN-2026-001 T-7) — 先验 saas session
+    // M04.F03.I01 (PLAN-2026-001 T-7) — 先验 saas session；
+    // 2026-08-31 contract-test I26：3 真后端走 Bearer，补双通道（对齐 /me/menus 先例）。
     const session = parseSessionFromCookie(request);
+    let bearerUserId: string | null = null;
+    let bearerTenantId: string | null = null;
     if (!session) {
+      const auth = request.headers.get("Authorization") ?? "";
+      const token = auth.replace(/^Bearer\s+/, "");
+      if (token) {
+        try {
+          const { payload } = await jwtVerify(
+            token,
+            new TextEncoder().encode(process.env.JWT_SIGNING_KEY ?? ""),
+            {
+              issuer: process.env.JWT_ISSUER ?? "saas-identity-platform",
+              audience: process.env.JWT_AUDIENCE ?? "saas-identity-platform-clients",
+            },
+          );
+          bearerUserId = String(payload.sub ?? "") || null;
+          bearerTenantId = typeof payload.tenant_id === "string" ? payload.tenant_id : null;
+        } catch {
+          // fall through to 401
+        }
+      }
+    }
+    if (!session && !bearerUserId) {
       return HttpResponse.json(
-        { code: "UNAUTHORIZED", message: "saas session required for OAuth authorize" },
+        { code: "UNAUTHORIZED", message: "saas session or Bearer token required" },
         { status: 401 },
       );
     }
@@ -551,16 +758,19 @@ export const authExtraHandlers = [
         { status: 400 },
       );
     }
-    // M04.F03.I02 (PLAN-2026-001 T-7) — user 从 session.userId 取 (不再 tenantId 直发)
-    const devUser = users.find((u) => u.id === session.userId);
+    // M04.F03.I02 (PLAN-2026-001 T-7) — user 从 session.userId 取 (不再 tenantId 直发)；
+    // 2026-08-31：Bearer 通道时 sub 即 userId
+    const effectiveUserId = session?.userId ?? bearerUserId!;
+    const effectiveTenantId = session?.tenantId ?? bearerTenantId;
+    const devUser = users.find((u) => u.id === effectiveUserId);
     if (!devUser) {
       return HttpResponse.json(
         { code: "INVALID_GRANT", message: "session user not found" },
         { status: 401 },
       );
     }
-    // 校验 session.tenantId 与请求 body.tenantId 一致 (与真后端同款)
-    if (devUser.tenantId !== body.tenantId) {
+    // 校验 effective tenantId 与请求 body.tenantId 一致 (与真后端同款)
+    if (effectiveTenantId !== body.tenantId) {
       return HttpResponse.json(
         { code: "INVALID_GRANT", message: "session vs request tenantId mismatch" },
         { status: 401 },
@@ -579,13 +789,33 @@ export const authExtraHandlers = [
   }),
 
   http.post(`*${BASE}/oauth/token`, async ({ request }) => {
-    // M04.F03.I02 (PLAN-2026-001 T-7) — 先验 saas session
+    // M04.F03.I02 (PLAN-2026-001 T-7) — 先验 saas session；
+    // 2026-08-31 contract-test I27：补 Bearer 通道（3 真后端走 Bearer）。
     const session = parseSessionFromCookie(request);
     if (!session) {
-      return HttpResponse.json(
-        { code: "UNAUTHORIZED", message: "saas session required for OAuth token" },
-        { status: 401 },
-      );
+      const auth = request.headers.get("Authorization") ?? "";
+      const token = auth.replace(/^Bearer\s+/, "");
+      if (!token) {
+        return HttpResponse.json(
+          { code: "UNAUTHORIZED", message: "saas session or Bearer token required" },
+          { status: 401 },
+        );
+      }
+      try {
+        await jwtVerify(
+          token,
+          new TextEncoder().encode(process.env.JWT_SIGNING_KEY ?? ""),
+          {
+            issuer: process.env.JWT_ISSUER ?? "saas-identity-platform",
+            audience: process.env.JWT_AUDIENCE ?? "saas-identity-platform-clients",
+          },
+        );
+      } catch {
+        return HttpResponse.json(
+          { code: "UNAUTHORIZED", message: "Invalid Bearer token" },
+          { status: 401 },
+        );
+      }
     }
     const body = (await request.json()) as {
       grantType?: string;
@@ -708,14 +938,23 @@ export const authExtraHandlers = [
 
 // === M00 — Tenants (平台 admin CRUD) ===
 export const tenantsExtraHandlers = [
-  http.get(`*${BASE}/admin/tenants`, () =>
-    HttpResponse.json({
-      items: tenants,
-      page: 1,
-      pageSize: tenants.length,
+  // 2026-08-31 contract-test I29：分页对齐家族约定 page=0 / pageSize=20
+  // （3 真后端 list 端点默认值，见 memory contract-test-pagination-defaults-must-align）。
+  http.get(`*${BASE}/admin/tenants`, ({ request }) => {
+    const url = new URL(request.url);
+    const page = Math.max(0, Number(url.searchParams.get("page") ?? 0) || 0);
+    const pageSize = Math.min(
+      100,
+      Math.max(1, Number(url.searchParams.get("pageSize") ?? 20) || 20),
+    );
+    const start = page * pageSize;
+    return HttpResponse.json({
+      items: tenants.slice(start, start + pageSize),
+      page,
+      pageSize,
       total: tenants.length,
-    }),
-  ),
+    });
+  }),
 
   http.get(`*${BASE}/admin/tenants/:id`, ({ params }) => {
     const t = getTenant(String(params.id));
@@ -731,6 +970,8 @@ export const tenantsExtraHandlers = [
       code: String(body.code ?? "").trim(),
       name: String(body.name ?? "").trim(),
       status: (body.status as "active" | "suspended" | "archived") ?? "active",
+      // 2026-08-31 contract-test I30：settings 是 Tenant DTO 契约字段（真后端 jsonb 默认 {}）
+      settings: {},
       createdAt: NOW(),
       updatedAt: NOW(),
     };
@@ -845,6 +1086,44 @@ export const usersExtraHandlers = [
     u.updatedAt = NOW();
     return HttpResponse.json(u);
   }),
+
+  // M01.F02.I02 — /users/invitations（2026-09-01 contract-test I42）。
+  // 邀请语义：按 email 建占位 user（status=invited），roleIds 取 body.roleIds ?? []。
+  // faker 兜底会返随机 email 破坏 oracle，此处确定性实现（对齐 nextjs invitations route）。
+  http.post(`*${BASE}/tenants/:tenantId/users/invitations`, async ({ params, request }) => {
+    const body = (await request.json().catch(() => null)) as {
+      email?: string;
+      roleIds?: string[];
+    } | null;
+    const email = String(body?.email ?? "").trim();
+    if (!email) {
+      return HttpResponse.json(
+        { code: "BAD_REQUEST", message: "email is required" },
+        { status: 400 },
+      );
+    }
+    const invited = {
+      id: uuidLike("user"),
+      tenantId: String(params.tenantId),
+      username: email.split("@")[0] ?? email,
+      email,
+      status: "invited" as const,
+      roleIds: body?.roleIds ?? [],
+      createdAt: NOW(),
+      updatedAt: NOW(),
+    };
+    users.push(invited);
+    // AuditAction 枚举无 user_invited（SSOT AuditAction 封闭集）；用 user_created 语义近似。
+    auditEvents.push({
+      id: `${invited.tenantId}-evt-${Date.now().toString(36)}`,
+      tenantId: invited.tenantId,
+      actorUserId: undefined,
+      action: "user_created",
+      targetUserId: invited.id,
+      occurredAt: NOW(),
+    });
+    return HttpResponse.json(invited, { status: 201 });
+  }),
 ];
 
 // === M02 — Roles (tenant-scoped CRUD) ===
@@ -909,6 +1188,24 @@ export const rolesExtraHandlers = [
     if (i < 0) return HttpResponse.json({ code: "NOT_FOUND", message: "Role not found" }, { status: 404 });
     roles.splice(i, 1);
     return new HttpResponse(null, { status: 204 });
+  }),
+
+  // M02.F02.I01 — PUT permissions（2026-09-01 contract-test I36）。
+  // 整批替换 role.permissionIds 并回带。faker 兜底返随机串破坏 oracle。
+  // 注意：permissionIds 是权限码（如 "users:read"），不是 uuid —— SSOT 声明 string[]。
+  http.put(`*${BASE}/tenants/:tenantId/roles/:roleId/permissions`, async ({ params, request }) => {
+    const r = getRole(String(params.tenantId), String(params.roleId));
+    if (!r) return HttpResponse.json({ code: "NOT_FOUND", message: "Role not found" }, { status: 404 });
+    const body = (await request.json().catch(() => null)) as { permissionIds?: string[] } | null;
+    if (!Array.isArray(body?.permissionIds)) {
+      return HttpResponse.json(
+        { code: "BAD_REQUEST", message: "permissionIds must be an array" },
+        { status: 400 },
+      );
+    }
+    r.permissionIds = body!.permissionIds;
+    r.updatedAt = NOW();
+    return HttpResponse.json(r);
   }),
 ];
 
@@ -1001,6 +1298,9 @@ export const apiKeysExtraHandlers = [
     const rotated = {
       ...k,
       id,
+      // rotate 语义：新行必有新 prefix（server 端随机生成，同 create 路径）。
+      // 2026-09-01 contract-test I57：旧实现沿用 "sk_live" 常量 → 新旧 prefix 相同被断言拦下。
+      prefix: `sk_live_${id.slice(0, 8)}`,
       status: "active" as const,
       createdAt: NOW(),
     };
@@ -1075,6 +1375,54 @@ export const auditExtraHandlers = [
   http.get(`*${BASE}/tenants/:tenantId/audit-events/retention`, ({ params }) => {
     const p = auditRetentionPolicies.find((x) => x.tenantId === String(params.tenantId));
     return HttpResponse.json({ retentionDays: p?.retentionDays ?? 90 });
+  }),
+
+  // M06.F02.I02 — PUT retention（2026-09-01 contract-test I59）。
+  // upsert 单行并回显；faker 兜底返随机数破坏 oracle，此处确定性实现。
+  http.put(`*${BASE}/tenants/:tenantId/audit-events/retention`, async ({ params, request }) => {
+    const body = (await request.json().catch(() => null)) as { retentionDays?: number } | null;
+    const days = Number(body?.retentionDays);
+    if (!Number.isInteger(days) || days < 1) {
+      return HttpResponse.json(
+        { code: "BAD_REQUEST", message: "retentionDays must be a positive integer" },
+        { status: 400 },
+      );
+    }
+    const tenantId = String(params.tenantId);
+    const existing = auditRetentionPolicies.find((x) => x.tenantId === tenantId);
+    if (existing) {
+      existing.retentionDays = days;
+      existing.updatedAt = NOW();
+    } else {
+      auditRetentionPolicies.push({ tenantId, retentionDays: days, updatedAt: NOW() });
+    }
+    return HttpResponse.json({ retentionDays: days });
+  }),
+
+  // M06.F01.I03 — POST export（2026-09-01 contract-test I58）。
+  // 契约面：{downloadUrl: string}；URL 本身含随机成分，contract-test 只比 shape。
+  http.post(`*${BASE}/tenants/:tenantId/audit-events/export`, async ({ params, request }) => {
+    const body = (await request.json().catch(() => null)) as {
+      from?: string;
+      to?: string;
+      format?: string;
+    } | null;
+    if (!body?.from || !body.to || !body.format) {
+      return HttpResponse.json(
+        { code: "BAD_REQUEST", message: "from/to/format are required" },
+        { status: 400 },
+      );
+    }
+    if (body.format !== "csv" && body.format !== "json") {
+      return HttpResponse.json(
+        { code: "BAD_REQUEST", message: "format must be csv or json" },
+        { status: 400 },
+      );
+    }
+    const tenantId = String(params.tenantId);
+    return HttpResponse.json({
+      downloadUrl: `/api/v1/tenants/${tenantId}/audit-events/export/${Date.now().toString(36)}.${body.format}`,
+    });
   }),
 ];
 
