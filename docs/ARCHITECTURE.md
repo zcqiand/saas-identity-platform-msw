@@ -6,7 +6,7 @@
 
 > **范围**：本文档只描述 *架构*（结构 / 边界 / 数据流 / 决策）。
 > 编码细则见 [`docs/conventions/`](conventions/)，单个决策的 ADR 见
-> [`docs/adr/`](adr/) + suite [`docs/adr/0012-msw-as-http-server.md`](../../docs/adr/0012-msw-as-http-server.md)，
+> [`docs/adr/`](adr/) + suite [`docs/adr/0012-msw-as-http-server.md`](../../../docs/adr/0012-msw-as-http-server.md)，
 > 功能清单见 [`docs/functions/function-tree.md`](functions/function-tree.md)。
 
 ---
@@ -115,7 +115,7 @@ saas-identity-platform-msw/
 
 ### 2.2 与 suite 父仓 `5 段式` 骨架的映射
 
-suite 父仓 [`docs/ARCHITECTURE.md` §2.3](../../docs/ARCHITECTURE.md#23-仓库矩阵14-个仓各自-5-段结构) 列了所有子仓的 5 段式，本仓逐项对应：
+suite 父仓 [`docs/ARCHITECTURE.md` §2.3](../../../docs/ARCHITECTURE.md#23-仓库矩阵14-个仓各自-5-段结构) 列了所有子仓的 5 段式，本仓逐项对应：
 
 | 段 | 本仓位置 |
 |---|---|
@@ -173,7 +173,7 @@ app.listen(PORT, () => console.log(`[saas-msw] mock http server listening on :${
   handlers 本身**零修改**（与 in-process `setupServer(...handlers)` 用同一份数组）。
 - **`ALLOWED_ORIGINS` 白名单** —— 跨源 dev 必须显式列出；`credentials:true` 让 cookie/session 能跨源。
   新增前端 dev origin（如 vue=5103 已有，但若新增 vite 子项目）必须**同步改两仓**（saas-msw + lab-msw）的 `src/server.ts`，
-  否则浏览器报 CORS 错（suite 父仓 [`docs/ARCHITECTURE.md` §3.5](../../docs/ARCHITECTURE.md#35-端口与-cors-对称) 列了同源表）。
+  否则浏览器报 CORS 错（suite 父仓 [`docs/ARCHITECTURE.md` §3.5](../../../docs/ARCHITECTURE.md#35-端口与-cors-对称) 列了同源表）。
 - **`/healthz`** —— 三个字段各有用途：
   - `ok:true`：deploy 脚本 30s 间隔 wget 探活；
   - `mode:'msw'`：消费者明确知道这是 mock，不会把它当真后端调用 OAuth redirect；
@@ -272,7 +272,7 @@ JSON `import` 给的数组类型上是 readonly，但**运行时引用稳定**�
 **`generated_ts_shim.ts`** 是把 shared OpenAPI 的 `tsp/models/*.tsp` 编译出来的 TS 类型**复制**到本仓（手维护）。
 为什么不直接 `import` shared？
 
-- shared 是契约仓，**没有 runtime 依赖**（suite [`docs/ARCHITECTURE.md` §4.1](../../docs/ARCHITECTURE.md#41-契约仓shared--2)）；
+- shared 是契约仓，**没有 runtime 依赖**（suite [`docs/ARCHITECTURE.md` §4.1](../../../docs/ARCHITECTURE.md#41-契约仓shared--2)）；
 - msw 仓有 runtime（Express/cors/msw），不能让 shared 被 webpack rollup 拖进来；
 - shared 中间产物 `openapi.yaml` 是 OpenAPI 3（不是 TS 类型）——orval 只生成 Zod schemas，不生成 TS 类型（除非另开 orval `client` 输出）。
 - 因此手维护 `generated_ts_shim.ts` 是当前最稳的路径（受 v0.3.0 教训驱动）。
@@ -303,7 +303,7 @@ JSON `import` 给的数组类型上是 readonly，但**运行时引用稳定**�
 | `saas-identity-platform-nextjs`（前端）| 同上 | 同上；同仓的 `app/api/v1/*` 在 dev 改走 fetch(:5100)（避免重复实现 OAuth state）|
 | `saas-identity-platform-react`（调 lab）| `LAB_SAAS_API_BASE_URL=http://localhost:5100` | 跨家族调 saas 时用 `lab-msw` 同源（:5200）+ `saas-msw` 跨源（:5100）|
 
-详见 suite [`docs/ARCHITECTURE.md` §3.3](../../docs/ARCHITECTURE.md#33-后端模式env-driven-单-urladr-0014)
+详见 suite [`docs/ARCHITECTURE.md` §3.3](../../../docs/ARCHITECTURE.md#33-后端模式env-driven-单-urladr-0014)
 （ADR-0014 env-driven 单 URL 模式——`BackendMode` 联合类型已废弃）。
 
 ### 4.2 CORS 白名单如何跨源
@@ -324,7 +324,7 @@ http://localhost:5100   ← 本仓自指（react/vue dev 同源）
 4. 跑 `python ../scripts/gate.py --all`（跨仓一致性门）。
 
 漏配 → 浏览器 CORS 错 → Cloudflare 把 502 换皮丢 CORS 头 → 误诊
-（详见 `memory/springboot-env-drift-502-trap.md` + suite [`docs/ARCHITECTURE.md` §3.5](../../docs/ARCHITECTURE.md#35-端口与-cors-对称)）。
+（详见 `memory/springboot-env-drift-502-trap.md` + suite [`docs/ARCHITECTURE.md` §3.5](../../../docs/ARCHITECTURE.md#35-端口与-cors-对称)）。
 
 ### 4.3 端点契约对齐
 
@@ -380,7 +380,7 @@ orval 从 `openapi.yaml` 生成 `handlers.msw.ts` 后，path 拼写错误会被 
 **关键检查点**：
 
 - 改 `shared` 的 BASE tree F 级（`M99.F0X`）必须**先**于本仓 `handlers-extra.ts` 改 I 级；
-  否则 L5 红（"已上线但无 BASE 引用"告警，suite [`docs/ARCHITECTURE.md` §3.7](../../docs/ARCHITECTURE.md#37-function-tree-是-跨端对齐的索引)）；
+  否则 L5 红（"已上线但无 BASE 引用"告警，suite [`docs/ARCHITECTURE.md` §3.7](../../../docs/ARCHITECTURE.md#37-function-tree-是-跨端对齐的索引)）；
 - `orval.config.ts` 里 `baseURL: "http://localhost:5202"` —— 写错了会让 orval 的 `BaseURL` 类型生成器误判，
   生成的 fetch 调用路径会偏。建议改 path 前先 grep `baseURL`。
 
@@ -463,10 +463,10 @@ runner:  node:20-alpine + npm ci --omit=dev + EXPOSE 5100 + HEALTHCHECK wget /he
 
 | ADR | 主题 | 一句话 |
 |---|---|---|
-| [ADR-0007](../../docs/adr/0007-shared-sql-ssot.md) | shared 仓扩到双 SSOT | shared 同时是 API + DB schema 真源；msw 仓从 openapi.yaml 读派生 |
-| [ADR-0008](../../docs/adr/0008-nextjs-full-stack.md) | saas-nextjs 兼全栈 | saas-nextjs dev 改走 fetch(:5100) 复用 msw 的 OAuth state |
-| [ADR-0012](../../docs/adr/0012-msw-as-http-server.md) | **msw 仓升级为独立 HTTP 服务** | **B 强度**：Express + `@mswjs/http-middleware` 暴露端口；本仓的核心决策 |
-| [ADR-0014](../../docs/adr/0014-env-driven-single-url.md) | env-driven 单 URL | 废弃 runtime BackendMode 联合类型；改 env-driven 3 getter |
+| [ADR-0007](../../../docs/adr/0007-shared-sql-ssot.md) | shared 仓扩到双 SSOT | shared 同时是 API + DB schema 真源；msw 仓从 openapi.yaml 读派生 |
+| [ADR-0008](../../../docs/adr/0008-nextjs-full-stack.md) | saas-nextjs 兼全栈 | saas-nextjs dev 改走 fetch(:5100) 复用 msw 的 OAuth state |
+| [ADR-0012](../../../docs/adr/0012-msw-as-http-server.md) | **msw 仓升级为独立 HTTP 服务** | **B 强度**：Express + `@mswjs/http-middleware` 暴露端口；本仓的核心决策 |
+| [ADR-0014](../../../docs/adr/0014-runtime-backend-switcher-removed.md) | env-driven 单 URL | 废弃 runtime BackendMode 联合类型；改 env-driven 3 getter |
 
 ### 6.2 本仓特有 ADR
 
@@ -525,7 +525,7 @@ runner:  node:20-alpine + npm ci --omit=dev + EXPOSE 5100 + HEALTHCHECK wget /he
 
 ## 附录 A：与父仓 `docs/ARCHITECTURE.md` 的关系
 
-suite 父仓 [`docs/ARCHITECTURE.md`](../../docs/ARCHITECTURE.md) 是**全景视图**——14 个仓、5 种角色、12 份 ADR、跨仓流程。
+suite 父仓 [`docs/ARCHITECTURE.md`](../../../docs/ARCHITECTURE.md) 是**全景视图**——14 个仓、5 种角色、12 份 ADR、跨仓流程。
 
 **本文档是 zoom-in**——只讲这一个仓的目录结构、handlers 分层、fixtures 形态、dev server 装配。
 
