@@ -1115,17 +1115,9 @@ export const usersExtraHandlers = [
       updatedAt: NOW(),
     };
     users.push(invited);
-    // AuditAction 枚举无 user_invited（SSOT AuditAction 封闭集）；用 user_created 语义近似。
-    auditEvents.push({
-      id: `${invited.tenantId}-evt-${Date.now().toString(36)}`,
-      tenantId: invited.tenantId,
-      actorUserId: undefined,
-      action: "user_created",
-      targetUserId: invited.id,
-      // 2026-09-02 contract-test M96 audit 覆盖对齐：metadata 对齐 nextjs/springboot/aspnetcore
-      metadata: { userId: invited.id },
-      occurredAt: NOW(),
-    });
+    // 2026-09-02 contract-test M96 audit 覆盖对齐（用户拍板）：invite 不写审计事件。
+    // AuditAction 枚举无 user_invited；此前用 user_created 近似，但 3 真后端
+    // Invitations 端点都不写 —— oracle 对齐真后端，删。
     return HttpResponse.json(invited, { status: 201 });
   }),
 ];
