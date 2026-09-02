@@ -1049,6 +1049,8 @@ export const usersExtraHandlers = [
       actorUserId: undefined,
       action: "user_created",
       targetUserId: newUser.id,
+      // 2026-09-02 contract-test M96 audit 覆盖对齐：metadata 对齐 nextjs/springboot/aspnetcore
+      metadata: { userId: newUser.id },
       occurredAt: NOW(),
     });
     return HttpResponse.json(newUser, { status: 201 });
@@ -1120,6 +1122,8 @@ export const usersExtraHandlers = [
       actorUserId: undefined,
       action: "user_created",
       targetUserId: invited.id,
+      // 2026-09-02 contract-test M96 audit 覆盖对齐：metadata 对齐 nextjs/springboot/aspnetcore
+      metadata: { userId: invited.id },
       occurredAt: NOW(),
     });
     return HttpResponse.json(invited, { status: 201 });
