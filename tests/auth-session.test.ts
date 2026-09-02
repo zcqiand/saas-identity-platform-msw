@@ -59,8 +59,8 @@ describe("M03.F01.I01 + M04.F03.I01/I02 + M09.F03.I01 saas session", () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        clientId: "lab-mgmt",
-        redirectUri: "http://localhost:3001/callback",
+        clientId: "11111111-1111-1111-1111-111111111111",
+        redirectUri: "http://localhost:5201/callback",
         responseType: "code",
         scope: "openid profile email",
         state: "x",
@@ -77,8 +77,8 @@ describe("M03.F01.I01 + M04.F03.I01/I02 + M09.F03.I01 saas session", () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        clientId: "lab-mgmt",
-        redirectUri: "http://localhost:3001/callback",
+        clientId: "11111111-1111-1111-1111-111111111111",
+        redirectUri: "http://localhost:5201/callback",
         responseType: "code",
         scope: "openid profile email",
         state: "abc",
@@ -99,9 +99,9 @@ describe("M03.F01.I01 + M04.F03.I01/I02 + M09.F03.I01 saas session", () => {
       body: JSON.stringify({
         grantType: "authorization_code",
         code: "anything",
-        clientId: "lab-mgmt",
+        clientId: "11111111-1111-1111-1111-111111111111",
         tenantId: "00000000-0000-0000-0000-000000000001",
-        redirectUri: "http://localhost:3001/callback",
+        redirectUri: "http://localhost:5201/callback",
       }),
     });
     expect(res.status).toBe(401);
@@ -215,8 +215,8 @@ describe("M03.F01.I01 + M04.F03.I02/I03 + M09.F03.I01 cookie jar 行为", () => 
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          clientId: "lab-mgmt",
-          redirectUri: "http://localhost:3001/callback",
+          clientId: "11111111-1111-1111-1111-111111111111",
+          redirectUri: "http://localhost:5201/callback",
           responseType: "code",
           scope: "openid profile email",
           state: "jar-state",
@@ -238,9 +238,9 @@ describe("M03.F01.I01 + M04.F03.I02/I03 + M09.F03.I01 cookie jar 行为", () => 
         body: JSON.stringify({
           grantType: "authorization_code",
           code,
-          clientId: "lab-mgmt",
+          clientId: "11111111-1111-1111-1111-111111111111",
           tenantId,
-          redirectUri: "http://localhost:3001/callback",
+          redirectUri: "http://localhost:5201/callback",
         }),
       },
       `saasSession=${sid}`,

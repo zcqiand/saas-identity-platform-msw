@@ -8,7 +8,7 @@ WORKDIR /app
 RUN npm config set registry https://registry.npmmirror.com
 
 ENV NODE_ENV=production
-ENV PORT=5174
+ENV PORT=5100
 
 COPY package*.json ./
 RUN npm ci --omit=dev && npm cache clean --force
@@ -16,9 +16,9 @@ RUN npm ci --omit=dev && npm cache clean --force
 COPY tsconfig.json ./
 COPY src ./src
 
-EXPOSE 5174
+EXPOSE 5100
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:5174/healthz || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:5100/healthz || exit 1
 
 CMD ["npx", "tsx", "src/server.ts"]

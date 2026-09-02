@@ -6,7 +6,7 @@
 ## 1. 项目定位
 
 SaaS 多租户多应用身份平台的 mock 边界（MSW v2）。从 shared 仓 OpenAPI 派生 handler 结构，
-faker 生成跨端一致 fixture。独立 HTTP 后端（ADR-0012 B 强度）：`src/server.ts` listen `:5174`，
+faker 生成跨端一致 fixture。独立 HTTP 后端（ADR-0012 B 强度）：`src/server.ts` listen `:5100`，
 健康检查 `/healthz`，不持久化。
 
 ## 2. 铁律
@@ -29,7 +29,7 @@ MSW v2 + @mswjs/http-middleware + Express + faker + jose（JWT mock 签发）。
 ## 4. 验收
 
 - suite 根目录跑 `python scripts/gate.py -p saas-identity-platform-msw`
-- `npm run dev`（HTTP server `:5174`）/ `npm start`（生产路径）
+- `npm run dev`（HTTP server `:5100`）/ `npm start`（生产路径）
 
 ## 5. 指向别处
 

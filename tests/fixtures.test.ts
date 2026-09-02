@@ -113,16 +113,18 @@ describe("M99.F02 apps+menus+grants fixture consistency", () => {
 
   it("apps carry OAuth client fields (clientId, redirectUris, isFirstParty)", () => {
     for (const a of apps) {
-      expect(a.clientId).toMatch(/^[a-z-]+$/);
+      // V017（2026-08-31）：client_id 收敛为 UUID（= app.id，V014 Phase 6 决策）
+      expect(a.clientId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
       expect(Array.isArray(a.redirectUris)).toBe(true);
       expect(typeof a.isFirstParty).toBe("boolean");
     }
   });
 
   it("getAppByClientId finds the same app", () => {
-    expect(getAppByClientId("lab-mgmt")?.id).toBe(APP_IDS.lab);
-    expect(getAppByClientId("erp")?.id).toBe(APP_IDS.erp);
-    expect(getAppByClientId("crm")?.id).toBe(APP_IDS.crm);
+    // V017：clientId = app.id（UUID），不再是 'lab-mgmt' 字符串
+    expect(getAppByClientId(APP_IDS.lab)?.id).toBe(APP_IDS.lab);
+    expect(getAppByClientId(APP_IDS.erp)?.id).toBe(APP_IDS.erp);
+    expect(getAppByClientId(APP_IDS.crm)?.id).toBe(APP_IDS.crm);
     expect(getAppByClientId("nope")).toBeUndefined();
   });
 

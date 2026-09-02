@@ -7,12 +7,12 @@
     "icon": "FlaskConical",
     "sortOrder": 1,
     "status": "active",
-    "clientId": "lab-mgmt",
+    "clientId": "11111111-1111-1111-1111-111111111111",
     "clientSecret": "lab-mgmt-secret",
     "redirectUris": [
-      "http://localhost:3001/callback",
-      "http://localhost:5173/login",
-      "http://localhost:5174/login",
+      "http://localhost:5201/callback",
+      "http://localhost:5202/login",
+      "http://localhost:5200/login",
       "https://lab-nextjs.xiangru.uk/login",
       "https://lab-react.xiangru.uk/login"
     ],
@@ -36,7 +36,7 @@
     "icon": "Boxes",
     "sortOrder": 2,
     "status": "active",
-    "clientId": "erp",
+    "clientId": "11111111-1111-1111-1111-111111111112",
     "clientSecret": "erp-secret",
     "redirectUris": [
       "http://localhost:3010/callback"
@@ -61,7 +61,7 @@
     "icon": "Users",
     "sortOrder": 3,
     "status": "active",
-    "clientId": "crm",
+    "clientId": "11111111-1111-1111-1111-111111111113",
     "clientSecret": "crm-secret",
     "redirectUris": [
       "http://localhost:3020/callback"

@@ -9,13 +9,17 @@ import cors from 'cors'
 import { createMiddleware } from '@mswjs/http-middleware'
 import { handlers } from './handlers-array'
 
-const PORT = Number(process.env.PORT ?? 5174)
+const PORT = Number(process.env.PORT ?? 5100)
 
 // 跨源前端 dev origin 必须进白名单（参见 multi-repo-family §6）
 const ALLOWED_ORIGINS = [
-  'http://localhost:3000', // nextjs dev
-  'http://localhost:5173', // react/vue dev（lab-msw 同源；saas 调 lab 跨源）
-  'http://localhost:5174', // react/vue dev（saas-msw 同源）
+  'http://localhost:5101', // saas-nextjs dev
+  'http://localhost:5102', // saas-react dev
+  'http://localhost:5103', // saas-vue dev
+  'http://localhost:5200', // lab-msw（saas 调 lab 跨源）
+  'http://localhost:5201', // lab-nextjs dev（lab 调 saas SSO）
+  'http://localhost:5202', // lab-react dev
+  'http://localhost:5203', // lab-vue dev
 ] as const
 
 const app = express()

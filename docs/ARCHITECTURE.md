@@ -39,7 +39,7 @@
                 │   handlers + cross-fend   │
                 │   fixtures + Express HTTP │
                 └──────┬──────────┬─────────┘
-                       │ :5174    │ :5174
+                       │ :5100    │ :5100
                        ▼          ▼
        6 个前端仓（react / vue / nextjs × 6）切 env 调它
 ```
@@ -48,12 +48,12 @@
 |---|---|
 | **家族角色** | Mock（saas 家族第 2/7 仓）|
 | **实现形态** | ADR-0012 B 强度：Express + `@mswjs/http-middleware` 独立 HTTP 服务 |
-| **默认端口** | `:5174`（避开同机 lab-msw 的 `:5173`，见 `M99.F03.I04`）|
+| **默认端口** | `:5100`（saas 段 X00，见 `M99.F03.I04` 与 conventions §6）|
 | **健康探针** | `GET /healthz → { ok:true, mode:"msw", uptime }`（明牌"我是 mock"，禁止当 staging）|
 | **持久化** | 全内存；handlers 对 fixture 数组 push/splice，进程重启即清（与 `src/Dockerfile` 多阶段构建一致）|
 | **fixture 形态** | `src/seeds/*.json`（9 张表 + `manifest.json`）+ `src/fixtures/seed.ts` 暴露可变数组 + ID constants |
 | **handlers 形态** | 两层：orval codegen（`src/handlers.msw.ts`，faker 兜底）+ 手写 extra（`src/handlers-extra.ts`，确定性）|
-| **测试方式** | vitest，两种路径：in-process `setupServer(...handlers)`（fast）+ 跨进程 `fetch(:5174)`（integration）|
+| **测试方式** | vitest，两种路径：in-process `setupServer(...handlers)`（fast）+ 跨进程 `fetch(:5100)`（integration）|
 | **禁止事项** | ❌ 调任何真后端 / ❌ 持久化到磁盘 / ❌ 改 shared 的 OpenAPI / ❌ 单端修 fixture（破坏跨端一致）|
 
 **为什么需要这个仓**：
@@ -132,10 +132,10 @@ suite 父仓 [`docs/ARCHITECTURE.md` §2.3](../../docs/ARCHITECTURE.md#23-仓库
 
 | 维度 | saas-msw（本仓）| lab-msw |
 |---|---|---|
-| 默认端口 | **5174** | 5173 |
+| 默认端口 | **5100** | 5200 |
 | 共享 fixture 域 | OAuth / tenants / users / roles / apps / menus / api-keys / audit | 业务域（contracts/receipts/samples/methods）|
 | OAuth handler | ✅（`authExtraHandlers` 含 `/oauth/authorize` + `/oauth/token`）| ❌ |
-| CORS 白名单中的对侧 msw | lab-msw:5173 | saas-msw:5174 |
+| CORS 白名单中的对侧 msw | lab-msw:5200 | saas-msw:5100 |
 | 与 nextjs 全栈仓关系 | saas-nextjs `app/api/v1/` 启动时也 fetch saas-msw | lab-nextjs 不兼全栈 |
 
 ---
@@ -147,11 +147,11 @@ suite 父仓 [`docs/ARCHITECTURE.md` §2.3](../../docs/ARCHITECTURE.md#23-仓库
 ADR-0012 B 强度的核心实现，30 行搞定所有 HTTP 装配：
 
 ```ts
-const PORT = Number(process.env.PORT ?? 5174)
+const PORT = Number(process.env.PORT ?? 5100)
 const ALLOWED_ORIGINS = [
-  'http://localhost:3000',  // nextjs dev
-  'http://localhost:5173',  // react/vue dev (lab-msw 同源; saas 调 lab 跨源)
-  'http://localhost:5174',  // react/vue dev (saas-msw 同源)
+  'http://localhost:5101',  // nextjs dev
+  'http://localhost:5202',  // react/vue dev (lab-msw 同源; saas 调 lab 跨源)
+  'http://localhost:5100',  // react/vue dev (saas-msw 同源)
 ] as const
 
 const app = express()
@@ -172,7 +172,7 @@ app.listen(PORT, () => console.log(`[saas-msw] mock http server listening on :${
   把 Express req/res 重建为 Web `Request` 然后调 handler，再把 `Response` 写回 res。
   handlers 本身**零修改**（与 in-process `setupServer(...handlers)` 用同一份数组）。
 - **`ALLOWED_ORIGINS` 白名单** —— 跨源 dev 必须显式列出；`credentials:true` 让 cookie/session 能跨源。
-  新增前端 dev origin（如 nuite=5174 已有，但若新增 vite 子项目）必须**同步改两仓**（saas-msw + lab-msw）的 `src/server.ts`，
+  新增前端 dev origin（如 vue=5103 已有，但若新增 vite 子项目）必须**同步改两仓**（saas-msw + lab-msw）的 `src/server.ts`，
   否则浏览器报 CORS 错（suite 父仓 [`docs/ARCHITECTURE.md` §3.5](../../docs/ARCHITECTURE.md#35-端口与-cors-对称) 列了同源表）。
 - **`/healthz`** —— 三个字段各有用途：
   - `ok:true`：deploy 脚本 30s 间隔 wget 探活；
@@ -294,14 +294,14 @@ JSON `import` 给的数组类型上是 readonly，但**运行时引用稳定**�
 
 ## 4. 与消费方契约
 
-### 4.1 6 个前端仓怎么切到 `:5174`
+### 4.1 6 个前端仓怎么切到 `:5100`
 
 | 前端仓 | dev env | 切到本仓的方式 |
 |---|---|---|
-| `saas-identity-platform-react` | `NEXT_PUBLIC_API_BASE_URL=http://localhost:5174` | axios baseURL 直接指向 msw；`installHttpClient()` 调一次 |
+| `saas-identity-platform-react` | `NEXT_PUBLIC_API_BASE_URL=http://localhost:5100` | axios baseURL 直接指向 msw；`installHttpClient()` 调一次 |
 | `saas-identity-platform-vue` | 同上 | 同上 |
-| `saas-identity-platform-nextjs`（前端）| 同上 | 同上；同仓的 `app/api/v1/*` 在 dev 改走 fetch(:5174)（避免重复实现 OAuth state）|
-| `saas-identity-platform-react`（调 lab）| `LAB_SAAS_API_BASE_URL=http://localhost:5174` | 跨家族调 saas 时用 `lab-msw` 同源（:5173）+ `saas-msw` 跨源（:5174）|
+| `saas-identity-platform-nextjs`（前端）| 同上 | 同上；同仓的 `app/api/v1/*` 在 dev 改走 fetch(:5100)（避免重复实现 OAuth state）|
+| `saas-identity-platform-react`（调 lab）| `LAB_SAAS_API_BASE_URL=http://localhost:5100` | 跨家族调 saas 时用 `lab-msw` 同源（:5200）+ `saas-msw` 跨源（:5100）|
 
 详见 suite [`docs/ARCHITECTURE.md` §3.3](../../docs/ARCHITECTURE.md#33-后端模式env-driven-单-urladr-0014)
 （ADR-0014 env-driven 单 URL 模式——`BackendMode` 联合类型已废弃）。
@@ -311,9 +311,9 @@ JSON `import` 给的数组类型上是 readonly，但**运行时引用稳定**�
 **单源白名单硬编码在 `src/server.ts::ALLOWED_ORIGINS`**（3 个 origin）：
 
 ```
-http://localhost:3000   ← nextjs dev（跨源，App Router）
-http://localhost:5173   ← react/vue dev 同源（Vite 默认）；也含 lab-msw（5173）
-http://localhost:5174   ← 本仓自指（react/vue dev 同源）
+http://localhost:5101   ← nextjs dev（跨源，App Router）
+http://localhost:5202   ← lab react/vue dev；也含 lab-msw（5200）
+http://localhost:5100   ← 本仓自指（react/vue dev 同源）
 ```
 
 **新增前端 dev origin 的 checklist**：
@@ -381,7 +381,7 @@ orval 从 `openapi.yaml` 生成 `handlers.msw.ts` 后，path 拼写错误会被 
 
 - 改 `shared` 的 BASE tree F 级（`M99.F0X`）必须**先**于本仓 `handlers-extra.ts` 改 I 级；
   否则 L5 红（"已上线但无 BASE 引用"告警，suite [`docs/ARCHITECTURE.md` §3.7](../../docs/ARCHITECTURE.md#37-function-tree-是-跨端对齐的索引)）；
-- `orval.config.ts` 里 `baseURL: "http://localhost:5173"` —— 写错了会让 orval 的 `BaseURL` 类型生成器误判，
+- `orval.config.ts` 里 `baseURL: "http://localhost:5202"` —— 写错了会让 orval 的 `BaseURL` 类型生成器误判，
   生成的 fetch 调用路径会偏。建议改 path 前先 grep `baseURL`。
 
 ### 5.2 启动 dev server → 拦截 → 返回 JSON
@@ -389,10 +389,10 @@ orval 从 `openapi.yaml` 生成 `handlers.msw.ts` 后，path 拼写错误会被 
 ```
 1. cd output/saas-identity-platform-msw && npm run dev
    → tsx watch src/server.ts
-   → Express listen :5174
-   → console.log("[saas-msw] mock http server listening on :5174 (mode=msw)")
+   → Express listen :5100
+   → console.log("[saas-msw] mock http server listening on :5100 (mode=msw)")
 
-2. 浏览器 / vitest / saas-nextjs 全栈后端 fetch http://localhost:5174/api/v1/...
+2. 浏览器 / vitest / saas-nextjs 全栈后端 fetch http://localhost:5100/api/v1/...
 
 3. Express 收请求：
    - cors middleware: 校验 origin ∈ ALLOWED_ORIGINS → 设 Access-Control-* 头
@@ -406,13 +406,13 @@ orval 从 `openapi.yaml` 生成 `handlers.msw.ts` 后，path 拼写错误会被 
 
 4. 客户端收 JSON：
    - axios：直接拿 response.data
-   - saas-nextjs app/api/v1/*：Drizzle 同步内存数据时也走 :5174（dev 模式）
+   - saas-nextjs app/api/v1/*：Drizzle 同步内存数据时也走 :5100（dev 模式）
 ```
 
 ### 5.3 健康检查与 mode 标识
 
 ```
-$ curl http://localhost:5174/healthz
+$ curl http://localhost:5100/healthz
 {"ok":true,"mode":"msw","uptime":12.345}
 ```
 
@@ -429,7 +429,7 @@ $ curl http://localhost:5174/healthz
 | 路径 | 文件 | 用途 |
 |---|---|---|
 | **in-process（fast）** | `tests/oauth-server.test.ts`、`tests/fixtures.test.ts` | `setupServer(...handlers)` 拦截；不走真 HTTP；0 网络延迟 |
-| **跨进程（integration）** | `tests/integration/*.test.ts`（如存在）| `fetch(http://localhost:5174/...)` 走真 Express；可观测 CORS、body parse |
+| **跨进程（integration）** | `tests/integration/*.test.ts`（如存在）| `fetch(http://localhost:5100/...)` 走真 Express；可观测 CORS、body parse |
 
 **vitest config 关键点**（`vitest.config.ts`）：
 
@@ -447,11 +447,11 @@ esbuild 默认对 `.ts` 输出 CJS（含 `exports` / `require`），会触发 `R
 
 ```
 builder: node:20-alpine + npm ci + npm run gen:handlers
-runner:  node:20-alpine + npm ci --omit=dev + EXPOSE 5174 + HEALTHCHECK wget /healthz
+runner:  node:20-alpine + npm ci --omit=dev + EXPOSE 5100 + HEALTHCHECK wget /healthz
 ```
 
 - `registry.npmmirror.com`（CLAUDE.md 顶层约束）；
-- `ENV PORT=5174`；
+- `ENV PORT=5100`；
 - `HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 CMD wget ... /healthz`；
 - 进程启动：`CMD ["npx", "tsx", "src/server.ts"]`（生产也用 tsx，**不**编译成 JS——与 `src/server.ts` 是 TS 入口一致）。
 
@@ -464,7 +464,7 @@ runner:  node:20-alpine + npm ci --omit=dev + EXPOSE 5174 + HEALTHCHECK wget /he
 | ADR | 主题 | 一句话 |
 |---|---|---|
 | [ADR-0007](../../docs/adr/0007-shared-sql-ssot.md) | shared 仓扩到双 SSOT | shared 同时是 API + DB schema 真源；msw 仓从 openapi.yaml 读派生 |
-| [ADR-0008](../../docs/adr/0008-nextjs-full-stack.md) | saas-nextjs 兼全栈 | saas-nextjs dev 改走 fetch(:5174) 复用 msw 的 OAuth state |
+| [ADR-0008](../../docs/adr/0008-nextjs-full-stack.md) | saas-nextjs 兼全栈 | saas-nextjs dev 改走 fetch(:5100) 复用 msw 的 OAuth state |
 | [ADR-0012](../../docs/adr/0012-msw-as-http-server.md) | **msw 仓升级为独立 HTTP 服务** | **B 强度**：Express + `@mswjs/http-middleware` 暴露端口；本仓的核心决策 |
 | [ADR-0014](../../docs/adr/0014-env-driven-single-url.md) | env-driven 单 URL | 废弃 runtime BackendMode 联合类型；改 env-driven 3 getter |
 
@@ -498,7 +498,7 @@ runner:  node:20-alpine + npm ci --omit=dev + EXPOSE 5174 + HEALTHCHECK wget /he
 | `M99.F03.I01` | Express + `@mswjs/http-middleware` 装配 | 规划 |
 | `M99.F03.I02` | `/healthz` 端点 | 规划 |
 | `M99.F03.I03` | Dockerfile 与容器化 | 规划 |
-| `M99.F03.I04` | 端口约定（5174）+ multi-repo-family §6 同步 | 规划 |
+| `M99.F03.I04` | 端口约定（5100）+ multi-repo-family §6 同步 | 规划 |
 
 ---
 
@@ -537,7 +537,7 @@ suite 父仓 [`docs/ARCHITECTURE.md`](../../docs/ARCHITECTURE.md) 是**全景视
 | §3.6 Mock 仓 = 独立 HTTP 服务（B 强度）| §3.1 HTTP 服务入口（具体到 `src/server.ts` 的 30 行实现）|
 | §3.5 端口与 CORS 对称 | §4.2 CORS 白名单具体配置 |
 | §4.2 Mock 仓目录骨架 | §2.1 当前形态 |
-| §4.3 6 个前端仓怎么切 msw | §4.1 6 个前端仓怎么切到 `:5174` |
+| §4.3 6 个前端仓怎么切 msw | §4.1 6 个前端仓怎么切到 `:5100` |
 | §5.1 改一次契约 → 三端同步 | §5.1 改一次契约 → handlers 同步（本仓视角）|
 | §5.4 门禁链 | §5.4 测试路径 + §5.5 Docker |
 | §7.3 端形态 ADR | §6.1 套件级 ADR（只列与本仓相关的 4 份）|
@@ -556,5 +556,5 @@ suite 父仓 [`docs/ARCHITECTURE.md`](../../docs/ARCHITECTURE.md) 是**全景视
 - suite 父仓 ADR-0008（nextjs-full-stack）：`../../docs/adr/0008-nextjs-full-stack.md`
 - suite 多仓家族规约：`../../docs/conventions/multi-repo-family.md`
 - 跨仓经验教训：`../../../memory/`（`springboot-env-drift-502-trap.md` 等）
-- 兄弟 msw 仓：`../lab-management-system-msw/docs/ARCHITECTURE.md`（同构，端口 5173）
+- 兄弟 msw 仓：`../lab-management-system-msw/docs/ARCHITECTURE.md`（同构，端口 5200）
 - 契约源：`../saas-identity-platform-shared/`（`generated/openapi/openapi.yaml`）

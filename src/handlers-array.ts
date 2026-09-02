@@ -37,6 +37,13 @@ const OVERRIDDEN_PATHS = new Set<string>([
   // 取真实 AppPublicInfo。切到 publicAppsExtraHandlers。
   // 路径字面量是 `:code`（orval 用冒号），不是 `{code}`（OpenAPI 用花括号）。
   "GET */api/v1/apps/:code",
+  // 2026-08-31 contract-test 第三期：auth/refresh 与 me/tenants/switch 切到
+  // 确定性 handler（rotate 存储 / membership 校验），faker 兜底是随机数据不能当 oracle。
+  "POST */api/v1/auth/refresh",
+  "POST */api/v1/me/tenants/:tenantId/switch",
+  // 2026-08-31 contract-test I25：oidc/callback faker 兜底缺 code 也返 200，
+  // 切到确定性 handler（错误分支 400 对齐 nextjs zod 契约面）。
+  "POST */api/v1/auth/oidc/callback",
 ]);
 function handlerKey(h: { method?: unknown; path?: unknown }): string {
   // MSW v2 handler.info.method/path 类型混合 (string | RegExp | HttpCustomPredicate);

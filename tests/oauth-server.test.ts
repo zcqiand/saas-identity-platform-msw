@@ -49,8 +49,8 @@ async function withSession(
 // 用 saas-shared seed 里的实际数据：apps.json 中第一个 active app 是 lab-mgmt，
 // redirectUris 配的是 lab-management-system-nextjs 的 callback。
 // 这里测 OAuth handler 协议本身，用 nextjs 后端的 redirect_uri（dev 跨仓用）。
-const VALID_CLIENT_ID = "lab-mgmt";
-const VALID_REDIRECT = "http://localhost:3001/callback";
+const VALID_CLIENT_ID = "11111111-1111-1111-1111-111111111111"; // V017: client_id 收敛 UUID（原 "lab-mgmt"）
+const VALID_REDIRECT = "http://localhost:5201/callback";
 const VALID_TENANT = "00000000-0000-0000-0000-000000000001"; // users seed 中 alice/bob/carol 的 tenant
 const VALID_SCOPE = "openid profile email";
 const VALID_STATE = "abc-123";

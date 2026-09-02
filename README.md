@@ -1,6 +1,6 @@
 # SaaS 多租户多应用身份平台 · Mock 后端
 
-SaaS 身份平台的 mock 边界 —— MSW v2 handler + 跨前端一致 fixture，独立 HTTP 后端（`:5174`）。
+SaaS 身份平台的 mock 边界 —— MSW v2 handler + 跨前端一致 fixture，独立 HTTP 后端（`:5100`）。
 
 本仓为《（书稿信息待补）》案例（待补）的可运行配套工程，是书稿代码块的 **source of truth**。
 
@@ -10,7 +10,7 @@ SaaS 身份平台的 mock 边界 —— MSW v2 handler + 跨前端一致 fixture
 npm install           # 安装依赖
 npm run gen:handlers  # 同步 shared OpenAPI 变更（orval 生成 faker handlers）
 npm test              # 全量测试（无 Key / 无 Docker / 无网可跑）
-npm run dev           # 起 HTTP server，监听 :5174（健康检查 /healthz）
+npm run dev           # 起 HTTP server，监听 :5100（健康检查 /healthz）
 npm start             # 生产路径
 ```
 
@@ -18,7 +18,7 @@ npm start             # 生产路径
 
 - 从 shared 仓 OpenAPI 派生 handler 结构；`handlers-extra.ts` 手写确定性 handler 优先于 faker 兜底
 - faker 生成跨端一致 fixture；lab-mgmt client 白名单 + lab-react 生产回调（seeds）
-- 独立 HTTP 部署：`src/server.ts` listen `:5174`，供 react / vue / nextjs 前端直接 fetch
+- 独立 HTTP 部署：`src/server.ts` listen `:5100`，供 react / vue / nextjs 前端直接 fetch
 
 ## 技术栈
 

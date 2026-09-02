@@ -28,4 +28,4 @@
 | M99.F03.I01 | Express + @mswjs/http-middleware 装配（src/server.ts + handlers 零修改） | 接口 | 规划 |
 | M99.F03.I02 | 健康检查端点 /healthz（{ ok, mode:'msw', uptime }） | 接口 | 规划 |
 | M99.F03.I03 | Dockerfile 与容器化（multi-stage + registry.npmmirror.com） | 接口 | 规划 |
-| M99.F03.I04 | 端口约定（saas-msw=5174）+ multi-repo-family §6 端口表同步 | 接口 | 规划 |
+| M99.F03.I04 | 端口约定（saas-msw=5100）+ multi-repo-family §6 端口表同步 | 接口 | 规划 |
