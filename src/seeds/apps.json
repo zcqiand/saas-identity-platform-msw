@@ -12,9 +12,11 @@
     "redirectUris": [
       "http://localhost:5201/callback",
       "http://localhost:5202/login",
+      "http://localhost:5203/login",
       "http://localhost:5200/login",
       "https://lab-nextjs.xiangru.uk/login",
-      "https://lab-react.xiangru.uk/login"
+      "https://lab-react.xiangru.uk/login",
+      "https://lab-vue.xiangru.uk/login"
     ],
     "scopes": [
       "lab.read",
