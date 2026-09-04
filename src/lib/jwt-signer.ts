@@ -15,7 +15,8 @@ import { SignJWT } from "jose";
 
 const enc = new TextEncoder();
 
-function getSigningKey(): Uint8Array {
+// ADR-0019 禁 env 字面默认值。signing key 缺失 throw（与 issuer/audience 同款 fail-fast）。
+export function getSigningKey(): Uint8Array {
   const k = process.env.JWT_SIGNING_KEY;
   if (!k || k.length < 32) {
     throw new Error(
@@ -25,18 +26,27 @@ function getSigningKey(): Uint8Array {
   return enc.encode(k);
 }
 
-function getIssuer(): string {
-  return process.env.JWT_ISSUER ?? "saas-identity-platform";
+// ADR-0019 禁 env 字面默认值。issuer/audience 缺失 throw,handler 启动即拒。
+export function getIssuer(): string {
+  const v = process.env.JWT_ISSUER;
+  if (!v) throw new Error("JWT_ISSUER env is required (ADR-0019 禁字面默认值)");
+  return v;
 }
 
-function getAudience(): string {
-  return process.env.JWT_AUDIENCE ?? "saas-identity-platform-clients";
+export function getAudience(): string {
+  const v = process.env.JWT_AUDIENCE;
+  if (!v) throw new Error("JWT_AUDIENCE env is required (ADR-0019 禁字面默认值)");
+  return v;
 }
 
 function getTtlSeconds(): number {
   const raw = process.env.JWT_TTL_SECONDS;
-  const n = raw ? Number(raw) : 3600;
-  return Number.isFinite(n) && n > 0 ? n : 3600;
+  if (!raw) throw new Error("JWT_TTL_SECONDS env is required (ADR-0019 禁字面默认值)");
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n <= 0) {
+    throw new Error(`JWT_TTL_SECONDS 非法值 ${raw}（必须正整数）`);
+  }
+  return n;
 }
 
 /**

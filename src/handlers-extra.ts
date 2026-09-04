@@ -4,7 +4,7 @@
 // test stability, so we intercept these endpoints before the orval handlers.
 import { http, HttpResponse } from "msw";
 import { jwtVerify } from "jose";
-import { signAccessToken } from "./lib/jwt-signer";
+import { getAudience, getIssuer, getSigningKey, signAccessToken } from "./lib/jwt-signer";
 import {
   apps,
   menus,
@@ -324,10 +324,10 @@ export const meExtraHandlers = [
         try {
           const { payload } = await jwtVerify(
             token,
-            new TextEncoder().encode(process.env.JWT_SIGNING_KEY ?? ""),
+            getSigningKey(),
             {
-              issuer: process.env.JWT_ISSUER ?? "saas-identity-platform",
-              audience: process.env.JWT_AUDIENCE ?? "saas-identity-platform-clients",
+              issuer: getIssuer(),
+              audience: getAudience(),
             },
           );
           userId = String(payload.sub ?? "");
@@ -552,10 +552,10 @@ export const authExtraHandlers = [
     try {
       const { payload } = await jwtVerify(
         token,
-        new TextEncoder().encode(process.env.JWT_SIGNING_KEY ?? ""),
+        getSigningKey(),
         {
-          issuer: process.env.JWT_ISSUER ?? "saas-identity-platform",
-          audience: process.env.JWT_AUDIENCE ?? "saas-identity-platform-clients",
+          issuer: getIssuer(),
+          audience: getAudience(),
         },
       );
       const userId = String(payload.sub ?? "");
@@ -607,10 +607,10 @@ export const authExtraHandlers = [
     try {
       const { payload } = await jwtVerify(
         token,
-        new TextEncoder().encode(process.env.JWT_SIGNING_KEY ?? ""),
+        getSigningKey(),
         {
-          issuer: process.env.JWT_ISSUER ?? "saas-identity-platform",
-          audience: process.env.JWT_AUDIENCE ?? "saas-identity-platform-clients",
+          issuer: getIssuer(),
+          audience: getAudience(),
         },
       );
       const userId = String(payload.sub ?? "");
@@ -640,10 +640,10 @@ export const authExtraHandlers = [
     try {
       const { payload } = await jwtVerify(
         token,
-        new TextEncoder().encode(process.env.JWT_SIGNING_KEY ?? ""),
+        getSigningKey(),
         {
-          issuer: process.env.JWT_ISSUER ?? "saas-identity-platform",
-          audience: process.env.JWT_AUDIENCE ?? "saas-identity-platform-clients",
+          issuer: getIssuer(),
+          audience: getAudience(),
         },
       );
       const userId = String(payload.sub ?? "");
@@ -696,10 +696,10 @@ export const authExtraHandlers = [
         try {
           const { payload } = await jwtVerify(
             token,
-            new TextEncoder().encode(process.env.JWT_SIGNING_KEY ?? ""),
+            getSigningKey(),
             {
-              issuer: process.env.JWT_ISSUER ?? "saas-identity-platform",
-              audience: process.env.JWT_AUDIENCE ?? "saas-identity-platform-clients",
+              issuer: getIssuer(),
+              audience: getAudience(),
             },
           );
           bearerUserId = String(payload.sub ?? "") || null;
@@ -804,10 +804,10 @@ export const authExtraHandlers = [
       try {
         await jwtVerify(
           token,
-          new TextEncoder().encode(process.env.JWT_SIGNING_KEY ?? ""),
+          getSigningKey(),
           {
-            issuer: process.env.JWT_ISSUER ?? "saas-identity-platform",
-            audience: process.env.JWT_AUDIENCE ?? "saas-identity-platform-clients",
+            issuer: getIssuer(),
+            audience: getAudience(),
           },
         );
       } catch {
