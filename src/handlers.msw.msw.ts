@@ -18,199 +18,170 @@ import type {
 } from 'msw';
 
 import {
-  ApiKeyStatus,
-  AppStatus,
-  AuditAction,
-  MembershipStatus,
-  MenuStatus,
-  MenuType,
-  OAuthGrantType,
-  TenantStatus,
-  UserStatus
+  SysMenuType,
+  SysUserStatus,
+  TenantMemberStatus,
+  TenantStatus
 } from './handlers.msw.schemas';
 import type {
-  AdminAppsListApps200,
+  AdminClientsListClients200,
   AdminTenantsListTenants200,
-  ApiKey,
-  App,
-  AppPublicInfo,
-  CreateApiKeyResponse,
   CurrentUser,
   LoginResponse,
   MeGetMyMenus200,
-  Menu,
   OAuthAuthorize200,
-  Role,
-  RoleMenuGrant,
+  OAuthClient,
+  OAuthClientPublicInfo,
   SwitchTenantResponse,
+  SysMenu,
+  SysRole,
+  SysRoleMenu,
   Tenant,
-  TenantApiKeysListApiKeys200,
-  TenantAuditExportAuditEvents200,
-  TenantAuditGetRetentionPolicy200,
-  TenantAuditListAuditEvents200,
-  TenantAuditListAuditEventsByUser200,
-  TenantAuditSetRetentionPolicy200,
-  TenantMembership,
-  TenantRolesListRoles200,
-  TenantUsersListUsers200,
-  TokenResponse,
-  User
+  TenantApplication,
+  TenantApplicationsListTenantApplications200,
+  TenantMember,
+  TenantMemberView,
+  TenantMembersListTenantUsers200,
+  TenantRolesListSysRoles200,
+  TokenResponse
 } from './handlers.msw.schemas';
 
 
-export const getAdminAppsListAppsResponseMock = (overrideResponse: Partial< AdminAppsListApps200 > = {}): AdminAppsListApps200 => ({items: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.string.uuid(), code: faker.string.alpha({length: {min: 2, max: 64}}), name: faker.string.alpha({length: {min: 2, max: 255}}), description: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), icon: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sortOrder: faker.number.int({min: undefined, max: undefined}), status: faker.helpers.arrayElement(Object.values(AppStatus)), clientId: faker.string.alpha({length: {min: 2, max: 128}}), clientSecret: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), redirectUris: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), scopes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), grantTypes: faker.helpers.arrayElements(Object.values(OAuthGrantType)), isFirstParty: faker.datatype.boolean(), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`})), page: faker.number.int({min: undefined, max: undefined}), pageSize: faker.number.int({min: undefined, max: undefined}), total: faker.number.int({min: undefined, max: undefined}), ...overrideResponse})
+export const getAdminClientsListClientsResponseMock = (overrideResponse: Partial< AdminClientsListClients200 > = {}): AdminClientsListClients200 => ({items: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.string.uuid(), clientId: faker.string.alpha({length: {min: 10, max: 20}}), clientName: faker.string.alpha({length: {min: 10, max: 20}}), grantTypes: faker.string.alpha({length: {min: 10, max: 20}}), redirectUris: faker.string.alpha({length: {min: 10, max: 20}}), scopes: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), accessTokenValidity: faker.number.int({min: undefined, max: undefined}), refreshTokenValidity: faker.number.int({min: undefined, max: undefined}), autoApprove: faker.datatype.boolean(), status: faker.number.int({min: undefined, max: undefined}), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`})), page: faker.number.int({min: undefined, max: undefined}), pageSize: faker.number.int({min: undefined, max: undefined}), total: faker.number.int({min: undefined, max: undefined}), ...overrideResponse})
 
-export const getAdminAppsCreateAppResponseMock = (overrideResponse: Partial< App > = {}): App => ({id: faker.string.uuid(), code: faker.string.alpha({length: {min: 2, max: 64}}), name: faker.string.alpha({length: {min: 2, max: 255}}), description: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), icon: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sortOrder: faker.number.int({min: undefined, max: undefined}), status: faker.helpers.arrayElement(Object.values(AppStatus)), clientId: faker.string.alpha({length: {min: 2, max: 128}}), clientSecret: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), redirectUris: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), scopes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), grantTypes: faker.helpers.arrayElements(Object.values(OAuthGrantType)), isFirstParty: faker.datatype.boolean(), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
+export const getAdminClientsCreateClientResponseMock = (overrideResponse: Partial< OAuthClient > = {}): OAuthClient => ({id: faker.string.uuid(), clientId: faker.string.alpha({length: {min: 10, max: 20}}), clientName: faker.string.alpha({length: {min: 10, max: 20}}), grantTypes: faker.string.alpha({length: {min: 10, max: 20}}), redirectUris: faker.string.alpha({length: {min: 10, max: 20}}), scopes: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), accessTokenValidity: faker.number.int({min: undefined, max: undefined}), refreshTokenValidity: faker.number.int({min: undefined, max: undefined}), autoApprove: faker.datatype.boolean(), status: faker.number.int({min: undefined, max: undefined}), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
 
-export const getAdminAppsGetAppResponseMock = (overrideResponse: Partial< App > = {}): App => ({id: faker.string.uuid(), code: faker.string.alpha({length: {min: 2, max: 64}}), name: faker.string.alpha({length: {min: 2, max: 255}}), description: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), icon: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sortOrder: faker.number.int({min: undefined, max: undefined}), status: faker.helpers.arrayElement(Object.values(AppStatus)), clientId: faker.string.alpha({length: {min: 2, max: 128}}), clientSecret: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), redirectUris: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), scopes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), grantTypes: faker.helpers.arrayElements(Object.values(OAuthGrantType)), isFirstParty: faker.datatype.boolean(), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
+export const getAdminClientsGetClientResponseMock = (overrideResponse: Partial< OAuthClient > = {}): OAuthClient => ({id: faker.string.uuid(), clientId: faker.string.alpha({length: {min: 10, max: 20}}), clientName: faker.string.alpha({length: {min: 10, max: 20}}), grantTypes: faker.string.alpha({length: {min: 10, max: 20}}), redirectUris: faker.string.alpha({length: {min: 10, max: 20}}), scopes: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), accessTokenValidity: faker.number.int({min: undefined, max: undefined}), refreshTokenValidity: faker.number.int({min: undefined, max: undefined}), autoApprove: faker.datatype.boolean(), status: faker.number.int({min: undefined, max: undefined}), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
 
-export const getAdminAppsUpdateAppResponseMock = (overrideResponse: Partial< App > = {}): App => ({id: faker.string.uuid(), code: faker.string.alpha({length: {min: 2, max: 64}}), name: faker.string.alpha({length: {min: 2, max: 255}}), description: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), icon: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sortOrder: faker.number.int({min: undefined, max: undefined}), status: faker.helpers.arrayElement(Object.values(AppStatus)), clientId: faker.string.alpha({length: {min: 2, max: 128}}), clientSecret: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), redirectUris: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), scopes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), grantTypes: faker.helpers.arrayElements(Object.values(OAuthGrantType)), isFirstParty: faker.datatype.boolean(), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
+export const getAdminClientsUpdateClientResponseMock = (overrideResponse: Partial< OAuthClient > = {}): OAuthClient => ({id: faker.string.uuid(), clientId: faker.string.alpha({length: {min: 10, max: 20}}), clientName: faker.string.alpha({length: {min: 10, max: 20}}), grantTypes: faker.string.alpha({length: {min: 10, max: 20}}), redirectUris: faker.string.alpha({length: {min: 10, max: 20}}), scopes: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), accessTokenValidity: faker.number.int({min: undefined, max: undefined}), refreshTokenValidity: faker.number.int({min: undefined, max: undefined}), autoApprove: faker.datatype.boolean(), status: faker.number.int({min: undefined, max: undefined}), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
 
-export const getAdminAppMenusListMenusResponseMock = (): Menu[] => (Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.string.uuid(), appId: faker.string.uuid(), parentId: faker.helpers.arrayElement([faker.string.uuid(), undefined]), code: faker.string.alpha({length: {min: 2, max: 64}}), name: faker.string.alpha({length: {min: 2, max: 255}}), path: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), icon: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), type: faker.helpers.arrayElement(Object.values(MenuType)), sortOrder: faker.number.int({min: undefined, max: undefined}), status: faker.helpers.arrayElement(Object.values(MenuStatus)), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`})))
+export const getAdminClientsSetClientStatusResponseMock = (overrideResponse: Partial< OAuthClient > = {}): OAuthClient => ({id: faker.string.uuid(), clientId: faker.string.alpha({length: {min: 10, max: 20}}), clientName: faker.string.alpha({length: {min: 10, max: 20}}), grantTypes: faker.string.alpha({length: {min: 10, max: 20}}), redirectUris: faker.string.alpha({length: {min: 10, max: 20}}), scopes: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), accessTokenValidity: faker.number.int({min: undefined, max: undefined}), refreshTokenValidity: faker.number.int({min: undefined, max: undefined}), autoApprove: faker.datatype.boolean(), status: faker.number.int({min: undefined, max: undefined}), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
 
-export const getAdminAppMenusCreateMenuResponseMock = (overrideResponse: Partial< Menu > = {}): Menu => ({id: faker.string.uuid(), appId: faker.string.uuid(), parentId: faker.helpers.arrayElement([faker.string.uuid(), undefined]), code: faker.string.alpha({length: {min: 2, max: 64}}), name: faker.string.alpha({length: {min: 2, max: 255}}), path: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), icon: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), type: faker.helpers.arrayElement(Object.values(MenuType)), sortOrder: faker.number.int({min: undefined, max: undefined}), status: faker.helpers.arrayElement(Object.values(MenuStatus)), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
+export const getAdminTenantsListTenantsResponseMock = (overrideResponse: Partial< AdminTenantsListTenants200 > = {}): AdminTenantsListTenants200 => ({items: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.string.uuid(), tenantKey: faker.string.alpha({length: {min: 2, max: 64}}), name: faker.string.alpha({length: {min: 2, max: 128}}), status: faker.helpers.arrayElement(Object.values(TenantStatus)), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`})), page: faker.number.int({min: undefined, max: undefined}), pageSize: faker.number.int({min: undefined, max: undefined}), total: faker.number.int({min: undefined, max: undefined}), ...overrideResponse})
 
-export const getAdminAppMenusGetMenuResponseMock = (overrideResponse: Partial< Menu > = {}): Menu => ({id: faker.string.uuid(), appId: faker.string.uuid(), parentId: faker.helpers.arrayElement([faker.string.uuid(), undefined]), code: faker.string.alpha({length: {min: 2, max: 64}}), name: faker.string.alpha({length: {min: 2, max: 255}}), path: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), icon: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), type: faker.helpers.arrayElement(Object.values(MenuType)), sortOrder: faker.number.int({min: undefined, max: undefined}), status: faker.helpers.arrayElement(Object.values(MenuStatus)), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
+export const getAdminTenantsCreateTenantResponseMock = (overrideResponse: Partial< Tenant > = {}): Tenant => ({id: faker.string.uuid(), tenantKey: faker.string.alpha({length: {min: 2, max: 64}}), name: faker.string.alpha({length: {min: 2, max: 128}}), status: faker.helpers.arrayElement(Object.values(TenantStatus)), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
 
-export const getAdminAppMenusUpdateMenuResponseMock = (overrideResponse: Partial< Menu > = {}): Menu => ({id: faker.string.uuid(), appId: faker.string.uuid(), parentId: faker.helpers.arrayElement([faker.string.uuid(), undefined]), code: faker.string.alpha({length: {min: 2, max: 64}}), name: faker.string.alpha({length: {min: 2, max: 255}}), path: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), icon: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), type: faker.helpers.arrayElement(Object.values(MenuType)), sortOrder: faker.number.int({min: undefined, max: undefined}), status: faker.helpers.arrayElement(Object.values(MenuStatus)), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
+export const getAdminTenantsGetTenantResponseMock = (overrideResponse: Partial< Tenant > = {}): Tenant => ({id: faker.string.uuid(), tenantKey: faker.string.alpha({length: {min: 2, max: 64}}), name: faker.string.alpha({length: {min: 2, max: 128}}), status: faker.helpers.arrayElement(Object.values(TenantStatus)), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
 
-export const getAdminAppMenusMoveMenuResponseMock = (overrideResponse: Partial< Menu > = {}): Menu => ({id: faker.string.uuid(), appId: faker.string.uuid(), parentId: faker.helpers.arrayElement([faker.string.uuid(), undefined]), code: faker.string.alpha({length: {min: 2, max: 64}}), name: faker.string.alpha({length: {min: 2, max: 255}}), path: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), icon: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), type: faker.helpers.arrayElement(Object.values(MenuType)), sortOrder: faker.number.int({min: undefined, max: undefined}), status: faker.helpers.arrayElement(Object.values(MenuStatus)), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
+export const getAdminTenantsUpdateTenantResponseMock = (overrideResponse: Partial< Tenant > = {}): Tenant => ({id: faker.string.uuid(), tenantKey: faker.string.alpha({length: {min: 2, max: 64}}), name: faker.string.alpha({length: {min: 2, max: 128}}), status: faker.helpers.arrayElement(Object.values(TenantStatus)), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
 
-export const getAdminAppMenusReorderMenusResponseMock = (): Menu[] => (Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.string.uuid(), appId: faker.string.uuid(), parentId: faker.helpers.arrayElement([faker.string.uuid(), undefined]), code: faker.string.alpha({length: {min: 2, max: 64}}), name: faker.string.alpha({length: {min: 2, max: 255}}), path: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), icon: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), type: faker.helpers.arrayElement(Object.values(MenuType)), sortOrder: faker.number.int({min: undefined, max: undefined}), status: faker.helpers.arrayElement(Object.values(MenuStatus)), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`})))
+export const getSessionsLoginResponseMock = (overrideResponse: Partial< LoginResponse > = {}): LoginResponse => ({user: {id: faker.string.uuid(), username: faker.string.alpha({length: {min: 1, max: 64}}), email: faker.helpers.arrayElement([faker.internet.email(), undefined]), mobile: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), status: faker.helpers.arrayElement(Object.values(SysUserStatus)), failedAttempts: faker.helpers.arrayElement([faker.number.int({min: undefined, max: undefined}), undefined]), lockedUntil: faker.helpers.arrayElement([`${faker.date.past().toISOString().split('.')[0]}Z`, undefined]), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`}, availableTenants: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.string.uuid(), tenantId: faker.string.uuid(), userId: faker.string.uuid(), memberName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), isOwner: faker.datatype.boolean(), status: faker.helpers.arrayElement(Object.values(TenantMemberStatus)), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`})), accessToken: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), refreshToken: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), tokenType: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), expiresIn: faker.helpers.arrayElement([faker.number.int({min: undefined, max: undefined}), undefined]), clientId: faker.string.alpha({length: {min: 10, max: 20}}), ...overrideResponse})
 
-export const getAdminAppsSetAppStatusResponseMock = (overrideResponse: Partial< App > = {}): App => ({id: faker.string.uuid(), code: faker.string.alpha({length: {min: 2, max: 64}}), name: faker.string.alpha({length: {min: 2, max: 255}}), description: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), icon: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sortOrder: faker.number.int({min: undefined, max: undefined}), status: faker.helpers.arrayElement(Object.values(AppStatus)), clientId: faker.string.alpha({length: {min: 2, max: 128}}), clientSecret: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), redirectUris: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), scopes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), grantTypes: faker.helpers.arrayElements(Object.values(OAuthGrantType)), isFirstParty: faker.datatype.boolean(), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
+export const getSessionsOidcCallbackResponseMock = (overrideResponse: Partial< TokenResponse > = {}): TokenResponse => ({accessToken: faker.string.alpha({length: {min: 10, max: 20}}), refreshToken: faker.string.alpha({length: {min: 10, max: 20}}), tokenType: faker.string.alpha({length: {min: 10, max: 20}}), expiresIn: faker.number.int({min: undefined, max: undefined}), scope: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), userId: faker.string.alpha({length: {min: 10, max: 20}}), clientId: faker.string.alpha({length: {min: 10, max: 20}}), tenantId: faker.string.uuid(), ...overrideResponse})
 
-export const getAdminTenantsListTenantsResponseMock = (overrideResponse: Partial< AdminTenantsListTenants200 > = {}): AdminTenantsListTenants200 => ({items: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.string.uuid(), code: faker.string.alpha({length: {min: 2, max: 64}}), name: faker.string.alpha({length: {min: 2, max: 255}}), status: faker.helpers.arrayElement(Object.values(TenantStatus)), settings: faker.helpers.arrayElement([{themeColor: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), locale: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), maxUsers: faker.helpers.arrayElement([faker.number.int({min: undefined, max: undefined}), undefined])}, undefined]), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`})), page: faker.number.int({min: undefined, max: undefined}), pageSize: faker.number.int({min: undefined, max: undefined}), total: faker.number.int({min: undefined, max: undefined}), ...overrideResponse})
+export const getSessionsRefreshTokenResponseMock = (overrideResponse: Partial< TokenResponse > = {}): TokenResponse => ({accessToken: faker.string.alpha({length: {min: 10, max: 20}}), refreshToken: faker.string.alpha({length: {min: 10, max: 20}}), tokenType: faker.string.alpha({length: {min: 10, max: 20}}), expiresIn: faker.number.int({min: undefined, max: undefined}), scope: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), userId: faker.string.alpha({length: {min: 10, max: 20}}), clientId: faker.string.alpha({length: {min: 10, max: 20}}), tenantId: faker.string.uuid(), ...overrideResponse})
 
-export const getAdminTenantsCreateTenantResponseMock = (overrideResponse: Partial< Tenant > = {}): Tenant => ({id: faker.string.uuid(), code: faker.string.alpha({length: {min: 2, max: 64}}), name: faker.string.alpha({length: {min: 2, max: 255}}), status: faker.helpers.arrayElement(Object.values(TenantStatus)), settings: faker.helpers.arrayElement([{themeColor: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), locale: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), maxUsers: faker.helpers.arrayElement([faker.number.int({min: undefined, max: undefined}), undefined])}, undefined]), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
+export const getClientsGetClientResponseMock = (overrideResponse: Partial< OAuthClientPublicInfo > = {}): OAuthClientPublicInfo => ({clientId: faker.string.alpha({length: {min: 10, max: 20}}), clientName: faker.string.alpha({length: {min: 10, max: 20}}), status: faker.number.int({min: undefined, max: undefined}), ...overrideResponse})
 
-export const getAdminTenantsGetTenantResponseMock = (overrideResponse: Partial< Tenant > = {}): Tenant => ({id: faker.string.uuid(), code: faker.string.alpha({length: {min: 2, max: 64}}), name: faker.string.alpha({length: {min: 2, max: 255}}), status: faker.helpers.arrayElement(Object.values(TenantStatus)), settings: faker.helpers.arrayElement([{themeColor: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), locale: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), maxUsers: faker.helpers.arrayElement([faker.number.int({min: undefined, max: undefined}), undefined])}, undefined]), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
+export const getClientMenusListSysMenusResponseMock = (): SysMenu[] => (Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.string.uuid(), clientId: faker.string.alpha({length: {min: 10, max: 20}}), parentId: faker.string.uuid(), title: faker.string.alpha({length: {min: 10, max: 20}}), type: faker.helpers.arrayElement(Object.values(SysMenuType)), path: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), component: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), perms: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), icon: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sortOrder: faker.number.int({min: undefined, max: undefined}), status: faker.number.int({min: undefined, max: undefined}), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`})))
 
-export const getAdminTenantsUpdateTenantResponseMock = (overrideResponse: Partial< Tenant > = {}): Tenant => ({id: faker.string.uuid(), code: faker.string.alpha({length: {min: 2, max: 64}}), name: faker.string.alpha({length: {min: 2, max: 255}}), status: faker.helpers.arrayElement(Object.values(TenantStatus)), settings: faker.helpers.arrayElement([{themeColor: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), locale: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), maxUsers: faker.helpers.arrayElement([faker.number.int({min: undefined, max: undefined}), undefined])}, undefined]), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
+export const getClientMenusCreateSysMenuResponseMock = (overrideResponse: Partial< SysMenu > = {}): SysMenu => ({id: faker.string.uuid(), clientId: faker.string.alpha({length: {min: 10, max: 20}}), parentId: faker.string.uuid(), title: faker.string.alpha({length: {min: 10, max: 20}}), type: faker.helpers.arrayElement(Object.values(SysMenuType)), path: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), component: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), perms: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), icon: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sortOrder: faker.number.int({min: undefined, max: undefined}), status: faker.number.int({min: undefined, max: undefined}), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
 
-export const getAppsGetAppResponseMock = (overrideResponse: Partial< AppPublicInfo > = {}): AppPublicInfo => ({id: faker.string.uuid(), code: faker.string.alpha({length: {min: 2, max: 64}}), name: faker.string.alpha({length: {min: 2, max: 255}}), description: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), icon: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), status: faker.helpers.arrayElement(Object.values(AppStatus)), ...overrideResponse})
+export const getClientMenusGetSysMenuResponseMock = (overrideResponse: Partial< SysMenu > = {}): SysMenu => ({id: faker.string.uuid(), clientId: faker.string.alpha({length: {min: 10, max: 20}}), parentId: faker.string.uuid(), title: faker.string.alpha({length: {min: 10, max: 20}}), type: faker.helpers.arrayElement(Object.values(SysMenuType)), path: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), component: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), perms: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), icon: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sortOrder: faker.number.int({min: undefined, max: undefined}), status: faker.number.int({min: undefined, max: undefined}), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
 
-export const getAuthLoginResponseMock = (overrideResponse: Partial< LoginResponse > = {}): LoginResponse => ({accessToken: faker.string.alpha({length: {min: 10, max: 20}}), refreshToken: faker.string.alpha({length: {min: 10, max: 20}}), tokenType: faker.string.alpha({length: {min: 10, max: 20}}), expiresIn: faker.number.int({min: undefined, max: undefined}), userId: faker.string.uuid(), currentTenantId: faker.string.uuid(), ...overrideResponse})
+export const getClientMenusUpdateSysMenuResponseMock = (overrideResponse: Partial< SysMenu > = {}): SysMenu => ({id: faker.string.uuid(), clientId: faker.string.alpha({length: {min: 10, max: 20}}), parentId: faker.string.uuid(), title: faker.string.alpha({length: {min: 10, max: 20}}), type: faker.helpers.arrayElement(Object.values(SysMenuType)), path: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), component: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), perms: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), icon: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sortOrder: faker.number.int({min: undefined, max: undefined}), status: faker.number.int({min: undefined, max: undefined}), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
 
-export const getAuthOidcCallbackResponseMock = (overrideResponse: Partial< TokenResponse > = {}): TokenResponse => ({accessToken: faker.string.alpha({length: {min: 10, max: 20}}), refreshToken: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), tokenType: faker.string.alpha({length: {min: 10, max: 20}}), expiresIn: faker.number.int({min: undefined, max: undefined}), scope: faker.string.alpha({length: {min: 10, max: 20}}), ...overrideResponse})
+export const getClientMenusMoveSysMenuResponseMock = (overrideResponse: Partial< SysMenu > = {}): SysMenu => ({id: faker.string.uuid(), clientId: faker.string.alpha({length: {min: 10, max: 20}}), parentId: faker.string.uuid(), title: faker.string.alpha({length: {min: 10, max: 20}}), type: faker.helpers.arrayElement(Object.values(SysMenuType)), path: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), component: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), perms: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), icon: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sortOrder: faker.number.int({min: undefined, max: undefined}), status: faker.number.int({min: undefined, max: undefined}), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
 
-export const getAuthRefreshTokenResponseMock = (overrideResponse: Partial< TokenResponse > = {}): TokenResponse => ({accessToken: faker.string.alpha({length: {min: 10, max: 20}}), refreshToken: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), tokenType: faker.string.alpha({length: {min: 10, max: 20}}), expiresIn: faker.number.int({min: undefined, max: undefined}), scope: faker.string.alpha({length: {min: 10, max: 20}}), ...overrideResponse})
+export const getClientMenusReorderSysMenusResponseMock = (): SysMenu[] => (Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.string.uuid(), clientId: faker.string.alpha({length: {min: 10, max: 20}}), parentId: faker.string.uuid(), title: faker.string.alpha({length: {min: 10, max: 20}}), type: faker.helpers.arrayElement(Object.values(SysMenuType)), path: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), component: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), perms: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), icon: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sortOrder: faker.number.int({min: undefined, max: undefined}), status: faker.number.int({min: undefined, max: undefined}), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`})))
 
-export const getMeWhoamiResponseMock = (overrideResponse: Partial< CurrentUser > = {}): CurrentUser => ({id: faker.string.uuid(), email: faker.internet.email(), displayName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), memberships: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.string.uuid(), userId: faker.string.uuid(), tenantId: faker.string.uuid(), roleIds: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), status: faker.helpers.arrayElement(Object.values(MembershipStatus)), joinedAt: `${faker.date.past().toISOString().split('.')[0]}Z`})), currentTenantId: faker.helpers.arrayElement([faker.string.uuid(), undefined]), ...overrideResponse})
+export const getMeWhoamiResponseMock = (overrideResponse: Partial< CurrentUser > = {}): CurrentUser => ({user: {id: faker.string.uuid(), username: faker.string.alpha({length: {min: 1, max: 64}}), email: faker.helpers.arrayElement([faker.internet.email(), undefined]), mobile: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), status: faker.helpers.arrayElement(Object.values(SysUserStatus)), failedAttempts: faker.helpers.arrayElement([faker.number.int({min: undefined, max: undefined}), undefined]), lockedUntil: faker.helpers.arrayElement([`${faker.date.past().toISOString().split('.')[0]}Z`, undefined]), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`}, memberships: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.string.uuid(), tenantId: faker.string.uuid(), userId: faker.string.uuid(), memberName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), isOwner: faker.datatype.boolean(), status: faker.helpers.arrayElement(Object.values(TenantMemberStatus)), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`})), currentTenantId: faker.helpers.arrayElement([faker.string.uuid(), undefined]), clientId: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), ...overrideResponse})
 
 export const getMeGetMyMenusResponseMock = (): MeGetMyMenus200 => ({
-        [faker.string.alphanumeric(5)]: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.string.uuid(), appId: faker.string.uuid(), parentId: faker.helpers.arrayElement([faker.string.uuid(), undefined]), code: faker.string.alpha({length: {min: 10, max: 20}}), name: faker.string.alpha({length: {min: 10, max: 20}}), path: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), icon: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), type: faker.helpers.arrayElement(Object.values(MenuType)), sortOrder: faker.number.int({min: undefined, max: undefined}), children: []}))
+        [faker.string.alphanumeric(5)]: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.string.uuid(), clientId: faker.string.alpha({length: {min: 10, max: 20}}), parentId: faker.string.uuid(), title: faker.string.alpha({length: {min: 10, max: 20}}), type: faker.helpers.arrayElement(Object.values(SysMenuType)), path: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), component: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), perms: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), icon: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sortOrder: faker.number.int({min: undefined, max: undefined}), children: []}))
       })
 
-export const getMeListMyTenantsResponseMock = (): TenantMembership[] => (Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.string.uuid(), userId: faker.string.uuid(), tenantId: faker.string.uuid(), roleIds: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), status: faker.helpers.arrayElement(Object.values(MembershipStatus)), joinedAt: `${faker.date.past().toISOString().split('.')[0]}Z`})))
+export const getMeListMyTenantsResponseMock = (): TenantMember[] => (Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.string.uuid(), tenantId: faker.string.uuid(), userId: faker.string.uuid(), memberName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), isOwner: faker.datatype.boolean(), status: faker.helpers.arrayElement(Object.values(TenantMemberStatus)), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`})))
 
-export const getMeSwitchTenantResponseMock = (overrideResponse: Partial< SwitchTenantResponse > = {}): SwitchTenantResponse => ({accessToken: faker.string.alpha({length: {min: 10, max: 20}}), refreshToken: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), expiresAt: `${faker.date.past().toISOString().split('.')[0]}Z`, tenantId: faker.string.uuid(), ...overrideResponse})
+export const getMeSwitchTenantResponseMock = (overrideResponse: Partial< SwitchTenantResponse > = {}): SwitchTenantResponse => ({accessToken: faker.string.alpha({length: {min: 10, max: 20}}), refreshToken: faker.string.alpha({length: {min: 10, max: 20}}), expiresAt: `${faker.date.past().toISOString().split('.')[0]}Z`, tenantId: faker.string.uuid(), clientId: faker.string.alpha({length: {min: 10, max: 20}}), ...overrideResponse})
 
 export const getOAuthAuthorizeResponseMock = (overrideResponse: Partial< OAuthAuthorize200 > = {}): OAuthAuthorize200 => ({code: faker.string.alpha({length: {min: 10, max: 20}}), state: faker.string.alpha({length: {min: 10, max: 20}}), ...overrideResponse})
 
-export const getOAuthTokenResponseMock = (overrideResponse: Partial< TokenResponse > = {}): TokenResponse => ({accessToken: faker.string.alpha({length: {min: 10, max: 20}}), refreshToken: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), tokenType: faker.string.alpha({length: {min: 10, max: 20}}), expiresIn: faker.number.int({min: undefined, max: undefined}), scope: faker.string.alpha({length: {min: 10, max: 20}}), ...overrideResponse})
+export const getOAuthTokenResponseMock = (overrideResponse: Partial< TokenResponse > = {}): TokenResponse => ({accessToken: faker.string.alpha({length: {min: 10, max: 20}}), refreshToken: faker.string.alpha({length: {min: 10, max: 20}}), tokenType: faker.string.alpha({length: {min: 10, max: 20}}), expiresIn: faker.number.int({min: undefined, max: undefined}), scope: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), userId: faker.string.alpha({length: {min: 10, max: 20}}), clientId: faker.string.alpha({length: {min: 10, max: 20}}), tenantId: faker.string.uuid(), ...overrideResponse})
 
-export const getTenantApiKeysListApiKeysResponseMock = (overrideResponse: Partial< TenantApiKeysListApiKeys200 > = {}): TenantApiKeysListApiKeys200 => ({items: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.string.uuid(), tenantId: faker.string.uuid(), name: faker.string.alpha({length: {min: 2, max: 128}}), prefix: faker.string.alpha({length: {min: 8, max: 16}}), status: faker.helpers.arrayElement(Object.values(ApiKeyStatus)), scopes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, lastUsedAt: faker.helpers.arrayElement([`${faker.date.past().toISOString().split('.')[0]}Z`, undefined]), expiresAt: faker.helpers.arrayElement([`${faker.date.past().toISOString().split('.')[0]}Z`, undefined]), revokedAt: faker.helpers.arrayElement([`${faker.date.past().toISOString().split('.')[0]}Z`, undefined])})), page: faker.number.int({min: undefined, max: undefined}), pageSize: faker.number.int({min: undefined, max: undefined}), total: faker.number.int({min: undefined, max: undefined}), ...overrideResponse})
+export const getTenantApplicationsListTenantApplicationsResponseMock = (overrideResponse: Partial< TenantApplicationsListTenantApplications200 > = {}): TenantApplicationsListTenantApplications200 => ({items: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.string.uuid(), tenantId: faker.string.uuid(), clientId: faker.string.alpha({length: {min: 10, max: 20}}), status: faker.number.int({min: undefined, max: undefined}), expireTime: faker.helpers.arrayElement([`${faker.date.past().toISOString().split('.')[0]}Z`, undefined]), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`})), page: faker.number.int({min: undefined, max: undefined}), pageSize: faker.number.int({min: undefined, max: undefined}), total: faker.number.int({min: undefined, max: undefined}), ...overrideResponse})
 
-export const getTenantApiKeysCreateApiKeyResponseMock = (overrideResponse: Partial< CreateApiKeyResponse > = {}): CreateApiKeyResponse => ({apiKey: {id: faker.string.uuid(), tenantId: faker.string.uuid(), name: faker.string.alpha({length: {min: 2, max: 128}}), prefix: faker.string.alpha({length: {min: 8, max: 16}}), status: faker.helpers.arrayElement(Object.values(ApiKeyStatus)), scopes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, lastUsedAt: faker.helpers.arrayElement([`${faker.date.past().toISOString().split('.')[0]}Z`, undefined]), expiresAt: faker.helpers.arrayElement([`${faker.date.past().toISOString().split('.')[0]}Z`, undefined]), revokedAt: faker.helpers.arrayElement([`${faker.date.past().toISOString().split('.')[0]}Z`, undefined])}, secret: faker.string.alpha({length: {min: 16, max: 256}}), ...overrideResponse})
+export const getTenantApplicationsSubscribeTenantApplicationResponseMock = (overrideResponse: Partial< TenantApplication > = {}): TenantApplication => ({id: faker.string.uuid(), tenantId: faker.string.uuid(), clientId: faker.string.alpha({length: {min: 10, max: 20}}), status: faker.number.int({min: undefined, max: undefined}), expireTime: faker.helpers.arrayElement([`${faker.date.past().toISOString().split('.')[0]}Z`, undefined]), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
 
-export const getTenantApiKeysRevokeApiKeyResponseMock = (overrideResponse: Partial< ApiKey > = {}): ApiKey => ({id: faker.string.uuid(), tenantId: faker.string.uuid(), name: faker.string.alpha({length: {min: 2, max: 128}}), prefix: faker.string.alpha({length: {min: 8, max: 16}}), status: faker.helpers.arrayElement(Object.values(ApiKeyStatus)), scopes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, lastUsedAt: faker.helpers.arrayElement([`${faker.date.past().toISOString().split('.')[0]}Z`, undefined]), expiresAt: faker.helpers.arrayElement([`${faker.date.past().toISOString().split('.')[0]}Z`, undefined]), revokedAt: faker.helpers.arrayElement([`${faker.date.past().toISOString().split('.')[0]}Z`, undefined]), ...overrideResponse})
+export const getTenantApplicationsUpdateTenantApplicationResponseMock = (overrideResponse: Partial< TenantApplication > = {}): TenantApplication => ({id: faker.string.uuid(), tenantId: faker.string.uuid(), clientId: faker.string.alpha({length: {min: 10, max: 20}}), status: faker.number.int({min: undefined, max: undefined}), expireTime: faker.helpers.arrayElement([`${faker.date.past().toISOString().split('.')[0]}Z`, undefined]), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
 
-export const getTenantApiKeysRotateApiKeyResponseMock = (overrideResponse: Partial< CreateApiKeyResponse > = {}): CreateApiKeyResponse => ({apiKey: {id: faker.string.uuid(), tenantId: faker.string.uuid(), name: faker.string.alpha({length: {min: 2, max: 128}}), prefix: faker.string.alpha({length: {min: 8, max: 16}}), status: faker.helpers.arrayElement(Object.values(ApiKeyStatus)), scopes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, lastUsedAt: faker.helpers.arrayElement([`${faker.date.past().toISOString().split('.')[0]}Z`, undefined]), expiresAt: faker.helpers.arrayElement([`${faker.date.past().toISOString().split('.')[0]}Z`, undefined]), revokedAt: faker.helpers.arrayElement([`${faker.date.past().toISOString().split('.')[0]}Z`, undefined])}, secret: faker.string.alpha({length: {min: 16, max: 256}}), ...overrideResponse})
+export const getTenantMembersListTenantUsersResponseMock = (overrideResponse: Partial< TenantMembersListTenantUsers200 > = {}): TenantMembersListTenantUsers200 => ({items: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({member: {id: faker.string.uuid(), tenantId: faker.string.uuid(), userId: faker.string.uuid(), memberName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), isOwner: faker.datatype.boolean(), status: faker.helpers.arrayElement(Object.values(TenantMemberStatus)), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`}, user: {id: faker.string.uuid(), username: faker.string.alpha({length: {min: 1, max: 64}}), email: faker.helpers.arrayElement([faker.internet.email(), undefined]), mobile: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), status: faker.helpers.arrayElement(Object.values(SysUserStatus)), failedAttempts: faker.helpers.arrayElement([faker.number.int({min: undefined, max: undefined}), undefined]), lockedUntil: faker.helpers.arrayElement([`${faker.date.past().toISOString().split('.')[0]}Z`, undefined]), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`}, roles: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}})))})), page: faker.number.int({min: undefined, max: undefined}), pageSize: faker.number.int({min: undefined, max: undefined}), total: faker.number.int({min: undefined, max: undefined}), ...overrideResponse})
 
-export const getTenantAuditListAuditEventsResponseMock = (overrideResponse: Partial< TenantAuditListAuditEvents200 > = {}): TenantAuditListAuditEvents200 => ({items: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.string.uuid(), tenantId: faker.string.uuid(), actorUserId: faker.helpers.arrayElement([faker.string.uuid(), undefined]), action: faker.helpers.arrayElement(Object.values(AuditAction)), targetUserId: faker.helpers.arrayElement([faker.string.uuid(), undefined]), metadata: faker.helpers.arrayElement([{
-        [faker.string.alphanumeric(5)]: {}
-      }, undefined]), occurredAt: `${faker.date.past().toISOString().split('.')[0]}Z`})), page: faker.number.int({min: undefined, max: undefined}), pageSize: faker.number.int({min: undefined, max: undefined}), total: faker.number.int({min: undefined, max: undefined}), ...overrideResponse})
+export const getTenantMembersCreateTenantUserResponseMock = (overrideResponse: Partial< TenantMemberView > = {}): TenantMemberView => ({member: {id: faker.string.uuid(), tenantId: faker.string.uuid(), userId: faker.string.uuid(), memberName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), isOwner: faker.datatype.boolean(), status: faker.helpers.arrayElement(Object.values(TenantMemberStatus)), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`}, user: {id: faker.string.uuid(), username: faker.string.alpha({length: {min: 1, max: 64}}), email: faker.helpers.arrayElement([faker.internet.email(), undefined]), mobile: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), status: faker.helpers.arrayElement(Object.values(SysUserStatus)), failedAttempts: faker.helpers.arrayElement([faker.number.int({min: undefined, max: undefined}), undefined]), lockedUntil: faker.helpers.arrayElement([`${faker.date.past().toISOString().split('.')[0]}Z`, undefined]), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`}, roles: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), ...overrideResponse})
 
-export const getTenantAuditListAuditEventsByUserResponseMock = (overrideResponse: Partial< TenantAuditListAuditEventsByUser200 > = {}): TenantAuditListAuditEventsByUser200 => ({items: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.string.uuid(), tenantId: faker.string.uuid(), actorUserId: faker.helpers.arrayElement([faker.string.uuid(), undefined]), action: faker.helpers.arrayElement(Object.values(AuditAction)), targetUserId: faker.helpers.arrayElement([faker.string.uuid(), undefined]), metadata: faker.helpers.arrayElement([{
-        [faker.string.alphanumeric(5)]: {}
-      }, undefined]), occurredAt: `${faker.date.past().toISOString().split('.')[0]}Z`})), page: faker.number.int({min: undefined, max: undefined}), pageSize: faker.number.int({min: undefined, max: undefined}), total: faker.number.int({min: undefined, max: undefined}), ...overrideResponse})
+export const getTenantMembersInviteTenantUserResponseMock = (overrideResponse: Partial< TenantMemberView > = {}): TenantMemberView => ({member: {id: faker.string.uuid(), tenantId: faker.string.uuid(), userId: faker.string.uuid(), memberName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), isOwner: faker.datatype.boolean(), status: faker.helpers.arrayElement(Object.values(TenantMemberStatus)), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`}, user: {id: faker.string.uuid(), username: faker.string.alpha({length: {min: 1, max: 64}}), email: faker.helpers.arrayElement([faker.internet.email(), undefined]), mobile: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), status: faker.helpers.arrayElement(Object.values(SysUserStatus)), failedAttempts: faker.helpers.arrayElement([faker.number.int({min: undefined, max: undefined}), undefined]), lockedUntil: faker.helpers.arrayElement([`${faker.date.past().toISOString().split('.')[0]}Z`, undefined]), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`}, roles: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), ...overrideResponse})
 
-export const getTenantAuditExportAuditEventsResponseMock = (overrideResponse: Partial< TenantAuditExportAuditEvents200 > = {}): TenantAuditExportAuditEvents200 => ({downloadUrl: faker.string.alpha({length: {min: 10, max: 20}}), ...overrideResponse})
+export const getTenantMembersGetTenantUserResponseMock = (overrideResponse: Partial< TenantMemberView > = {}): TenantMemberView => ({member: {id: faker.string.uuid(), tenantId: faker.string.uuid(), userId: faker.string.uuid(), memberName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), isOwner: faker.datatype.boolean(), status: faker.helpers.arrayElement(Object.values(TenantMemberStatus)), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`}, user: {id: faker.string.uuid(), username: faker.string.alpha({length: {min: 1, max: 64}}), email: faker.helpers.arrayElement([faker.internet.email(), undefined]), mobile: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), status: faker.helpers.arrayElement(Object.values(SysUserStatus)), failedAttempts: faker.helpers.arrayElement([faker.number.int({min: undefined, max: undefined}), undefined]), lockedUntil: faker.helpers.arrayElement([`${faker.date.past().toISOString().split('.')[0]}Z`, undefined]), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`}, roles: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), ...overrideResponse})
 
-export const getTenantAuditGetRetentionPolicyResponseMock = (overrideResponse: Partial< TenantAuditGetRetentionPolicy200 > = {}): TenantAuditGetRetentionPolicy200 => ({retentionDays: faker.number.int({min: undefined, max: undefined}), ...overrideResponse})
+export const getTenantMembersUpdateTenantUserResponseMock = (overrideResponse: Partial< TenantMemberView > = {}): TenantMemberView => ({member: {id: faker.string.uuid(), tenantId: faker.string.uuid(), userId: faker.string.uuid(), memberName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), isOwner: faker.datatype.boolean(), status: faker.helpers.arrayElement(Object.values(TenantMemberStatus)), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`}, user: {id: faker.string.uuid(), username: faker.string.alpha({length: {min: 1, max: 64}}), email: faker.helpers.arrayElement([faker.internet.email(), undefined]), mobile: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), status: faker.helpers.arrayElement(Object.values(SysUserStatus)), failedAttempts: faker.helpers.arrayElement([faker.number.int({min: undefined, max: undefined}), undefined]), lockedUntil: faker.helpers.arrayElement([`${faker.date.past().toISOString().split('.')[0]}Z`, undefined]), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`}, roles: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), ...overrideResponse})
 
-export const getTenantAuditSetRetentionPolicyResponseMock = (overrideResponse: Partial< TenantAuditSetRetentionPolicy200 > = {}): TenantAuditSetRetentionPolicy200 => ({retentionDays: faker.number.int({min: undefined, max: undefined}), ...overrideResponse})
+export const getTenantMembersAssignTenantMemberRolesResponseMock = (overrideResponse: Partial< TenantMemberView > = {}): TenantMemberView => ({member: {id: faker.string.uuid(), tenantId: faker.string.uuid(), userId: faker.string.uuid(), memberName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), isOwner: faker.datatype.boolean(), status: faker.helpers.arrayElement(Object.values(TenantMemberStatus)), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`}, user: {id: faker.string.uuid(), username: faker.string.alpha({length: {min: 1, max: 64}}), email: faker.helpers.arrayElement([faker.internet.email(), undefined]), mobile: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), status: faker.helpers.arrayElement(Object.values(SysUserStatus)), failedAttempts: faker.helpers.arrayElement([faker.number.int({min: undefined, max: undefined}), undefined]), lockedUntil: faker.helpers.arrayElement([`${faker.date.past().toISOString().split('.')[0]}Z`, undefined]), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`}, roles: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), ...overrideResponse})
 
-export const getTenantRolesListRolesResponseMock = (overrideResponse: Partial< TenantRolesListRoles200 > = {}): TenantRolesListRoles200 => ({items: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.string.uuid(), tenantId: faker.string.uuid(), code: faker.string.alpha({length: {min: 1, max: 64}}), name: faker.string.alpha({length: {min: 1, max: 255}}), description: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), permissionIds: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`})), page: faker.number.int({min: undefined, max: undefined}), pageSize: faker.number.int({min: undefined, max: undefined}), total: faker.number.int({min: undefined, max: undefined}), ...overrideResponse})
+export const getTenantMembersChangeTenantUserStatusResponseMock = (overrideResponse: Partial< TenantMemberView > = {}): TenantMemberView => ({member: {id: faker.string.uuid(), tenantId: faker.string.uuid(), userId: faker.string.uuid(), memberName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), isOwner: faker.datatype.boolean(), status: faker.helpers.arrayElement(Object.values(TenantMemberStatus)), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`}, user: {id: faker.string.uuid(), username: faker.string.alpha({length: {min: 1, max: 64}}), email: faker.helpers.arrayElement([faker.internet.email(), undefined]), mobile: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), status: faker.helpers.arrayElement(Object.values(SysUserStatus)), failedAttempts: faker.helpers.arrayElement([faker.number.int({min: undefined, max: undefined}), undefined]), lockedUntil: faker.helpers.arrayElement([`${faker.date.past().toISOString().split('.')[0]}Z`, undefined]), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`}, roles: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), ...overrideResponse})
 
-export const getTenantRolesCreateRoleResponseMock = (overrideResponse: Partial< Role > = {}): Role => ({id: faker.string.uuid(), tenantId: faker.string.uuid(), code: faker.string.alpha({length: {min: 1, max: 64}}), name: faker.string.alpha({length: {min: 1, max: 255}}), description: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), permissionIds: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
+export const getTenantRolesListSysRolesResponseMock = (overrideResponse: Partial< TenantRolesListSysRoles200 > = {}): TenantRolesListSysRoles200 => ({items: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.string.uuid(), tenantId: faker.string.uuid(), clientId: faker.string.alpha({length: {min: 10, max: 20}}), roleCode: faker.string.alpha({length: {min: 1, max: 64}}), roleName: faker.string.alpha({length: {min: 1, max: 64}}), description: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), isPreset: faker.datatype.boolean(), status: faker.number.int({min: undefined, max: undefined}), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`})), page: faker.number.int({min: undefined, max: undefined}), pageSize: faker.number.int({min: undefined, max: undefined}), total: faker.number.int({min: undefined, max: undefined}), ...overrideResponse})
 
-export const getTenantRolesGetRoleResponseMock = (overrideResponse: Partial< Role > = {}): Role => ({id: faker.string.uuid(), tenantId: faker.string.uuid(), code: faker.string.alpha({length: {min: 1, max: 64}}), name: faker.string.alpha({length: {min: 1, max: 255}}), description: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), permissionIds: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
+export const getTenantRolesCreateSysRoleResponseMock = (overrideResponse: Partial< SysRole > = {}): SysRole => ({id: faker.string.uuid(), tenantId: faker.string.uuid(), clientId: faker.string.alpha({length: {min: 10, max: 20}}), roleCode: faker.string.alpha({length: {min: 1, max: 64}}), roleName: faker.string.alpha({length: {min: 1, max: 64}}), description: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), isPreset: faker.datatype.boolean(), status: faker.number.int({min: undefined, max: undefined}), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
 
-export const getTenantRolesUpdateRoleResponseMock = (overrideResponse: Partial< Role > = {}): Role => ({id: faker.string.uuid(), tenantId: faker.string.uuid(), code: faker.string.alpha({length: {min: 1, max: 64}}), name: faker.string.alpha({length: {min: 1, max: 255}}), description: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), permissionIds: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
+export const getTenantRolesGetSysRoleResponseMock = (overrideResponse: Partial< SysRole > = {}): SysRole => ({id: faker.string.uuid(), tenantId: faker.string.uuid(), clientId: faker.string.alpha({length: {min: 10, max: 20}}), roleCode: faker.string.alpha({length: {min: 1, max: 64}}), roleName: faker.string.alpha({length: {min: 1, max: 64}}), description: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), isPreset: faker.datatype.boolean(), status: faker.number.int({min: undefined, max: undefined}), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
 
-export const getTenantRoleMenusListRoleMenusResponseMock = (overrideResponse: Partial< RoleMenuGrant > = {}): RoleMenuGrant => ({roleId: faker.string.uuid(), tenantId: faker.string.uuid(), menuIds: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
+export const getTenantRolesUpdateSysRoleResponseMock = (overrideResponse: Partial< SysRole > = {}): SysRole => ({id: faker.string.uuid(), tenantId: faker.string.uuid(), clientId: faker.string.alpha({length: {min: 10, max: 20}}), roleCode: faker.string.alpha({length: {min: 1, max: 64}}), roleName: faker.string.alpha({length: {min: 1, max: 64}}), description: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), isPreset: faker.datatype.boolean(), status: faker.number.int({min: undefined, max: undefined}), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
 
-export const getTenantRoleMenusSetRoleMenusResponseMock = (overrideResponse: Partial< RoleMenuGrant > = {}): RoleMenuGrant => ({roleId: faker.string.uuid(), tenantId: faker.string.uuid(), menuIds: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
+export const getTenantRoleMenusListSysRoleMenusResponseMock = (): SysRoleMenu[] => (Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({roleId: faker.string.uuid(), menuId: faker.string.uuid()})))
 
-export const getTenantRolesSetPermissionsResponseMock = (overrideResponse: Partial< Role > = {}): Role => ({id: faker.string.uuid(), tenantId: faker.string.uuid(), code: faker.string.alpha({length: {min: 1, max: 64}}), name: faker.string.alpha({length: {min: 1, max: 255}}), description: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), permissionIds: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
-
-export const getTenantUsersListUsersResponseMock = (overrideResponse: Partial< TenantUsersListUsers200 > = {}): TenantUsersListUsers200 => ({items: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.string.uuid(), tenantId: faker.string.uuid(), username: faker.string.alpha({length: {min: 1, max: 64}}), email: faker.internet.email(), displayName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), status: faker.helpers.arrayElement(Object.values(UserStatus)), roleIds: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`})), page: faker.number.int({min: undefined, max: undefined}), pageSize: faker.number.int({min: undefined, max: undefined}), total: faker.number.int({min: undefined, max: undefined}), ...overrideResponse})
-
-export const getTenantUsersCreateUserResponseMock = (overrideResponse: Partial< User > = {}): User => ({id: faker.string.uuid(), tenantId: faker.string.uuid(), username: faker.string.alpha({length: {min: 1, max: 64}}), email: faker.internet.email(), displayName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), status: faker.helpers.arrayElement(Object.values(UserStatus)), roleIds: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
-
-export const getTenantUsersInviteUserResponseMock = (overrideResponse: Partial< User > = {}): User => ({id: faker.string.uuid(), tenantId: faker.string.uuid(), username: faker.string.alpha({length: {min: 1, max: 64}}), email: faker.internet.email(), displayName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), status: faker.helpers.arrayElement(Object.values(UserStatus)), roleIds: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
-
-export const getTenantUsersGetUserResponseMock = (overrideResponse: Partial< User > = {}): User => ({id: faker.string.uuid(), tenantId: faker.string.uuid(), username: faker.string.alpha({length: {min: 1, max: 64}}), email: faker.internet.email(), displayName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), status: faker.helpers.arrayElement(Object.values(UserStatus)), roleIds: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
-
-export const getTenantUsersUpdateUserResponseMock = (overrideResponse: Partial< User > = {}): User => ({id: faker.string.uuid(), tenantId: faker.string.uuid(), username: faker.string.alpha({length: {min: 1, max: 64}}), email: faker.internet.email(), displayName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), status: faker.helpers.arrayElement(Object.values(UserStatus)), roleIds: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
-
-export const getTenantUsersAssignRolesResponseMock = (overrideResponse: Partial< User > = {}): User => ({id: faker.string.uuid(), tenantId: faker.string.uuid(), username: faker.string.alpha({length: {min: 1, max: 64}}), email: faker.internet.email(), displayName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), status: faker.helpers.arrayElement(Object.values(UserStatus)), roleIds: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
-
-export const getTenantUsersChangeUserStatusResponseMock = (overrideResponse: Partial< User > = {}): User => ({id: faker.string.uuid(), tenantId: faker.string.uuid(), username: faker.string.alpha({length: {min: 1, max: 64}}), email: faker.internet.email(), displayName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), status: faker.helpers.arrayElement(Object.values(UserStatus)), roleIds: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), createdAt: `${faker.date.past().toISOString().split('.')[0]}Z`, updatedAt: `${faker.date.past().toISOString().split('.')[0]}Z`, ...overrideResponse})
+export const getTenantRoleMenusSetSysRoleMenusResponseMock = (): SysRoleMenu[] => (Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({roleId: faker.string.uuid(), menuId: faker.string.uuid()})))
 
 
-export const getAdminAppsListAppsMockHandler = (overrideResponse?: AdminAppsListApps200 | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<AdminAppsListApps200> | AdminAppsListApps200), options?: RequestHandlerOptions) => {
-  return http.get('*/api/v1/admin/apps', async (info) => {await delay(1000);
+export const getAdminClientsListClientsMockHandler = (overrideResponse?: AdminClientsListClients200 | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<AdminClientsListClients200> | AdminClientsListClients200), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/admin/clients', async (info) => {await delay(1000);
   
     return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getAdminAppsListAppsResponseMock()),
+    : getAdminClientsListClientsResponseMock()),
       { status: 200,
         headers: { 'Content-Type': 'application/json' }
       })
   }, options)
 }
 
-export const getAdminAppsCreateAppMockHandler = (overrideResponse?: App | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<App> | App), options?: RequestHandlerOptions) => {
-  return http.post('*/api/v1/admin/apps', async (info) => {await delay(1000);
+export const getAdminClientsCreateClientMockHandler = (overrideResponse?: OAuthClient | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<OAuthClient> | OAuthClient), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/admin/clients', async (info) => {await delay(1000);
   
     return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getAdminAppsCreateAppResponseMock()),
+    : getAdminClientsCreateClientResponseMock()),
       { status: 200,
         headers: { 'Content-Type': 'application/json' }
       })
   }, options)
 }
 
-export const getAdminAppsGetAppMockHandler = (overrideResponse?: App | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<App> | App), options?: RequestHandlerOptions) => {
-  return http.get('*/api/v1/admin/apps/:appId', async (info) => {await delay(1000);
+export const getAdminClientsGetClientMockHandler = (overrideResponse?: OAuthClient | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<OAuthClient> | OAuthClient), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/admin/clients/:clientId', async (info) => {await delay(1000);
   
     return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getAdminAppsGetAppResponseMock()),
+    : getAdminClientsGetClientResponseMock()),
       { status: 200,
         headers: { 'Content-Type': 'application/json' }
       })
   }, options)
 }
 
-export const getAdminAppsUpdateAppMockHandler = (overrideResponse?: App | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<App> | App), options?: RequestHandlerOptions) => {
-  return http.patch('*/api/v1/admin/apps/:appId', async (info) => {await delay(1000);
+export const getAdminClientsUpdateClientMockHandler = (overrideResponse?: OAuthClient | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<OAuthClient> | OAuthClient), options?: RequestHandlerOptions) => {
+  return http.patch('*/api/v1/admin/clients/:clientId', async (info) => {await delay(1000);
   
     return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getAdminAppsUpdateAppResponseMock()),
+    : getAdminClientsUpdateClientResponseMock()),
       { status: 200,
         headers: { 'Content-Type': 'application/json' }
       })
   }, options)
 }
 
-export const getAdminAppsDeleteAppMockHandler = (overrideResponse?: void | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void), options?: RequestHandlerOptions) => {
-  return http.delete('*/api/v1/admin/apps/:appId', async (info) => {await delay(1000);
+export const getAdminClientsDeleteClientMockHandler = (overrideResponse?: void | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void), options?: RequestHandlerOptions) => {
+  return http.delete('*/api/v1/admin/clients/:clientId', async (info) => {await delay(1000);
   if (typeof overrideResponse === 'function') {await overrideResponse(info); }
     return new HttpResponse(null,
       { status: 204,
@@ -219,94 +190,12 @@ export const getAdminAppsDeleteAppMockHandler = (overrideResponse?: void | ((inf
   }, options)
 }
 
-export const getAdminAppMenusListMenusMockHandler = (overrideResponse?: Menu[] | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Menu[]> | Menu[]), options?: RequestHandlerOptions) => {
-  return http.get('*/api/v1/admin/apps/:appId/menus', async (info) => {await delay(1000);
+export const getAdminClientsSetClientStatusMockHandler = (overrideResponse?: OAuthClient | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<OAuthClient> | OAuthClient), options?: RequestHandlerOptions) => {
+  return http.patch('*/api/v1/admin/clients/:clientId/status', async (info) => {await delay(1000);
   
     return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getAdminAppMenusListMenusResponseMock()),
-      { status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      })
-  }, options)
-}
-
-export const getAdminAppMenusCreateMenuMockHandler = (overrideResponse?: Menu | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<Menu> | Menu), options?: RequestHandlerOptions) => {
-  return http.post('*/api/v1/admin/apps/:appId/menus', async (info) => {await delay(1000);
-  
-    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getAdminAppMenusCreateMenuResponseMock()),
-      { status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      })
-  }, options)
-}
-
-export const getAdminAppMenusGetMenuMockHandler = (overrideResponse?: Menu | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Menu> | Menu), options?: RequestHandlerOptions) => {
-  return http.get('*/api/v1/admin/apps/:appId/menus/:menuId', async (info) => {await delay(1000);
-  
-    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getAdminAppMenusGetMenuResponseMock()),
-      { status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      })
-  }, options)
-}
-
-export const getAdminAppMenusUpdateMenuMockHandler = (overrideResponse?: Menu | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<Menu> | Menu), options?: RequestHandlerOptions) => {
-  return http.patch('*/api/v1/admin/apps/:appId/menus/:menuId', async (info) => {await delay(1000);
-  
-    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getAdminAppMenusUpdateMenuResponseMock()),
-      { status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      })
-  }, options)
-}
-
-export const getAdminAppMenusDeleteMenuMockHandler = (overrideResponse?: void | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void), options?: RequestHandlerOptions) => {
-  return http.delete('*/api/v1/admin/apps/:appId/menus/:menuId', async (info) => {await delay(1000);
-  if (typeof overrideResponse === 'function') {await overrideResponse(info); }
-    return new HttpResponse(null,
-      { status: 204,
-        
-      })
-  }, options)
-}
-
-export const getAdminAppMenusMoveMenuMockHandler = (overrideResponse?: Menu | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<Menu> | Menu), options?: RequestHandlerOptions) => {
-  return http.patch('*/api/v1/admin/apps/:appId/menus/:menuId/parent', async (info) => {await delay(1000);
-  
-    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getAdminAppMenusMoveMenuResponseMock()),
-      { status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      })
-  }, options)
-}
-
-export const getAdminAppMenusReorderMenusMockHandler = (overrideResponse?: Menu[] | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<Menu[]> | Menu[]), options?: RequestHandlerOptions) => {
-  return http.put('*/api/v1/admin/apps/:appId/menus/:menuId/reorder', async (info) => {await delay(1000);
-  
-    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getAdminAppMenusReorderMenusResponseMock()),
-      { status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      })
-  }, options)
-}
-
-export const getAdminAppsSetAppStatusMockHandler = (overrideResponse?: App | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<App> | App), options?: RequestHandlerOptions) => {
-  return http.patch('*/api/v1/admin/apps/:appId/status', async (info) => {await delay(1000);
-  
-    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getAdminAppsSetAppStatusResponseMock()),
+    : getAdminClientsSetClientStatusResponseMock()),
       { status: 200,
         headers: { 'Content-Type': 'application/json' }
       })
@@ -371,31 +260,19 @@ export const getAdminTenantsDeleteTenantMockHandler = (overrideResponse?: void |
   }, options)
 }
 
-export const getAppsGetAppMockHandler = (overrideResponse?: AppPublicInfo | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<AppPublicInfo> | AppPublicInfo), options?: RequestHandlerOptions) => {
-  return http.get('*/api/v1/apps/:code', async (info) => {await delay(1000);
-  
-    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getAppsGetAppResponseMock()),
-      { status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      })
-  }, options)
-}
-
-export const getAuthLoginMockHandler = (overrideResponse?: LoginResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<LoginResponse> | LoginResponse), options?: RequestHandlerOptions) => {
+export const getSessionsLoginMockHandler = (overrideResponse?: LoginResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<LoginResponse> | LoginResponse), options?: RequestHandlerOptions) => {
   return http.post('*/api/v1/auth/login', async (info) => {await delay(1000);
   
     return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getAuthLoginResponseMock()),
+    : getSessionsLoginResponseMock()),
       { status: 200,
         headers: { 'Content-Type': 'application/json' }
       })
   }, options)
 }
 
-export const getAuthLogoutMockHandler = (overrideResponse?: void | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<void> | void), options?: RequestHandlerOptions) => {
+export const getSessionsLogoutMockHandler = (overrideResponse?: void | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<void> | void), options?: RequestHandlerOptions) => {
   return http.post('*/api/v1/auth/logout', async (info) => {await delay(1000);
   if (typeof overrideResponse === 'function') {await overrideResponse(info); }
     return new HttpResponse(null,
@@ -405,24 +282,118 @@ export const getAuthLogoutMockHandler = (overrideResponse?: void | ((info: Param
   }, options)
 }
 
-export const getAuthOidcCallbackMockHandler = (overrideResponse?: TokenResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<TokenResponse> | TokenResponse), options?: RequestHandlerOptions) => {
+export const getSessionsOidcCallbackMockHandler = (overrideResponse?: TokenResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<TokenResponse> | TokenResponse), options?: RequestHandlerOptions) => {
   return http.post('*/api/v1/auth/oidc/callback', async (info) => {await delay(1000);
   
     return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getAuthOidcCallbackResponseMock()),
+    : getSessionsOidcCallbackResponseMock()),
       { status: 200,
         headers: { 'Content-Type': 'application/json' }
       })
   }, options)
 }
 
-export const getAuthRefreshTokenMockHandler = (overrideResponse?: TokenResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<TokenResponse> | TokenResponse), options?: RequestHandlerOptions) => {
+export const getSessionsRefreshTokenMockHandler = (overrideResponse?: TokenResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<TokenResponse> | TokenResponse), options?: RequestHandlerOptions) => {
   return http.post('*/api/v1/auth/refresh', async (info) => {await delay(1000);
   
     return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getAuthRefreshTokenResponseMock()),
+    : getSessionsRefreshTokenResponseMock()),
+      { status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      })
+  }, options)
+}
+
+export const getClientsGetClientMockHandler = (overrideResponse?: OAuthClientPublicInfo | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<OAuthClientPublicInfo> | OAuthClientPublicInfo), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/clients/:clientId', async (info) => {await delay(1000);
+  
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getClientsGetClientResponseMock()),
+      { status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      })
+  }, options)
+}
+
+export const getClientMenusListSysMenusMockHandler = (overrideResponse?: SysMenu[] | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SysMenu[]> | SysMenu[]), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/clients/:clientId/menus', async (info) => {await delay(1000);
+  
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getClientMenusListSysMenusResponseMock()),
+      { status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      })
+  }, options)
+}
+
+export const getClientMenusCreateSysMenuMockHandler = (overrideResponse?: SysMenu | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SysMenu> | SysMenu), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/clients/:clientId/menus', async (info) => {await delay(1000);
+  
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getClientMenusCreateSysMenuResponseMock()),
+      { status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      })
+  }, options)
+}
+
+export const getClientMenusGetSysMenuMockHandler = (overrideResponse?: SysMenu | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SysMenu> | SysMenu), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/clients/:clientId/menus/:menuId', async (info) => {await delay(1000);
+  
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getClientMenusGetSysMenuResponseMock()),
+      { status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      })
+  }, options)
+}
+
+export const getClientMenusUpdateSysMenuMockHandler = (overrideResponse?: SysMenu | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<SysMenu> | SysMenu), options?: RequestHandlerOptions) => {
+  return http.patch('*/api/v1/clients/:clientId/menus/:menuId', async (info) => {await delay(1000);
+  
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getClientMenusUpdateSysMenuResponseMock()),
+      { status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      })
+  }, options)
+}
+
+export const getClientMenusDeleteSysMenuMockHandler = (overrideResponse?: void | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void), options?: RequestHandlerOptions) => {
+  return http.delete('*/api/v1/clients/:clientId/menus/:menuId', async (info) => {await delay(1000);
+  if (typeof overrideResponse === 'function') {await overrideResponse(info); }
+    return new HttpResponse(null,
+      { status: 204,
+        
+      })
+  }, options)
+}
+
+export const getClientMenusMoveSysMenuMockHandler = (overrideResponse?: SysMenu | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<SysMenu> | SysMenu), options?: RequestHandlerOptions) => {
+  return http.patch('*/api/v1/clients/:clientId/menus/:menuId/parent', async (info) => {await delay(1000);
+  
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getClientMenusMoveSysMenuResponseMock()),
+      { status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      })
+  }, options)
+}
+
+export const getClientMenusReorderSysMenusMockHandler = (overrideResponse?: SysMenu[] | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<SysMenu[]> | SysMenu[]), options?: RequestHandlerOptions) => {
+  return http.put('*/api/v1/clients/:clientId/menus/:menuId/reorder', async (info) => {await delay(1000);
+  
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getClientMenusReorderSysMenusResponseMock()),
       { status: 200,
         headers: { 'Content-Type': 'application/json' }
       })
@@ -453,7 +424,7 @@ export const getMeGetMyMenusMockHandler = (overrideResponse?: MeGetMyMenus200 | 
   }, options)
 }
 
-export const getMeListMyTenantsMockHandler = (overrideResponse?: TenantMembership[] | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<TenantMembership[]> | TenantMembership[]), options?: RequestHandlerOptions) => {
+export const getMeListMyTenantsMockHandler = (overrideResponse?: TenantMember[] | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<TenantMember[]> | TenantMember[]), options?: RequestHandlerOptions) => {
   return http.get('*/api/v1/me/tenants', async (info) => {await delay(1000);
   
     return new HttpResponse(JSON.stringify(overrideResponse !== undefined
@@ -501,32 +472,44 @@ export const getOAuthTokenMockHandler = (overrideResponse?: TokenResponse | ((in
   }, options)
 }
 
-export const getTenantApiKeysListApiKeysMockHandler = (overrideResponse?: TenantApiKeysListApiKeys200 | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<TenantApiKeysListApiKeys200> | TenantApiKeysListApiKeys200), options?: RequestHandlerOptions) => {
-  return http.get('*/api/v1/tenants/:tenantId/api-keys', async (info) => {await delay(1000);
+export const getTenantApplicationsListTenantApplicationsMockHandler = (overrideResponse?: TenantApplicationsListTenantApplications200 | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<TenantApplicationsListTenantApplications200> | TenantApplicationsListTenantApplications200), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/tenants/:tenantId/applications', async (info) => {await delay(1000);
   
     return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getTenantApiKeysListApiKeysResponseMock()),
+    : getTenantApplicationsListTenantApplicationsResponseMock()),
       { status: 200,
         headers: { 'Content-Type': 'application/json' }
       })
   }, options)
 }
 
-export const getTenantApiKeysCreateApiKeyMockHandler = (overrideResponse?: CreateApiKeyResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<CreateApiKeyResponse> | CreateApiKeyResponse), options?: RequestHandlerOptions) => {
-  return http.post('*/api/v1/tenants/:tenantId/api-keys', async (info) => {await delay(1000);
+export const getTenantApplicationsSubscribeTenantApplicationMockHandler = (overrideResponse?: TenantApplication | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<TenantApplication> | TenantApplication), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/tenants/:tenantId/applications', async (info) => {await delay(1000);
   
     return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getTenantApiKeysCreateApiKeyResponseMock()),
+    : getTenantApplicationsSubscribeTenantApplicationResponseMock()),
       { status: 200,
         headers: { 'Content-Type': 'application/json' }
       })
   }, options)
 }
 
-export const getTenantApiKeysDeleteApiKeyMockHandler = (overrideResponse?: void | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void), options?: RequestHandlerOptions) => {
-  return http.delete('*/api/v1/tenants/:tenantId/api-keys/:keyId', async (info) => {await delay(1000);
+export const getTenantApplicationsUpdateTenantApplicationMockHandler = (overrideResponse?: TenantApplication | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<TenantApplication> | TenantApplication), options?: RequestHandlerOptions) => {
+  return http.patch('*/api/v1/tenants/:tenantId/applications/:clientId', async (info) => {await delay(1000);
+  
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getTenantApplicationsUpdateTenantApplicationResponseMock()),
+      { status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      })
+  }, options)
+}
+
+export const getTenantApplicationsRemoveTenantApplicationMockHandler = (overrideResponse?: void | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void), options?: RequestHandlerOptions) => {
+  return http.delete('*/api/v1/tenants/:tenantId/applications/:clientId', async (info) => {await delay(1000);
   if (typeof overrideResponse === 'function') {await overrideResponse(info); }
     return new HttpResponse(null,
       { status: 204,
@@ -535,139 +518,149 @@ export const getTenantApiKeysDeleteApiKeyMockHandler = (overrideResponse?: void 
   }, options)
 }
 
-export const getTenantApiKeysRevokeApiKeyMockHandler = (overrideResponse?: ApiKey | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<ApiKey> | ApiKey), options?: RequestHandlerOptions) => {
-  return http.post('*/api/v1/tenants/:tenantId/api-keys/:keyId/revoke', async (info) => {await delay(1000);
+export const getTenantMembersListTenantUsersMockHandler = (overrideResponse?: TenantMembersListTenantUsers200 | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<TenantMembersListTenantUsers200> | TenantMembersListTenantUsers200), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/tenants/:tenantId/members', async (info) => {await delay(1000);
   
     return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getTenantApiKeysRevokeApiKeyResponseMock()),
+    : getTenantMembersListTenantUsersResponseMock()),
       { status: 200,
         headers: { 'Content-Type': 'application/json' }
       })
   }, options)
 }
 
-export const getTenantApiKeysRotateApiKeyMockHandler = (overrideResponse?: CreateApiKeyResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<CreateApiKeyResponse> | CreateApiKeyResponse), options?: RequestHandlerOptions) => {
-  return http.post('*/api/v1/tenants/:tenantId/api-keys/:keyId/rotate', async (info) => {await delay(1000);
+export const getTenantMembersCreateTenantUserMockHandler = (overrideResponse?: TenantMemberView | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<TenantMemberView> | TenantMemberView), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/tenants/:tenantId/members', async (info) => {await delay(1000);
   
     return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getTenantApiKeysRotateApiKeyResponseMock()),
+    : getTenantMembersCreateTenantUserResponseMock()),
       { status: 200,
         headers: { 'Content-Type': 'application/json' }
       })
   }, options)
 }
 
-export const getTenantAuditListAuditEventsMockHandler = (overrideResponse?: TenantAuditListAuditEvents200 | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<TenantAuditListAuditEvents200> | TenantAuditListAuditEvents200), options?: RequestHandlerOptions) => {
-  return http.get('*/api/v1/tenants/:tenantId/audit-events', async (info) => {await delay(1000);
+export const getTenantMembersInviteTenantUserMockHandler = (overrideResponse?: TenantMemberView | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<TenantMemberView> | TenantMemberView), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/tenants/:tenantId/members/invitations', async (info) => {await delay(1000);
   
     return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getTenantAuditListAuditEventsResponseMock()),
+    : getTenantMembersInviteTenantUserResponseMock()),
       { status: 200,
         headers: { 'Content-Type': 'application/json' }
       })
   }, options)
 }
 
-export const getTenantAuditListAuditEventsByUserMockHandler = (overrideResponse?: TenantAuditListAuditEventsByUser200 | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<TenantAuditListAuditEventsByUser200> | TenantAuditListAuditEventsByUser200), options?: RequestHandlerOptions) => {
-  return http.get('*/api/v1/tenants/:tenantId/audit-events/by-user/:userId', async (info) => {await delay(1000);
+export const getTenantMembersGetTenantUserMockHandler = (overrideResponse?: TenantMemberView | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<TenantMemberView> | TenantMemberView), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/tenants/:tenantId/members/:userId', async (info) => {await delay(1000);
   
     return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getTenantAuditListAuditEventsByUserResponseMock()),
+    : getTenantMembersGetTenantUserResponseMock()),
       { status: 200,
         headers: { 'Content-Type': 'application/json' }
       })
   }, options)
 }
 
-export const getTenantAuditExportAuditEventsMockHandler = (overrideResponse?: TenantAuditExportAuditEvents200 | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<TenantAuditExportAuditEvents200> | TenantAuditExportAuditEvents200), options?: RequestHandlerOptions) => {
-  return http.post('*/api/v1/tenants/:tenantId/audit-events/export', async (info) => {await delay(1000);
+export const getTenantMembersUpdateTenantUserMockHandler = (overrideResponse?: TenantMemberView | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<TenantMemberView> | TenantMemberView), options?: RequestHandlerOptions) => {
+  return http.patch('*/api/v1/tenants/:tenantId/members/:userId', async (info) => {await delay(1000);
   
     return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getTenantAuditExportAuditEventsResponseMock()),
+    : getTenantMembersUpdateTenantUserResponseMock()),
       { status: 200,
         headers: { 'Content-Type': 'application/json' }
       })
   }, options)
 }
 
-export const getTenantAuditGetRetentionPolicyMockHandler = (overrideResponse?: TenantAuditGetRetentionPolicy200 | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<TenantAuditGetRetentionPolicy200> | TenantAuditGetRetentionPolicy200), options?: RequestHandlerOptions) => {
-  return http.get('*/api/v1/tenants/:tenantId/audit-events/retention', async (info) => {await delay(1000);
+export const getTenantMembersDeleteTenantUserMockHandler = (overrideResponse?: void | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void), options?: RequestHandlerOptions) => {
+  return http.delete('*/api/v1/tenants/:tenantId/members/:userId', async (info) => {await delay(1000);
+  if (typeof overrideResponse === 'function') {await overrideResponse(info); }
+    return new HttpResponse(null,
+      { status: 204,
+        
+      })
+  }, options)
+}
+
+export const getTenantMembersAssignTenantMemberRolesMockHandler = (overrideResponse?: TenantMemberView | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<TenantMemberView> | TenantMemberView), options?: RequestHandlerOptions) => {
+  return http.put('*/api/v1/tenants/:tenantId/members/:userId/roles', async (info) => {await delay(1000);
   
     return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getTenantAuditGetRetentionPolicyResponseMock()),
+    : getTenantMembersAssignTenantMemberRolesResponseMock()),
       { status: 200,
         headers: { 'Content-Type': 'application/json' }
       })
   }, options)
 }
 
-export const getTenantAuditSetRetentionPolicyMockHandler = (overrideResponse?: TenantAuditSetRetentionPolicy200 | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<TenantAuditSetRetentionPolicy200> | TenantAuditSetRetentionPolicy200), options?: RequestHandlerOptions) => {
-  return http.put('*/api/v1/tenants/:tenantId/audit-events/retention', async (info) => {await delay(1000);
+export const getTenantMembersChangeTenantUserStatusMockHandler = (overrideResponse?: TenantMemberView | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<TenantMemberView> | TenantMemberView), options?: RequestHandlerOptions) => {
+  return http.patch('*/api/v1/tenants/:tenantId/members/:userId/status', async (info) => {await delay(1000);
   
     return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getTenantAuditSetRetentionPolicyResponseMock()),
+    : getTenantMembersChangeTenantUserStatusResponseMock()),
       { status: 200,
         headers: { 'Content-Type': 'application/json' }
       })
   }, options)
 }
 
-export const getTenantRolesListRolesMockHandler = (overrideResponse?: TenantRolesListRoles200 | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<TenantRolesListRoles200> | TenantRolesListRoles200), options?: RequestHandlerOptions) => {
+export const getTenantRolesListSysRolesMockHandler = (overrideResponse?: TenantRolesListSysRoles200 | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<TenantRolesListSysRoles200> | TenantRolesListSysRoles200), options?: RequestHandlerOptions) => {
   return http.get('*/api/v1/tenants/:tenantId/roles', async (info) => {await delay(1000);
   
     return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getTenantRolesListRolesResponseMock()),
+    : getTenantRolesListSysRolesResponseMock()),
       { status: 200,
         headers: { 'Content-Type': 'application/json' }
       })
   }, options)
 }
 
-export const getTenantRolesCreateRoleMockHandler = (overrideResponse?: Role | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<Role> | Role), options?: RequestHandlerOptions) => {
+export const getTenantRolesCreateSysRoleMockHandler = (overrideResponse?: SysRole | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SysRole> | SysRole), options?: RequestHandlerOptions) => {
   return http.post('*/api/v1/tenants/:tenantId/roles', async (info) => {await delay(1000);
   
     return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getTenantRolesCreateRoleResponseMock()),
+    : getTenantRolesCreateSysRoleResponseMock()),
       { status: 200,
         headers: { 'Content-Type': 'application/json' }
       })
   }, options)
 }
 
-export const getTenantRolesGetRoleMockHandler = (overrideResponse?: Role | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Role> | Role), options?: RequestHandlerOptions) => {
+export const getTenantRolesGetSysRoleMockHandler = (overrideResponse?: SysRole | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SysRole> | SysRole), options?: RequestHandlerOptions) => {
   return http.get('*/api/v1/tenants/:tenantId/roles/:roleId', async (info) => {await delay(1000);
   
     return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getTenantRolesGetRoleResponseMock()),
+    : getTenantRolesGetSysRoleResponseMock()),
       { status: 200,
         headers: { 'Content-Type': 'application/json' }
       })
   }, options)
 }
 
-export const getTenantRolesUpdateRoleMockHandler = (overrideResponse?: Role | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<Role> | Role), options?: RequestHandlerOptions) => {
+export const getTenantRolesUpdateSysRoleMockHandler = (overrideResponse?: SysRole | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<SysRole> | SysRole), options?: RequestHandlerOptions) => {
   return http.patch('*/api/v1/tenants/:tenantId/roles/:roleId', async (info) => {await delay(1000);
   
     return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getTenantRolesUpdateRoleResponseMock()),
+    : getTenantRolesUpdateSysRoleResponseMock()),
       { status: 200,
         headers: { 'Content-Type': 'application/json' }
       })
   }, options)
 }
 
-export const getTenantRolesDeleteRoleMockHandler = (overrideResponse?: void | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void), options?: RequestHandlerOptions) => {
+export const getTenantRolesDeleteSysRoleMockHandler = (overrideResponse?: void | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void), options?: RequestHandlerOptions) => {
   return http.delete('*/api/v1/tenants/:tenantId/roles/:roleId', async (info) => {await delay(1000);
   if (typeof overrideResponse === 'function') {await overrideResponse(info); }
     return new HttpResponse(null,
@@ -677,31 +670,31 @@ export const getTenantRolesDeleteRoleMockHandler = (overrideResponse?: void | ((
   }, options)
 }
 
-export const getTenantRoleMenusListRoleMenusMockHandler = (overrideResponse?: RoleMenuGrant | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<RoleMenuGrant> | RoleMenuGrant), options?: RequestHandlerOptions) => {
+export const getTenantRoleMenusListSysRoleMenusMockHandler = (overrideResponse?: SysRoleMenu[] | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SysRoleMenu[]> | SysRoleMenu[]), options?: RequestHandlerOptions) => {
   return http.get('*/api/v1/tenants/:tenantId/roles/:roleId/menus', async (info) => {await delay(1000);
   
     return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getTenantRoleMenusListRoleMenusResponseMock()),
+    : getTenantRoleMenusListSysRoleMenusResponseMock()),
       { status: 200,
         headers: { 'Content-Type': 'application/json' }
       })
   }, options)
 }
 
-export const getTenantRoleMenusSetRoleMenusMockHandler = (overrideResponse?: RoleMenuGrant | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<RoleMenuGrant> | RoleMenuGrant), options?: RequestHandlerOptions) => {
+export const getTenantRoleMenusSetSysRoleMenusMockHandler = (overrideResponse?: SysRoleMenu[] | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<SysRoleMenu[]> | SysRoleMenu[]), options?: RequestHandlerOptions) => {
   return http.put('*/api/v1/tenants/:tenantId/roles/:roleId/menus', async (info) => {await delay(1000);
   
     return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getTenantRoleMenusSetRoleMenusResponseMock()),
+    : getTenantRoleMenusSetSysRoleMenusResponseMock()),
       { status: 200,
         headers: { 'Content-Type': 'application/json' }
       })
   }, options)
 }
 
-export const getTenantRoleMenusClearRoleMenusMockHandler = (overrideResponse?: void | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void), options?: RequestHandlerOptions) => {
+export const getTenantRoleMenusClearSysRoleMenusMockHandler = (overrideResponse?: void | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void), options?: RequestHandlerOptions) => {
   return http.delete('*/api/v1/tenants/:tenantId/roles/:roleId/menus', async (info) => {await delay(1000);
   if (typeof overrideResponse === 'function') {await overrideResponse(info); }
     return new HttpResponse(null,
@@ -710,166 +703,53 @@ export const getTenantRoleMenusClearRoleMenusMockHandler = (overrideResponse?: v
       })
   }, options)
 }
-
-export const getTenantRolesSetPermissionsMockHandler = (overrideResponse?: Role | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<Role> | Role), options?: RequestHandlerOptions) => {
-  return http.put('*/api/v1/tenants/:tenantId/roles/:roleId/permissions', async (info) => {await delay(1000);
-  
-    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getTenantRolesSetPermissionsResponseMock()),
-      { status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      })
-  }, options)
-}
-
-export const getTenantUsersListUsersMockHandler = (overrideResponse?: TenantUsersListUsers200 | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<TenantUsersListUsers200> | TenantUsersListUsers200), options?: RequestHandlerOptions) => {
-  return http.get('*/api/v1/tenants/:tenantId/users', async (info) => {await delay(1000);
-  
-    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getTenantUsersListUsersResponseMock()),
-      { status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      })
-  }, options)
-}
-
-export const getTenantUsersCreateUserMockHandler = (overrideResponse?: User | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<User> | User), options?: RequestHandlerOptions) => {
-  return http.post('*/api/v1/tenants/:tenantId/users', async (info) => {await delay(1000);
-  
-    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getTenantUsersCreateUserResponseMock()),
-      { status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      })
-  }, options)
-}
-
-export const getTenantUsersInviteUserMockHandler = (overrideResponse?: User | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<User> | User), options?: RequestHandlerOptions) => {
-  return http.post('*/api/v1/tenants/:tenantId/users/invitations', async (info) => {await delay(1000);
-  
-    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getTenantUsersInviteUserResponseMock()),
-      { status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      })
-  }, options)
-}
-
-export const getTenantUsersGetUserMockHandler = (overrideResponse?: User | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<User> | User), options?: RequestHandlerOptions) => {
-  return http.get('*/api/v1/tenants/:tenantId/users/:userId', async (info) => {await delay(1000);
-  
-    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getTenantUsersGetUserResponseMock()),
-      { status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      })
-  }, options)
-}
-
-export const getTenantUsersUpdateUserMockHandler = (overrideResponse?: User | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<User> | User), options?: RequestHandlerOptions) => {
-  return http.patch('*/api/v1/tenants/:tenantId/users/:userId', async (info) => {await delay(1000);
-  
-    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getTenantUsersUpdateUserResponseMock()),
-      { status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      })
-  }, options)
-}
-
-export const getTenantUsersDeleteUserMockHandler = (overrideResponse?: void | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void), options?: RequestHandlerOptions) => {
-  return http.delete('*/api/v1/tenants/:tenantId/users/:userId', async (info) => {await delay(1000);
-  if (typeof overrideResponse === 'function') {await overrideResponse(info); }
-    return new HttpResponse(null,
-      { status: 204,
-        
-      })
-  }, options)
-}
-
-export const getTenantUsersAssignRolesMockHandler = (overrideResponse?: User | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<User> | User), options?: RequestHandlerOptions) => {
-  return http.put('*/api/v1/tenants/:tenantId/users/:userId/roles', async (info) => {await delay(1000);
-  
-    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getTenantUsersAssignRolesResponseMock()),
-      { status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      })
-  }, options)
-}
-
-export const getTenantUsersChangeUserStatusMockHandler = (overrideResponse?: User | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<User> | User), options?: RequestHandlerOptions) => {
-  return http.patch('*/api/v1/tenants/:tenantId/users/:userId/status', async (info) => {await delay(1000);
-  
-    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getTenantUsersChangeUserStatusResponseMock()),
-      { status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      })
-  }, options)
-}
 export const getTitleMock = () => [
-  getAdminAppsListAppsMockHandler(),
-  getAdminAppsCreateAppMockHandler(),
-  getAdminAppsGetAppMockHandler(),
-  getAdminAppsUpdateAppMockHandler(),
-  getAdminAppsDeleteAppMockHandler(),
-  getAdminAppMenusListMenusMockHandler(),
-  getAdminAppMenusCreateMenuMockHandler(),
-  getAdminAppMenusGetMenuMockHandler(),
-  getAdminAppMenusUpdateMenuMockHandler(),
-  getAdminAppMenusDeleteMenuMockHandler(),
-  getAdminAppMenusMoveMenuMockHandler(),
-  getAdminAppMenusReorderMenusMockHandler(),
-  getAdminAppsSetAppStatusMockHandler(),
+  getAdminClientsListClientsMockHandler(),
+  getAdminClientsCreateClientMockHandler(),
+  getAdminClientsGetClientMockHandler(),
+  getAdminClientsUpdateClientMockHandler(),
+  getAdminClientsDeleteClientMockHandler(),
+  getAdminClientsSetClientStatusMockHandler(),
   getAdminTenantsListTenantsMockHandler(),
   getAdminTenantsCreateTenantMockHandler(),
   getAdminTenantsGetTenantMockHandler(),
   getAdminTenantsUpdateTenantMockHandler(),
   getAdminTenantsDeleteTenantMockHandler(),
-  getAppsGetAppMockHandler(),
-  getAuthLoginMockHandler(),
-  getAuthLogoutMockHandler(),
-  getAuthOidcCallbackMockHandler(),
-  getAuthRefreshTokenMockHandler(),
+  getSessionsLoginMockHandler(),
+  getSessionsLogoutMockHandler(),
+  getSessionsOidcCallbackMockHandler(),
+  getSessionsRefreshTokenMockHandler(),
+  getClientsGetClientMockHandler(),
+  getClientMenusListSysMenusMockHandler(),
+  getClientMenusCreateSysMenuMockHandler(),
+  getClientMenusGetSysMenuMockHandler(),
+  getClientMenusUpdateSysMenuMockHandler(),
+  getClientMenusDeleteSysMenuMockHandler(),
+  getClientMenusMoveSysMenuMockHandler(),
+  getClientMenusReorderSysMenusMockHandler(),
   getMeWhoamiMockHandler(),
   getMeGetMyMenusMockHandler(),
   getMeListMyTenantsMockHandler(),
   getMeSwitchTenantMockHandler(),
   getOAuthAuthorizeMockHandler(),
   getOAuthTokenMockHandler(),
-  getTenantApiKeysListApiKeysMockHandler(),
-  getTenantApiKeysCreateApiKeyMockHandler(),
-  getTenantApiKeysDeleteApiKeyMockHandler(),
-  getTenantApiKeysRevokeApiKeyMockHandler(),
-  getTenantApiKeysRotateApiKeyMockHandler(),
-  getTenantAuditListAuditEventsMockHandler(),
-  getTenantAuditListAuditEventsByUserMockHandler(),
-  getTenantAuditExportAuditEventsMockHandler(),
-  getTenantAuditGetRetentionPolicyMockHandler(),
-  getTenantAuditSetRetentionPolicyMockHandler(),
-  getTenantRolesListRolesMockHandler(),
-  getTenantRolesCreateRoleMockHandler(),
-  getTenantRolesGetRoleMockHandler(),
-  getTenantRolesUpdateRoleMockHandler(),
-  getTenantRolesDeleteRoleMockHandler(),
-  getTenantRoleMenusListRoleMenusMockHandler(),
-  getTenantRoleMenusSetRoleMenusMockHandler(),
-  getTenantRoleMenusClearRoleMenusMockHandler(),
-  getTenantRolesSetPermissionsMockHandler(),
-  getTenantUsersListUsersMockHandler(),
-  getTenantUsersCreateUserMockHandler(),
-  getTenantUsersInviteUserMockHandler(),
-  getTenantUsersGetUserMockHandler(),
-  getTenantUsersUpdateUserMockHandler(),
-  getTenantUsersDeleteUserMockHandler(),
-  getTenantUsersAssignRolesMockHandler(),
-  getTenantUsersChangeUserStatusMockHandler()]
+  getTenantApplicationsListTenantApplicationsMockHandler(),
+  getTenantApplicationsSubscribeTenantApplicationMockHandler(),
+  getTenantApplicationsUpdateTenantApplicationMockHandler(),
+  getTenantApplicationsRemoveTenantApplicationMockHandler(),
+  getTenantMembersListTenantUsersMockHandler(),
+  getTenantMembersCreateTenantUserMockHandler(),
+  getTenantMembersInviteTenantUserMockHandler(),
+  getTenantMembersGetTenantUserMockHandler(),
+  getTenantMembersUpdateTenantUserMockHandler(),
+  getTenantMembersDeleteTenantUserMockHandler(),
+  getTenantMembersAssignTenantMemberRolesMockHandler(),
+  getTenantMembersChangeTenantUserStatusMockHandler(),
+  getTenantRolesListSysRolesMockHandler(),
+  getTenantRolesCreateSysRoleMockHandler(),
+  getTenantRolesGetSysRoleMockHandler(),
+  getTenantRolesUpdateSysRoleMockHandler(),
+  getTenantRolesDeleteSysRoleMockHandler(),
+  getTenantRoleMenusListSysRoleMenusMockHandler(),
+  getTenantRoleMenusSetSysRoleMenusMockHandler(),
+  getTenantRoleMenusClearSysRoleMenusMockHandler()]

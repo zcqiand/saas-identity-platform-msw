@@ -11,190 +11,117 @@ import type {
 } from 'axios';
 
 import type {
-  AdminAppMenusMoveMenuBody,
-  AdminAppsListApps200,
-  AdminAppsListAppsParams,
-  AdminAppsSetAppStatusBody,
+  AdminClientsListClients200,
+  AdminClientsListClientsParams,
+  AdminClientsSetClientStatusBody,
   AdminTenantsListTenants200,
   AdminTenantsListTenantsParams,
-  ApiKey,
-  App,
-  AppPublicInfo,
   AuthorizeCodeRequest,
-  CreateApiKeyRequest,
-  CreateApiKeyResponse,
-  CreateAppRequest,
-  CreateMenuRequest,
-  CreateRoleRequest,
+  ClientMenusMoveSysMenuBody,
+  CreateOAuthClientRequest,
+  CreateSysMenuRequest,
+  CreateSysRoleRequest,
+  CreateSysUserRequest,
   CreateTenantRequest,
-  CreateUserRequest,
   CurrentUser,
   LoginRequest,
   LoginResponse,
   MeGetMyMenus200,
-  Menu,
+  MeGetMyMenusParams,
+  MeListMyTenantsParams,
+  MeSwitchTenantParams,
   OAuthAuthorize200,
+  OAuthClient,
+  OAuthClientPublicInfo,
   OidcCallbackRequest,
-  ReorderMenuRequest,
-  Role,
-  RoleMenuGrant,
-  SetRoleMenusRequest,
+  ReorderSysMenuRequest,
+  SetSysRoleMenusRequest,
+  SetTenantMemberRolesRequest,
+  SubscribeTenantApplicationRequest,
   SwitchTenantResponse,
+  SysMenu,
+  SysRole,
+  SysRoleMenu,
   Tenant,
-  TenantApiKeysListApiKeys200,
-  TenantApiKeysListApiKeysParams,
-  TenantAuditExportAuditEvents200,
-  TenantAuditExportAuditEventsBody,
-  TenantAuditGetRetentionPolicy200,
-  TenantAuditListAuditEvents200,
-  TenantAuditListAuditEventsByUser200,
-  TenantAuditListAuditEventsByUserParams,
-  TenantAuditListAuditEventsParams,
-  TenantAuditSetRetentionPolicy200,
-  TenantAuditSetRetentionPolicyBody,
-  TenantMembership,
-  TenantRolesListRoles200,
-  TenantRolesListRolesParams,
-  TenantRolesSetPermissionsBody,
-  TenantUsersAssignRolesBody,
-  TenantUsersChangeUserStatusBody,
-  TenantUsersInviteUserBody,
-  TenantUsersListUsers200,
-  TenantUsersListUsersParams,
+  TenantApplication,
+  TenantApplicationsListTenantApplications200,
+  TenantApplicationsListTenantApplicationsParams,
+  TenantMember,
+  TenantMemberView,
+  TenantMembersChangeTenantUserStatusBody,
+  TenantMembersInviteTenantUserBody,
+  TenantMembersListTenantUsers200,
+  TenantMembersListTenantUsersParams,
+  TenantRoleMenusClearSysRoleMenusParams,
+  TenantRoleMenusListSysRoleMenusParams,
+  TenantRoleMenusSetSysRoleMenusParams,
+  TenantRolesListSysRoles200,
+  TenantRolesListSysRolesParams,
   TokenRequest,
   TokenResponse,
-  UpdateAppRequest,
-  UpdateMenuRequest,
-  UpdateRoleRequest,
-  UpdateTenantRequest,
-  UpdateUserRequest,
-  User
+  UpdateOAuthClientRequest,
+  UpdateSysMenuRequest,
+  UpdateSysRoleRequest,
+  UpdateSysUserRequest,
+  UpdateTenantApplicationRequest,
+  UpdateTenantRequest
 } from './handlers.msw.schemas';
 
 
 
 
-  export const adminAppsListApps = <TData = AxiosResponse<AdminAppsListApps200>>(
-    params?: AdminAppsListAppsParams, options?: AxiosRequestConfig
+  export const adminClientsListClients = <TData = AxiosResponse<AdminClientsListClients200>>(
+    params?: AdminClientsListClientsParams, options?: AxiosRequestConfig
  ): Promise<TData> => {
     return axios.get(
-      `/api/v1/admin/apps`,{
+      `/api/v1/admin/clients`,{
     ...options,
         params: {...params, ...options?.params},}
     );
   }
 
-export const adminAppsCreateApp = <TData = AxiosResponse<App>>(
-    createAppRequest: CreateAppRequest, options?: AxiosRequestConfig
+export const adminClientsCreateClient = <TData = AxiosResponse<OAuthClient>>(
+    createOAuthClientRequest: CreateOAuthClientRequest, options?: AxiosRequestConfig
  ): Promise<TData> => {
     return axios.post(
-      `/api/v1/admin/apps`,
-      createAppRequest,options
+      `/api/v1/admin/clients`,
+      createOAuthClientRequest,options
     );
   }
 
-export const adminAppsGetApp = <TData = AxiosResponse<App>>(
-    appId: string, options?: AxiosRequestConfig
+export const adminClientsGetClient = <TData = AxiosResponse<OAuthClient>>(
+    clientId: string, options?: AxiosRequestConfig
  ): Promise<TData> => {
     return axios.get(
-      `/api/v1/admin/apps/${appId}`,options
+      `/api/v1/admin/clients/${clientId}`,options
     );
   }
 
-export const adminAppsUpdateApp = <TData = AxiosResponse<App>>(
-    appId: string,
-    updateAppRequest: UpdateAppRequest, options?: AxiosRequestConfig
+export const adminClientsUpdateClient = <TData = AxiosResponse<OAuthClient>>(
+    clientId: string,
+    updateOAuthClientRequest: UpdateOAuthClientRequest, options?: AxiosRequestConfig
  ): Promise<TData> => {
     return axios.patch(
-      `/api/v1/admin/apps/${appId}`,
-      updateAppRequest,options
+      `/api/v1/admin/clients/${clientId}`,
+      updateOAuthClientRequest,options
     );
   }
 
-export const adminAppsDeleteApp = <TData = AxiosResponse<void>>(
-    appId: string, options?: AxiosRequestConfig
+export const adminClientsDeleteClient = <TData = AxiosResponse<void>>(
+    clientId: string, options?: AxiosRequestConfig
  ): Promise<TData> => {
     return axios.delete(
-      `/api/v1/admin/apps/${appId}`,options
+      `/api/v1/admin/clients/${clientId}`,options
     );
   }
 
-export const adminAppMenusListMenus = <TData = AxiosResponse<Menu[]>>(
-    appId: string, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.get(
-      `/api/v1/admin/apps/${appId}/menus`,options
-    );
-  }
-
-export const adminAppMenusCreateMenu = <TData = AxiosResponse<Menu>>(
-    appId: string,
-    createMenuRequest: CreateMenuRequest, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.post(
-      `/api/v1/admin/apps/${appId}/menus`,
-      createMenuRequest,options
-    );
-  }
-
-export const adminAppMenusGetMenu = <TData = AxiosResponse<Menu>>(
-    appId: string,
-    menuId: string, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.get(
-      `/api/v1/admin/apps/${appId}/menus/${menuId}`,options
-    );
-  }
-
-export const adminAppMenusUpdateMenu = <TData = AxiosResponse<Menu>>(
-    appId: string,
-    menuId: string,
-    updateMenuRequest: UpdateMenuRequest, options?: AxiosRequestConfig
+export const adminClientsSetClientStatus = <TData = AxiosResponse<OAuthClient>>(
+    clientId: string,
+    adminClientsSetClientStatusBody: AdminClientsSetClientStatusBody, options?: AxiosRequestConfig
  ): Promise<TData> => {
     return axios.patch(
-      `/api/v1/admin/apps/${appId}/menus/${menuId}`,
-      updateMenuRequest,options
-    );
-  }
-
-export const adminAppMenusDeleteMenu = <TData = AxiosResponse<void>>(
-    appId: string,
-    menuId: string, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.delete(
-      `/api/v1/admin/apps/${appId}/menus/${menuId}`,options
-    );
-  }
-
-export const adminAppMenusMoveMenu = <TData = AxiosResponse<Menu>>(
-    appId: string,
-    menuId: string,
-    adminAppMenusMoveMenuBody: AdminAppMenusMoveMenuBody, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.patch(
-      `/api/v1/admin/apps/${appId}/menus/${menuId}/parent`,
-      adminAppMenusMoveMenuBody,options
-    );
-  }
-
-export const adminAppMenusReorderMenus = <TData = AxiosResponse<Menu[]>>(
-    appId: string,
-    menuId: string,
-    reorderMenuRequest: ReorderMenuRequest, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.put(
-      `/api/v1/admin/apps/${appId}/menus/${menuId}/reorder`,
-      reorderMenuRequest,options
-    );
-  }
-
-export const adminAppsSetAppStatus = <TData = AxiosResponse<App>>(
-    appId: string,
-    adminAppsSetAppStatusBody: AdminAppsSetAppStatusBody, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.patch(
-      `/api/v1/admin/apps/${appId}/status`,
-      adminAppsSetAppStatusBody,options
+      `/api/v1/admin/clients/${clientId}/status`,
+      adminClientsSetClientStatusBody,options
     );
   }
 
@@ -243,15 +170,7 @@ export const adminTenantsDeleteTenant = <TData = AxiosResponse<void>>(
     );
   }
 
-export const appsGetApp = <TData = AxiosResponse<AppPublicInfo>>(
-    code: string, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.get(
-      `/api/v1/apps/${code}`,options
-    );
-  }
-
-export const authLogin = <TData = AxiosResponse<LoginResponse>>(
+export const sessionsLogin = <TData = AxiosResponse<LoginResponse>>(
     loginRequest: LoginRequest, options?: AxiosRequestConfig
  ): Promise<TData> => {
     return axios.post(
@@ -260,7 +179,7 @@ export const authLogin = <TData = AxiosResponse<LoginResponse>>(
     );
   }
 
-export const authLogout = <TData = AxiosResponse<void>>(
+export const sessionsLogout = <TData = AxiosResponse<void>>(
      options?: AxiosRequestConfig
  ): Promise<TData> => {
     return axios.post(
@@ -268,7 +187,7 @@ export const authLogout = <TData = AxiosResponse<void>>(
     );
   }
 
-export const authOidcCallback = <TData = AxiosResponse<TokenResponse>>(
+export const sessionsOidcCallback = <TData = AxiosResponse<TokenResponse>>(
     oidcCallbackRequest: OidcCallbackRequest, options?: AxiosRequestConfig
  ): Promise<TData> => {
     return axios.post(
@@ -277,12 +196,89 @@ export const authOidcCallback = <TData = AxiosResponse<TokenResponse>>(
     );
   }
 
-export const authRefreshToken = <TData = AxiosResponse<TokenResponse>>(
+export const sessionsRefreshToken = <TData = AxiosResponse<TokenResponse>>(
     tokenRequest: TokenRequest, options?: AxiosRequestConfig
  ): Promise<TData> => {
     return axios.post(
       `/api/v1/auth/refresh`,
       tokenRequest,options
+    );
+  }
+
+export const clientsGetClient = <TData = AxiosResponse<OAuthClientPublicInfo>>(
+    clientId: string, options?: AxiosRequestConfig
+ ): Promise<TData> => {
+    return axios.get(
+      `/api/v1/clients/${clientId}`,options
+    );
+  }
+
+export const clientMenusListSysMenus = <TData = AxiosResponse<SysMenu[]>>(
+    clientId: string, options?: AxiosRequestConfig
+ ): Promise<TData> => {
+    return axios.get(
+      `/api/v1/clients/${clientId}/menus`,options
+    );
+  }
+
+export const clientMenusCreateSysMenu = <TData = AxiosResponse<SysMenu>>(
+    clientId: string,
+    createSysMenuRequest: CreateSysMenuRequest, options?: AxiosRequestConfig
+ ): Promise<TData> => {
+    return axios.post(
+      `/api/v1/clients/${clientId}/menus`,
+      createSysMenuRequest,options
+    );
+  }
+
+export const clientMenusGetSysMenu = <TData = AxiosResponse<SysMenu>>(
+    clientId: string,
+    menuId: string, options?: AxiosRequestConfig
+ ): Promise<TData> => {
+    return axios.get(
+      `/api/v1/clients/${clientId}/menus/${menuId}`,options
+    );
+  }
+
+export const clientMenusUpdateSysMenu = <TData = AxiosResponse<SysMenu>>(
+    clientId: string,
+    menuId: string,
+    updateSysMenuRequest: UpdateSysMenuRequest, options?: AxiosRequestConfig
+ ): Promise<TData> => {
+    return axios.patch(
+      `/api/v1/clients/${clientId}/menus/${menuId}`,
+      updateSysMenuRequest,options
+    );
+  }
+
+export const clientMenusDeleteSysMenu = <TData = AxiosResponse<void>>(
+    clientId: string,
+    menuId: string, options?: AxiosRequestConfig
+ ): Promise<TData> => {
+    return axios.delete(
+      `/api/v1/clients/${clientId}/menus/${menuId}`,options
+    );
+  }
+
+export const clientMenusMoveSysMenu = <TData = AxiosResponse<SysMenu>>(
+    clientId: string,
+    menuId: string,
+    clientMenusMoveSysMenuBody: ClientMenusMoveSysMenuBody, options?: AxiosRequestConfig
+ ): Promise<TData> => {
+    return axios.patch(
+      `/api/v1/clients/${clientId}/menus/${menuId}/parent`,
+      clientMenusMoveSysMenuBody,options
+    );
+  }
+
+export const clientMenusReorderSysMenus = <TData = AxiosResponse<SysMenu[]>>(
+    clientId: string,
+    menuId: string,
+    reorderSysMenuRequest: ReorderSysMenuRequest, options?: AxiosRequestConfig
+ ): Promise<TData> => {
+    return axios.put(
+      `/api/v1/clients/${clientId}/menus/${menuId}/reorder`,
+      reorderSysMenuRequest,options
     );
   }
 
@@ -295,26 +291,33 @@ export const meWhoami = <TData = AxiosResponse<CurrentUser>>(
   }
 
 export const meGetMyMenus = <TData = AxiosResponse<MeGetMyMenus200>>(
-     options?: AxiosRequestConfig
+    params: MeGetMyMenusParams, options?: AxiosRequestConfig
  ): Promise<TData> => {
     return axios.get(
-      `/api/v1/me/menus`,options
+      `/api/v1/me/menus`,{
+    ...options,
+        params: {...params, ...options?.params},}
     );
   }
 
-export const meListMyTenants = <TData = AxiosResponse<TenantMembership[]>>(
-     options?: AxiosRequestConfig
+export const meListMyTenants = <TData = AxiosResponse<TenantMember[]>>(
+    params: MeListMyTenantsParams, options?: AxiosRequestConfig
  ): Promise<TData> => {
     return axios.get(
-      `/api/v1/me/tenants`,options
+      `/api/v1/me/tenants`,{
+    ...options,
+        params: {...params, ...options?.params},}
     );
   }
 
 export const meSwitchTenant = <TData = AxiosResponse<SwitchTenantResponse>>(
-    tenantId: string, options?: AxiosRequestConfig
+    tenantId: string,
+    params: MeSwitchTenantParams, options?: AxiosRequestConfig
  ): Promise<TData> => {
     return axios.post(
-      `/api/v1/me/tenants/${tenantId}/switch`,undefined,options
+      `/api/v1/me/tenants/${tenantId}/switch`,undefined,{
+    ...options,
+        params: {...params, ...options?.params},}
     );
   }
 
@@ -336,108 +339,132 @@ export const oAuthToken = <TData = AxiosResponse<TokenResponse>>(
     );
   }
 
-export const tenantApiKeysListApiKeys = <TData = AxiosResponse<TenantApiKeysListApiKeys200>>(
+export const tenantApplicationsListTenantApplications = <TData = AxiosResponse<TenantApplicationsListTenantApplications200>>(
     tenantId: string,
-    params?: TenantApiKeysListApiKeysParams, options?: AxiosRequestConfig
+    params?: TenantApplicationsListTenantApplicationsParams, options?: AxiosRequestConfig
  ): Promise<TData> => {
     return axios.get(
-      `/api/v1/tenants/${tenantId}/api-keys`,{
+      `/api/v1/tenants/${tenantId}/applications`,{
     ...options,
         params: {...params, ...options?.params},}
     );
   }
 
-export const tenantApiKeysCreateApiKey = <TData = AxiosResponse<CreateApiKeyResponse>>(
+export const tenantApplicationsSubscribeTenantApplication = <TData = AxiosResponse<TenantApplication>>(
     tenantId: string,
-    createApiKeyRequest: CreateApiKeyRequest, options?: AxiosRequestConfig
+    subscribeTenantApplicationRequest: SubscribeTenantApplicationRequest, options?: AxiosRequestConfig
  ): Promise<TData> => {
     return axios.post(
-      `/api/v1/tenants/${tenantId}/api-keys`,
-      createApiKeyRequest,options
+      `/api/v1/tenants/${tenantId}/applications`,
+      subscribeTenantApplicationRequest,options
     );
   }
 
-export const tenantApiKeysDeleteApiKey = <TData = AxiosResponse<void>>(
+export const tenantApplicationsUpdateTenantApplication = <TData = AxiosResponse<TenantApplication>>(
     tenantId: string,
-    keyId: string, options?: AxiosRequestConfig
+    clientId: string,
+    updateTenantApplicationRequest: UpdateTenantApplicationRequest, options?: AxiosRequestConfig
+ ): Promise<TData> => {
+    return axios.patch(
+      `/api/v1/tenants/${tenantId}/applications/${clientId}`,
+      updateTenantApplicationRequest,options
+    );
+  }
+
+export const tenantApplicationsRemoveTenantApplication = <TData = AxiosResponse<void>>(
+    tenantId: string,
+    clientId: string, options?: AxiosRequestConfig
  ): Promise<TData> => {
     return axios.delete(
-      `/api/v1/tenants/${tenantId}/api-keys/${keyId}`,options
+      `/api/v1/tenants/${tenantId}/applications/${clientId}`,options
     );
   }
 
-export const tenantApiKeysRevokeApiKey = <TData = AxiosResponse<ApiKey>>(
+export const tenantMembersListTenantUsers = <TData = AxiosResponse<TenantMembersListTenantUsers200>>(
     tenantId: string,
-    keyId: string, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.post(
-      `/api/v1/tenants/${tenantId}/api-keys/${keyId}/revoke`,undefined,options
-    );
-  }
-
-export const tenantApiKeysRotateApiKey = <TData = AxiosResponse<CreateApiKeyResponse>>(
-    tenantId: string,
-    keyId: string, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.post(
-      `/api/v1/tenants/${tenantId}/api-keys/${keyId}/rotate`,undefined,options
-    );
-  }
-
-export const tenantAuditListAuditEvents = <TData = AxiosResponse<TenantAuditListAuditEvents200>>(
-    tenantId: string,
-    params?: TenantAuditListAuditEventsParams, options?: AxiosRequestConfig
+    params?: TenantMembersListTenantUsersParams, options?: AxiosRequestConfig
  ): Promise<TData> => {
     return axios.get(
-      `/api/v1/tenants/${tenantId}/audit-events`,{
+      `/api/v1/tenants/${tenantId}/members`,{
     ...options,
         params: {...params, ...options?.params},}
     );
   }
 
-export const tenantAuditListAuditEventsByUser = <TData = AxiosResponse<TenantAuditListAuditEventsByUser200>>(
+export const tenantMembersCreateTenantUser = <TData = AxiosResponse<TenantMemberView>>(
+    tenantId: string,
+    createSysUserRequest: CreateSysUserRequest, options?: AxiosRequestConfig
+ ): Promise<TData> => {
+    return axios.post(
+      `/api/v1/tenants/${tenantId}/members`,
+      createSysUserRequest,options
+    );
+  }
+
+export const tenantMembersInviteTenantUser = <TData = AxiosResponse<TenantMemberView>>(
+    tenantId: string,
+    tenantMembersInviteTenantUserBody: TenantMembersInviteTenantUserBody, options?: AxiosRequestConfig
+ ): Promise<TData> => {
+    return axios.post(
+      `/api/v1/tenants/${tenantId}/members/invitations`,
+      tenantMembersInviteTenantUserBody,options
+    );
+  }
+
+export const tenantMembersGetTenantUser = <TData = AxiosResponse<TenantMemberView>>(
+    tenantId: string,
+    userId: string, options?: AxiosRequestConfig
+ ): Promise<TData> => {
+    return axios.get(
+      `/api/v1/tenants/${tenantId}/members/${userId}`,options
+    );
+  }
+
+export const tenantMembersUpdateTenantUser = <TData = AxiosResponse<TenantMemberView>>(
     tenantId: string,
     userId: string,
-    params?: TenantAuditListAuditEventsByUserParams, options?: AxiosRequestConfig
+    updateSysUserRequest: UpdateSysUserRequest, options?: AxiosRequestConfig
  ): Promise<TData> => {
-    return axios.get(
-      `/api/v1/tenants/${tenantId}/audit-events/by-user/${userId}`,{
-    ...options,
-        params: {...params, ...options?.params},}
+    return axios.patch(
+      `/api/v1/tenants/${tenantId}/members/${userId}`,
+      updateSysUserRequest,options
     );
   }
 
-export const tenantAuditExportAuditEvents = <TData = AxiosResponse<TenantAuditExportAuditEvents200>>(
+export const tenantMembersDeleteTenantUser = <TData = AxiosResponse<void>>(
     tenantId: string,
-    tenantAuditExportAuditEventsBody: TenantAuditExportAuditEventsBody, options?: AxiosRequestConfig
+    userId: string, options?: AxiosRequestConfig
  ): Promise<TData> => {
-    return axios.post(
-      `/api/v1/tenants/${tenantId}/audit-events/export`,
-      tenantAuditExportAuditEventsBody,options
+    return axios.delete(
+      `/api/v1/tenants/${tenantId}/members/${userId}`,options
     );
   }
 
-export const tenantAuditGetRetentionPolicy = <TData = AxiosResponse<TenantAuditGetRetentionPolicy200>>(
-    tenantId: string, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.get(
-      `/api/v1/tenants/${tenantId}/audit-events/retention`,options
-    );
-  }
-
-export const tenantAuditSetRetentionPolicy = <TData = AxiosResponse<TenantAuditSetRetentionPolicy200>>(
+export const tenantMembersAssignTenantMemberRoles = <TData = AxiosResponse<TenantMemberView>>(
     tenantId: string,
-    tenantAuditSetRetentionPolicyBody: TenantAuditSetRetentionPolicyBody, options?: AxiosRequestConfig
+    userId: string,
+    setTenantMemberRolesRequest: SetTenantMemberRolesRequest, options?: AxiosRequestConfig
  ): Promise<TData> => {
     return axios.put(
-      `/api/v1/tenants/${tenantId}/audit-events/retention`,
-      tenantAuditSetRetentionPolicyBody,options
+      `/api/v1/tenants/${tenantId}/members/${userId}/roles`,
+      setTenantMemberRolesRequest,options
     );
   }
 
-export const tenantRolesListRoles = <TData = AxiosResponse<TenantRolesListRoles200>>(
+export const tenantMembersChangeTenantUserStatus = <TData = AxiosResponse<TenantMemberView>>(
     tenantId: string,
-    params?: TenantRolesListRolesParams, options?: AxiosRequestConfig
+    userId: string,
+    tenantMembersChangeTenantUserStatusBody: TenantMembersChangeTenantUserStatusBody, options?: AxiosRequestConfig
+ ): Promise<TData> => {
+    return axios.patch(
+      `/api/v1/tenants/${tenantId}/members/${userId}/status`,
+      tenantMembersChangeTenantUserStatusBody,options
+    );
+  }
+
+export const tenantRolesListSysRoles = <TData = AxiosResponse<TenantRolesListSysRoles200>>(
+    tenantId: string,
+    params: TenantRolesListSysRolesParams, options?: AxiosRequestConfig
  ): Promise<TData> => {
     return axios.get(
       `/api/v1/tenants/${tenantId}/roles`,{
@@ -446,17 +473,17 @@ export const tenantRolesListRoles = <TData = AxiosResponse<TenantRolesListRoles2
     );
   }
 
-export const tenantRolesCreateRole = <TData = AxiosResponse<Role>>(
+export const tenantRolesCreateSysRole = <TData = AxiosResponse<SysRole>>(
     tenantId: string,
-    createRoleRequest: CreateRoleRequest, options?: AxiosRequestConfig
+    createSysRoleRequest: CreateSysRoleRequest, options?: AxiosRequestConfig
  ): Promise<TData> => {
     return axios.post(
       `/api/v1/tenants/${tenantId}/roles`,
-      createRoleRequest,options
+      createSysRoleRequest,options
     );
   }
 
-export const tenantRolesGetRole = <TData = AxiosResponse<Role>>(
+export const tenantRolesGetSysRole = <TData = AxiosResponse<SysRole>>(
     tenantId: string,
     roleId: string, options?: AxiosRequestConfig
  ): Promise<TData> => {
@@ -465,18 +492,18 @@ export const tenantRolesGetRole = <TData = AxiosResponse<Role>>(
     );
   }
 
-export const tenantRolesUpdateRole = <TData = AxiosResponse<Role>>(
+export const tenantRolesUpdateSysRole = <TData = AxiosResponse<SysRole>>(
     tenantId: string,
     roleId: string,
-    updateRoleRequest: UpdateRoleRequest, options?: AxiosRequestConfig
+    updateSysRoleRequest: UpdateSysRoleRequest, options?: AxiosRequestConfig
  ): Promise<TData> => {
     return axios.patch(
       `/api/v1/tenants/${tenantId}/roles/${roleId}`,
-      updateRoleRequest,options
+      updateSysRoleRequest,options
     );
   }
 
-export const tenantRolesDeleteRole = <TData = AxiosResponse<void>>(
+export const tenantRolesDeleteSysRole = <TData = AxiosResponse<void>>(
     tenantId: string,
     roleId: string, options?: AxiosRequestConfig
  ): Promise<TData> => {
@@ -485,181 +512,90 @@ export const tenantRolesDeleteRole = <TData = AxiosResponse<void>>(
     );
   }
 
-export const tenantRoleMenusListRoleMenus = <TData = AxiosResponse<RoleMenuGrant>>(
-    tenantId: string,
-    roleId: string, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.get(
-      `/api/v1/tenants/${tenantId}/roles/${roleId}/menus`,options
-    );
-  }
-
-export const tenantRoleMenusSetRoleMenus = <TData = AxiosResponse<RoleMenuGrant>>(
+export const tenantRoleMenusListSysRoleMenus = <TData = AxiosResponse<SysRoleMenu[]>>(
     tenantId: string,
     roleId: string,
-    setRoleMenusRequest: SetRoleMenusRequest, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.put(
-      `/api/v1/tenants/${tenantId}/roles/${roleId}/menus`,
-      setRoleMenusRequest,options
-    );
-  }
-
-export const tenantRoleMenusClearRoleMenus = <TData = AxiosResponse<void>>(
-    tenantId: string,
-    roleId: string, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.delete(
-      `/api/v1/tenants/${tenantId}/roles/${roleId}/menus`,options
-    );
-  }
-
-export const tenantRolesSetPermissions = <TData = AxiosResponse<Role>>(
-    tenantId: string,
-    roleId: string,
-    tenantRolesSetPermissionsBody: TenantRolesSetPermissionsBody, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.put(
-      `/api/v1/tenants/${tenantId}/roles/${roleId}/permissions`,
-      tenantRolesSetPermissionsBody,options
-    );
-  }
-
-export const tenantUsersListUsers = <TData = AxiosResponse<TenantUsersListUsers200>>(
-    tenantId: string,
-    params?: TenantUsersListUsersParams, options?: AxiosRequestConfig
+    params: TenantRoleMenusListSysRoleMenusParams, options?: AxiosRequestConfig
  ): Promise<TData> => {
     return axios.get(
-      `/api/v1/tenants/${tenantId}/users`,{
+      `/api/v1/tenants/${tenantId}/roles/${roleId}/menus`,{
     ...options,
         params: {...params, ...options?.params},}
     );
   }
 
-export const tenantUsersCreateUser = <TData = AxiosResponse<User>>(
+export const tenantRoleMenusSetSysRoleMenus = <TData = AxiosResponse<SysRoleMenu[]>>(
     tenantId: string,
-    createUserRequest: CreateUserRequest, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.post(
-      `/api/v1/tenants/${tenantId}/users`,
-      createUserRequest,options
-    );
-  }
-
-export const tenantUsersInviteUser = <TData = AxiosResponse<User>>(
-    tenantId: string,
-    tenantUsersInviteUserBody: TenantUsersInviteUserBody, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.post(
-      `/api/v1/tenants/${tenantId}/users/invitations`,
-      tenantUsersInviteUserBody,options
-    );
-  }
-
-export const tenantUsersGetUser = <TData = AxiosResponse<User>>(
-    tenantId: string,
-    userId: string, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.get(
-      `/api/v1/tenants/${tenantId}/users/${userId}`,options
-    );
-  }
-
-export const tenantUsersUpdateUser = <TData = AxiosResponse<User>>(
-    tenantId: string,
-    userId: string,
-    updateUserRequest: UpdateUserRequest, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.patch(
-      `/api/v1/tenants/${tenantId}/users/${userId}`,
-      updateUserRequest,options
-    );
-  }
-
-export const tenantUsersDeleteUser = <TData = AxiosResponse<void>>(
-    tenantId: string,
-    userId: string, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.delete(
-      `/api/v1/tenants/${tenantId}/users/${userId}`,options
-    );
-  }
-
-export const tenantUsersAssignRoles = <TData = AxiosResponse<User>>(
-    tenantId: string,
-    userId: string,
-    tenantUsersAssignRolesBody: TenantUsersAssignRolesBody, options?: AxiosRequestConfig
+    roleId: string,
+    setSysRoleMenusRequest: SetSysRoleMenusRequest,
+    params: TenantRoleMenusSetSysRoleMenusParams, options?: AxiosRequestConfig
  ): Promise<TData> => {
     return axios.put(
-      `/api/v1/tenants/${tenantId}/users/${userId}/roles`,
-      tenantUsersAssignRolesBody,options
+      `/api/v1/tenants/${tenantId}/roles/${roleId}/menus`,
+      setSysRoleMenusRequest,{
+    ...options,
+        params: {...params, ...options?.params},}
     );
   }
 
-export const tenantUsersChangeUserStatus = <TData = AxiosResponse<User>>(
+export const tenantRoleMenusClearSysRoleMenus = <TData = AxiosResponse<void>>(
     tenantId: string,
-    userId: string,
-    tenantUsersChangeUserStatusBody: TenantUsersChangeUserStatusBody, options?: AxiosRequestConfig
+    roleId: string,
+    params: TenantRoleMenusClearSysRoleMenusParams, options?: AxiosRequestConfig
  ): Promise<TData> => {
-    return axios.patch(
-      `/api/v1/tenants/${tenantId}/users/${userId}/status`,
-      tenantUsersChangeUserStatusBody,options
+    return axios.delete(
+      `/api/v1/tenants/${tenantId}/roles/${roleId}/menus`,{
+    ...options,
+        params: {...params, ...options?.params},}
     );
   }
 
-export type AdminAppsListAppsResult = AxiosResponse<AdminAppsListApps200>
-export type AdminAppsCreateAppResult = AxiosResponse<App>
-export type AdminAppsGetAppResult = AxiosResponse<App>
-export type AdminAppsUpdateAppResult = AxiosResponse<App>
-export type AdminAppsDeleteAppResult = AxiosResponse<void>
-export type AdminAppMenusListMenusResult = AxiosResponse<Menu[]>
-export type AdminAppMenusCreateMenuResult = AxiosResponse<Menu>
-export type AdminAppMenusGetMenuResult = AxiosResponse<Menu>
-export type AdminAppMenusUpdateMenuResult = AxiosResponse<Menu>
-export type AdminAppMenusDeleteMenuResult = AxiosResponse<void>
-export type AdminAppMenusMoveMenuResult = AxiosResponse<Menu>
-export type AdminAppMenusReorderMenusResult = AxiosResponse<Menu[]>
-export type AdminAppsSetAppStatusResult = AxiosResponse<App>
+export type AdminClientsListClientsResult = AxiosResponse<AdminClientsListClients200>
+export type AdminClientsCreateClientResult = AxiosResponse<OAuthClient>
+export type AdminClientsGetClientResult = AxiosResponse<OAuthClient>
+export type AdminClientsUpdateClientResult = AxiosResponse<OAuthClient>
+export type AdminClientsDeleteClientResult = AxiosResponse<void>
+export type AdminClientsSetClientStatusResult = AxiosResponse<OAuthClient>
 export type AdminTenantsListTenantsResult = AxiosResponse<AdminTenantsListTenants200>
 export type AdminTenantsCreateTenantResult = AxiosResponse<Tenant>
 export type AdminTenantsGetTenantResult = AxiosResponse<Tenant>
 export type AdminTenantsUpdateTenantResult = AxiosResponse<Tenant>
 export type AdminTenantsDeleteTenantResult = AxiosResponse<void>
-export type AppsGetAppResult = AxiosResponse<AppPublicInfo>
-export type AuthLoginResult = AxiosResponse<LoginResponse>
-export type AuthLogoutResult = AxiosResponse<void>
-export type AuthOidcCallbackResult = AxiosResponse<TokenResponse>
-export type AuthRefreshTokenResult = AxiosResponse<TokenResponse>
+export type SessionsLoginResult = AxiosResponse<LoginResponse>
+export type SessionsLogoutResult = AxiosResponse<void>
+export type SessionsOidcCallbackResult = AxiosResponse<TokenResponse>
+export type SessionsRefreshTokenResult = AxiosResponse<TokenResponse>
+export type ClientsGetClientResult = AxiosResponse<OAuthClientPublicInfo>
+export type ClientMenusListSysMenusResult = AxiosResponse<SysMenu[]>
+export type ClientMenusCreateSysMenuResult = AxiosResponse<SysMenu>
+export type ClientMenusGetSysMenuResult = AxiosResponse<SysMenu>
+export type ClientMenusUpdateSysMenuResult = AxiosResponse<SysMenu>
+export type ClientMenusDeleteSysMenuResult = AxiosResponse<void>
+export type ClientMenusMoveSysMenuResult = AxiosResponse<SysMenu>
+export type ClientMenusReorderSysMenusResult = AxiosResponse<SysMenu[]>
 export type MeWhoamiResult = AxiosResponse<CurrentUser>
 export type MeGetMyMenusResult = AxiosResponse<MeGetMyMenus200>
-export type MeListMyTenantsResult = AxiosResponse<TenantMembership[]>
+export type MeListMyTenantsResult = AxiosResponse<TenantMember[]>
 export type MeSwitchTenantResult = AxiosResponse<SwitchTenantResponse>
 export type OAuthAuthorizeResult = AxiosResponse<OAuthAuthorize200>
 export type OAuthTokenResult = AxiosResponse<TokenResponse>
-export type TenantApiKeysListApiKeysResult = AxiosResponse<TenantApiKeysListApiKeys200>
-export type TenantApiKeysCreateApiKeyResult = AxiosResponse<CreateApiKeyResponse>
-export type TenantApiKeysDeleteApiKeyResult = AxiosResponse<void>
-export type TenantApiKeysRevokeApiKeyResult = AxiosResponse<ApiKey>
-export type TenantApiKeysRotateApiKeyResult = AxiosResponse<CreateApiKeyResponse>
-export type TenantAuditListAuditEventsResult = AxiosResponse<TenantAuditListAuditEvents200>
-export type TenantAuditListAuditEventsByUserResult = AxiosResponse<TenantAuditListAuditEventsByUser200>
-export type TenantAuditExportAuditEventsResult = AxiosResponse<TenantAuditExportAuditEvents200>
-export type TenantAuditGetRetentionPolicyResult = AxiosResponse<TenantAuditGetRetentionPolicy200>
-export type TenantAuditSetRetentionPolicyResult = AxiosResponse<TenantAuditSetRetentionPolicy200>
-export type TenantRolesListRolesResult = AxiosResponse<TenantRolesListRoles200>
-export type TenantRolesCreateRoleResult = AxiosResponse<Role>
-export type TenantRolesGetRoleResult = AxiosResponse<Role>
-export type TenantRolesUpdateRoleResult = AxiosResponse<Role>
-export type TenantRolesDeleteRoleResult = AxiosResponse<void>
-export type TenantRoleMenusListRoleMenusResult = AxiosResponse<RoleMenuGrant>
-export type TenantRoleMenusSetRoleMenusResult = AxiosResponse<RoleMenuGrant>
-export type TenantRoleMenusClearRoleMenusResult = AxiosResponse<void>
-export type TenantRolesSetPermissionsResult = AxiosResponse<Role>
-export type TenantUsersListUsersResult = AxiosResponse<TenantUsersListUsers200>
-export type TenantUsersCreateUserResult = AxiosResponse<User>
-export type TenantUsersInviteUserResult = AxiosResponse<User>
-export type TenantUsersGetUserResult = AxiosResponse<User>
-export type TenantUsersUpdateUserResult = AxiosResponse<User>
-export type TenantUsersDeleteUserResult = AxiosResponse<void>
-export type TenantUsersAssignRolesResult = AxiosResponse<User>
-export type TenantUsersChangeUserStatusResult = AxiosResponse<User>
+export type TenantApplicationsListTenantApplicationsResult = AxiosResponse<TenantApplicationsListTenantApplications200>
+export type TenantApplicationsSubscribeTenantApplicationResult = AxiosResponse<TenantApplication>
+export type TenantApplicationsUpdateTenantApplicationResult = AxiosResponse<TenantApplication>
+export type TenantApplicationsRemoveTenantApplicationResult = AxiosResponse<void>
+export type TenantMembersListTenantUsersResult = AxiosResponse<TenantMembersListTenantUsers200>
+export type TenantMembersCreateTenantUserResult = AxiosResponse<TenantMemberView>
+export type TenantMembersInviteTenantUserResult = AxiosResponse<TenantMemberView>
+export type TenantMembersGetTenantUserResult = AxiosResponse<TenantMemberView>
+export type TenantMembersUpdateTenantUserResult = AxiosResponse<TenantMemberView>
+export type TenantMembersDeleteTenantUserResult = AxiosResponse<void>
+export type TenantMembersAssignTenantMemberRolesResult = AxiosResponse<TenantMemberView>
+export type TenantMembersChangeTenantUserStatusResult = AxiosResponse<TenantMemberView>
+export type TenantRolesListSysRolesResult = AxiosResponse<TenantRolesListSysRoles200>
+export type TenantRolesCreateSysRoleResult = AxiosResponse<SysRole>
+export type TenantRolesGetSysRoleResult = AxiosResponse<SysRole>
+export type TenantRolesUpdateSysRoleResult = AxiosResponse<SysRole>
+export type TenantRolesDeleteSysRoleResult = AxiosResponse<void>
+export type TenantRoleMenusListSysRoleMenusResult = AxiosResponse<SysRoleMenu[]>
+export type TenantRoleMenusSetSysRoleMenusResult = AxiosResponse<SysRoleMenu[]>
+export type TenantRoleMenusClearSysRoleMenusResult = AxiosResponse<void>

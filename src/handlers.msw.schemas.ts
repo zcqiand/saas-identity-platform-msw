@@ -4,122 +4,6 @@
  * (title)
  * OpenAPI spec version: 0.0.0
  */
-export interface ApiKey {
-  id: string;
-  tenantId: string;
-  /**
-   * @minLength 2
-   * @maxLength 128
-   */
-  name: string;
-  /**
-   * @minLength 8
-   * @maxLength 16
-   */
-  prefix: string;
-  status: ApiKeyStatus;
-  scopes: string[];
-  createdAt: string;
-  lastUsedAt?: string;
-  expiresAt?: string;
-  revokedAt?: string;
-}
-
-export type ApiKeyStatus = typeof ApiKeyStatus[keyof typeof ApiKeyStatus];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ApiKeyStatus = {
-  active: 'active',
-  revoked: 'revoked',
-  expired: 'expired',
-} as const;
-
-export interface App {
-  id: string;
-  /**
-   * @minLength 2
-   * @maxLength 64
-   */
-  code: string;
-  /**
-   * @minLength 2
-   * @maxLength 255
-   */
-  name: string;
-  description?: string;
-  icon?: string;
-  sortOrder: number;
-  status: AppStatus;
-  /**
-   * @minLength 2
-   * @maxLength 128
-   */
-  clientId: string;
-  clientSecret?: string;
-  redirectUris: string[];
-  scopes: string[];
-  grantTypes: OAuthGrantType[];
-  isFirstParty: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface AppPublicInfo {
-  id: string;
-  /**
-   * @minLength 2
-   * @maxLength 64
-   */
-  code: string;
-  /**
-   * @minLength 2
-   * @maxLength 255
-   */
-  name: string;
-  description?: string;
-  icon?: string;
-  status: AppStatus;
-}
-
-export type AppStatus = typeof AppStatus[keyof typeof AppStatus];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const AppStatus = {
-  active: 'active',
-  disabled: 'disabled',
-} as const;
-
-export type AuditAction = typeof AuditAction[keyof typeof AuditAction];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const AuditAction = {
-  user_created: 'user_created',
-  user_updated: 'user_updated',
-  user_deleted: 'user_deleted',
-  role_assigned: 'role_assigned',
-  role_revoked: 'role_revoked',
-  login_success: 'login_success',
-  login_failed: 'login_failed',
-  oauth_token_issued: 'oauth_token_issued',
-  api_key_created: 'api_key_created',
-  api_key_revoked: 'api_key_revoked',
-} as const;
-
-export type AuditEventMetadata = {[key: string]: unknown};
-
-export interface AuditEvent {
-  id: string;
-  tenantId: string;
-  actorUserId?: string;
-  action: AuditAction;
-  targetUserId?: string;
-  metadata?: AuditEventMetadata;
-  occurredAt: string;
-}
-
 export type AuthorizeCodeRequestResponseType = typeof AuthorizeCodeRequestResponseType[keyof typeof AuthorizeCodeRequestResponseType];
 
 
@@ -132,93 +16,62 @@ export interface AuthorizeCodeRequest {
   clientId: string;
   /**
    * @minLength 1
-   * @maxLength 2048
+   * @maxLength 500
    */
   redirectUri: string;
   responseType: AuthorizeCodeRequestResponseType;
-  scope: string;
+  scope?: string;
   state: string;
-  tenantId: string;
 }
 
-export interface CreateApiKeyRequest {
-  /**
-   * @minLength 2
-   * @maxLength 128
-   */
-  name: string;
-  scopes?: string[];
-  expiresAt?: string;
-}
-
-export interface CreateApiKeyResponse {
-  apiKey: ApiKey;
-  /**
-   * @minLength 16
-   * @maxLength 256
-   */
-  secret: string;
-}
-
-export interface CreateAppRequest {
-  /**
-   * @minLength 2
-   * @maxLength 64
-   */
-  code: string;
-  /**
-   * @minLength 2
-   * @maxLength 255
-   */
-  name: string;
-  description?: string;
-  icon?: string;
-  sortOrder?: number;
-  status?: AppStatus;
-  /**
-   * @minLength 2
-   * @maxLength 128
-   */
+export interface CreateOAuthClientRequest {
   clientId: string;
-  clientSecret?: string;
-  redirectUris: string[];
-  scopes?: string[];
-  grantTypes?: OAuthGrantType[];
-  isFirstParty?: boolean;
+  clientName: string;
+  clientSecret: string;
+  grantTypes: string;
+  redirectUris: string;
+  scopes?: string;
+  accessTokenValidity?: number;
+  refreshTokenValidity?: number;
+  autoApprove?: boolean;
 }
 
-export interface CreateMenuRequest {
+export interface CreateSysMenuRequest {
   parentId?: string;
-  /**
-   * @minLength 2
-   * @maxLength 64
-   */
-  code: string;
-  /**
-   * @minLength 2
-   * @maxLength 255
-   */
-  name: string;
+  title: string;
+  type: SysMenuType;
   path?: string;
+  component?: string;
+  perms?: string;
   icon?: string;
-  type?: MenuType;
   sortOrder?: number;
-  status?: MenuStatus;
 }
 
-export interface CreateRoleRequest {
+export interface CreateSysRoleRequest {
+  clientId: string;
   /**
    * @minLength 1
    * @maxLength 64
    */
-  code: string;
+  roleCode: string;
   /**
    * @minLength 1
-   * @maxLength 255
+   * @maxLength 64
    */
-  name: string;
+  roleName: string;
   description?: string;
-  permissionIds?: string[];
+  isPreset?: boolean;
+}
+
+export interface CreateSysUserRequest {
+  /**
+   * @minLength 1
+   * @maxLength 64
+   */
+  username: string;
+  password: string;
+  email?: string;
+  mobile?: string;
 }
 
 export interface CreateTenantRequest {
@@ -226,44 +79,31 @@ export interface CreateTenantRequest {
    * @minLength 2
    * @maxLength 64
    */
-  code: string;
+  tenantKey: string;
   /**
    * @minLength 2
-   * @maxLength 255
+   * @maxLength 128
    */
   name: string;
-  settings?: TenantSettings;
-}
-
-export interface CreateUserRequest {
-  /**
-   * @minLength 1
-   * @maxLength 64
-   */
-  username: string;
-  email: string;
-  displayName?: string;
-  password: string;
-  roleIds?: string[];
 }
 
 export interface CurrentUser {
-  id: string;
-  email: string;
-  displayName?: string;
-  memberships: TenantMembership[];
+  user: SysUser;
+  memberships: TenantMember[];
   currentTenantId?: string;
+  clientId?: string;
 }
 
 export interface EffectiveMenuNode {
   id: string;
-  appId: string;
-  parentId?: string;
-  code: string;
-  name: string;
+  clientId: string;
+  parentId: string;
+  title: string;
+  type: SysMenuType;
   path?: string;
+  component?: string;
+  perms?: string;
   icon?: string;
-  type: MenuType;
   sortOrder: number;
   children: EffectiveMenuNode[];
 }
@@ -274,6 +114,13 @@ export interface ErrorResponse {
   code: string;
   message: string;
   details?: ErrorResponseDetails;
+}
+
+export interface LockedAccountResponse {
+  code: string;
+  message: string;
+  lockedUntil: string;
+  remainingAttempts?: number;
 }
 
 export interface LoginRequest {
@@ -287,80 +134,39 @@ export interface LoginRequest {
    * @maxLength 128
    */
   password: string;
-  tenantCode?: string;
+  clientId: string;
 }
 
 export interface LoginResponse {
-  accessToken: string;
-  refreshToken: string;
-  tokenType: string;
-  expiresIn: number;
-  userId: string;
-  currentTenantId: string;
+  user: SysUser;
+  availableTenants: TenantMember[];
+  accessToken?: string;
+  refreshToken?: string;
+  tokenType?: string;
+  expiresIn?: number;
+  clientId: string;
 }
 
-export type MembershipStatus = typeof MembershipStatus[keyof typeof MembershipStatus];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const MembershipStatus = {
-  active: 'active',
-  invited: 'invited',
-  removed: 'removed',
-} as const;
-
-export interface Menu {
+export interface OAuthClient {
   id: string;
-  appId: string;
-  parentId?: string;
-  /**
-   * @minLength 2
-   * @maxLength 64
-   */
-  code: string;
-  /**
-   * @minLength 2
-   * @maxLength 255
-   */
-  name: string;
-  path?: string;
-  icon?: string;
-  type: MenuType;
-  sortOrder: number;
-  status: MenuStatus;
+  clientId: string;
+  clientName: string;
+  grantTypes: string;
+  redirectUris: string;
+  scopes?: string;
+  accessTokenValidity: number;
+  refreshTokenValidity: number;
+  autoApprove: boolean;
+  status: number;
   createdAt: string;
   updatedAt: string;
 }
 
-export type MenuStatus = typeof MenuStatus[keyof typeof MenuStatus];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const MenuStatus = {
-  active: 'active',
-  disabled: 'disabled',
-} as const;
-
-export type MenuType = typeof MenuType[keyof typeof MenuType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const MenuType = {
-  group: 'group',
-  page: 'page',
-  action: 'action',
-} as const;
-
-export type OAuthGrantType = typeof OAuthGrantType[keyof typeof OAuthGrantType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const OAuthGrantType = {
-  authorization_code: 'authorization_code',
-  refresh_token: 'refresh_token',
-  client_credentials: 'client_credentials',
-  password: 'password',
-} as const;
+export interface OAuthClientPublicInfo {
+  clientId: string;
+  clientName: string;
+  status: number;
+}
 
 export interface OidcCallbackRequest {
   code: string;
@@ -368,46 +174,106 @@ export interface OidcCallbackRequest {
   clientId: string;
 }
 
-export interface ReorderMenuRequest {
+export interface ReorderSysMenuRequest {
   orderedMenuIds: string[];
 }
 
-export interface Role {
-  id: string;
-  tenantId: string;
-  /**
-   * @minLength 1
-   * @maxLength 64
-   */
-  code: string;
-  /**
-   * @minLength 1
-   * @maxLength 255
-   */
-  name: string;
-  description?: string;
-  permissionIds: string[];
-  createdAt: string;
-  updatedAt: string;
+export interface SetSysRoleMenusRequest {
+  menuIds: string[];
 }
 
-export interface RoleMenuGrant {
-  roleId: string;
-  tenantId: string;
-  menuIds: string[];
-  updatedAt: string;
+export interface SetTenantMemberRolesRequest {
+  roleIds: string[];
 }
 
-export interface SetRoleMenusRequest {
-  menuIds: string[];
+export interface SubscribeTenantApplicationRequest {
+  clientId: string;
+  expireTime?: string;
 }
 
 export interface SwitchTenantResponse {
   accessToken: string;
-  refreshToken?: string;
+  refreshToken: string;
   expiresAt: string;
   tenantId: string;
+  clientId: string;
 }
+
+export interface SysMenu {
+  id: string;
+  clientId: string;
+  parentId: string;
+  title: string;
+  type: SysMenuType;
+  path?: string;
+  component?: string;
+  perms?: string;
+  icon?: string;
+  sortOrder: number;
+  status: number;
+  createdAt: string;
+}
+
+export type SysMenuType = typeof SysMenuType[keyof typeof SysMenuType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SysMenuType = {
+  directory: 'directory',
+  menu: 'menu',
+  button: 'button',
+} as const;
+
+export interface SysRole {
+  id: string;
+  tenantId: string;
+  clientId: string;
+  /**
+   * @minLength 1
+   * @maxLength 64
+   */
+  roleCode: string;
+  /**
+   * @minLength 1
+   * @maxLength 64
+   */
+  roleName: string;
+  description?: string;
+  isPreset: boolean;
+  status: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SysRoleMenu {
+  roleId: string;
+  menuId: string;
+}
+
+export interface SysUser {
+  id: string;
+  /**
+   * @minLength 1
+   * @maxLength 64
+   */
+  username: string;
+  email?: string;
+  mobile?: string;
+  status: SysUserStatus;
+  failedAttempts?: number;
+  lockedUntil?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type SysUserStatus = typeof SysUserStatus[keyof typeof SysUserStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SysUserStatus = {
+  active: 'active',
+  disabled: 'disabled',
+} as const;
 
 export interface Tenant {
   id: string;
@@ -415,31 +281,50 @@ export interface Tenant {
    * @minLength 2
    * @maxLength 64
    */
-  code: string;
+  tenantKey: string;
   /**
    * @minLength 2
-   * @maxLength 255
+   * @maxLength 128
    */
   name: string;
   status: TenantStatus;
-  settings?: TenantSettings;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface TenantMembership {
+export interface TenantApplication {
   id: string;
-  userId: string;
   tenantId: string;
-  roleIds: string[];
-  status: MembershipStatus;
-  joinedAt: string;
+  clientId: string;
+  status: number;
+  expireTime?: string;
+  createdAt: string;
 }
 
-export interface TenantSettings {
-  themeColor?: string;
-  locale?: string;
-  maxUsers?: number;
+export interface TenantMember {
+  id: string;
+  tenantId: string;
+  userId: string;
+  memberName?: string;
+  isOwner: boolean;
+  status: TenantMemberStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type TenantMemberStatus = typeof TenantMemberStatus[keyof typeof TenantMemberStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const TenantMemberStatus = {
+  active: 'active',
+  disabled: 'disabled',
+} as const;
+
+export interface TenantMemberView {
+  member: TenantMember;
+  user: SysUser;
+  roles: string[];
 }
 
 export type TenantStatus = typeof TenantStatus[keyof typeof TenantStatus];
@@ -449,7 +334,6 @@ export type TenantStatus = typeof TenantStatus[keyof typeof TenantStatus];
 export const TenantStatus = {
   active: 'active',
   suspended: 'suspended',
-  archived: 'archived',
 } as const;
 
 export type TokenRequestGrantType = typeof TokenRequestGrantType[keyof typeof TokenRequestGrantType];
@@ -467,109 +351,87 @@ export interface TokenRequest {
   refreshToken?: string;
   clientId: string;
   clientSecret?: string;
-  tenantId: string;
   redirectUri?: string;
 }
 
 export interface TokenResponse {
   accessToken: string;
-  refreshToken?: string;
+  refreshToken: string;
   tokenType: string;
   expiresIn: number;
-  scope: string;
-}
-
-export interface UpdateAppRequest {
-  name?: string;
-  description?: string;
-  icon?: string;
-  sortOrder?: number;
-  status?: AppStatus;
-  redirectUris?: string[];
-  scopes?: string[];
-  grantTypes?: OAuthGrantType[];
-  isFirstParty?: boolean;
-}
-
-export interface UpdateMenuRequest {
-  parentId?: string;
-  name?: string;
-  path?: string;
-  icon?: string;
-  type?: MenuType;
-  sortOrder?: number;
-  status?: MenuStatus;
-}
-
-export interface UpdateRoleRequest {
-  name?: string;
-  description?: string;
-  permissionIds?: string[];
-}
-
-export interface UpdateTenantRequest {
-  name?: string;
-  /**
-   * @minLength 2
-   * @maxLength 64
-   */
-  code?: string;
-  status?: TenantStatus;
-  settings?: TenantSettings;
-}
-
-export interface UpdateUserRequest {
-  displayName?: string;
-  email?: string;
-  status?: UserStatus;
-  roleIds?: string[];
-}
-
-export interface User {
-  id: string;
+  scope?: string;
+  userId: string;
+  clientId: string;
   tenantId: string;
+}
+
+export interface UpdateOAuthClientRequest {
+  clientName?: string;
+  grantTypes?: string;
+  redirectUris?: string;
+  scopes?: string;
+  accessTokenValidity?: number;
+  refreshTokenValidity?: number;
+  autoApprove?: boolean;
+  status?: number;
+}
+
+export interface UpdateSysMenuRequest {
+  parentId?: string;
+  title?: string;
+  type?: SysMenuType;
+  path?: string;
+  component?: string;
+  perms?: string;
+  icon?: string;
+  sortOrder?: number;
+  status?: number;
+}
+
+export interface UpdateSysRoleRequest {
   /**
    * @minLength 1
    * @maxLength 64
    */
-  username: string;
-  email: string;
-  displayName?: string;
-  status: UserStatus;
-  roleIds: string[];
-  createdAt: string;
-  updatedAt: string;
+  roleName?: string;
+  description?: string;
+  status?: number;
 }
 
-export type UserStatus = typeof UserStatus[keyof typeof UserStatus];
+export interface UpdateSysUserRequest {
+  email?: string;
+  mobile?: string;
+  status?: SysUserStatus;
+}
 
+export interface UpdateTenantApplicationRequest {
+  status: number;
+  expireTime?: string;
+}
 
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const UserStatus = {
-  active: 'active',
-  invited: 'invited',
-  suspended: 'suspended',
-  disabled: 'disabled',
-} as const;
+export interface UpdateTenantRequest {
+  /**
+   * @minLength 2
+   * @maxLength 128
+   */
+  name?: string;
+  status?: TenantStatus;
+}
 
-export type AdminAppsListAppsParams = {
+export type AdminClientsListClientsParams = {
 page?: number;
 pageSize?: number;
 };
 
-export type AdminAppsListApps200 = {
-  items: App[];
+export type AdminClientsListClients200 = {
+  items: OAuthClient[];
   page: number;
   pageSize: number;
   total: number;
 };
 
-export type AdminAppMenusMoveMenuBody = {
-  parentId?: string;
-};
-
-export type AdminAppsSetAppStatusBody = {
-  status: AppStatus;
+export type AdminClientsSetClientStatusBody = {
+  status: number;
 };
 
 export type AdminTenantsListTenantsParams = {
@@ -584,123 +446,87 @@ export type AdminTenantsListTenants200 = {
   total: number;
 };
 
+export type SessionsLoginDefault = LockedAccountResponse | ErrorResponse;
+
+export type ClientMenusMoveSysMenuBody = {
+  parentId?: string;
+};
+
+export type MeGetMyMenusParams = {
+clientId: string;
+};
+
 export type MeGetMyMenus200 = {[key: string]: EffectiveMenuNode[]};
+
+export type MeListMyTenantsParams = {
+clientId: string;
+};
+
+export type MeSwitchTenantParams = {
+clientId: string;
+};
 
 export type OAuthAuthorize200 = {
   code: string;
   state: string;
 };
 
-export type TenantApiKeysListApiKeysParams = {
+export type TenantApplicationsListTenantApplicationsParams = {
 page?: number;
 pageSize?: number;
 };
 
-export type TenantApiKeysListApiKeys200 = {
-  items: ApiKey[];
+export type TenantApplicationsListTenantApplications200 = {
+  items: TenantApplication[];
   page: number;
   pageSize: number;
   total: number;
 };
 
-export type TenantAuditListAuditEventsParams = {
+export type TenantMembersListTenantUsersParams = {
 page?: number;
 pageSize?: number;
-actorUserId?: string;
-action?: AuditAction;
-from?: string;
-to?: string;
+status?: TenantMemberStatus;
 };
 
-export type TenantAuditListAuditEvents200 = {
-  items: AuditEvent[];
+export type TenantMembersListTenantUsers200 = {
+  items: TenantMemberView[];
   page: number;
   pageSize: number;
   total: number;
 };
 
-export type TenantAuditListAuditEventsByUserParams = {
+export type TenantMembersInviteTenantUserBody = {
+  email?: string;
+  mobile?: string;
+};
+
+export type TenantMembersChangeTenantUserStatusBody = {
+  status: TenantMemberStatus;
+};
+
+export type TenantRolesListSysRolesParams = {
+clientId: string;
 page?: number;
 pageSize?: number;
 };
 
-export type TenantAuditListAuditEventsByUser200 = {
-  items: AuditEvent[];
+export type TenantRolesListSysRoles200 = {
+  items: SysRole[];
   page: number;
   pageSize: number;
   total: number;
 };
 
-export type TenantAuditExportAuditEventsBodyFormat = typeof TenantAuditExportAuditEventsBodyFormat[keyof typeof TenantAuditExportAuditEventsBodyFormat];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const TenantAuditExportAuditEventsBodyFormat = {
-  csv: 'csv',
-  json: 'json',
-} as const;
-
-export type TenantAuditExportAuditEventsBody = {
-  from: string;
-  to: string;
-  format: TenantAuditExportAuditEventsBodyFormat;
+export type TenantRoleMenusListSysRoleMenusParams = {
+clientId: string;
 };
 
-export type TenantAuditExportAuditEvents200 = {
-  downloadUrl: string;
+export type TenantRoleMenusSetSysRoleMenusParams = {
+clientId: string;
 };
 
-export type TenantAuditGetRetentionPolicy200 = {
-  retentionDays: number;
-};
-
-export type TenantAuditSetRetentionPolicyBody = {
-  retentionDays: number;
-};
-
-export type TenantAuditSetRetentionPolicy200 = {
-  retentionDays: number;
-};
-
-export type TenantRolesListRolesParams = {
-page?: number;
-pageSize?: number;
-};
-
-export type TenantRolesListRoles200 = {
-  items: Role[];
-  page: number;
-  pageSize: number;
-  total: number;
-};
-
-export type TenantRolesSetPermissionsBody = {
-  permissionIds: string[];
-};
-
-export type TenantUsersListUsersParams = {
-page?: number;
-pageSize?: number;
-status?: UserStatus;
-};
-
-export type TenantUsersListUsers200 = {
-  items: User[];
-  page: number;
-  pageSize: number;
-  total: number;
-};
-
-export type TenantUsersInviteUserBody = {
-  email: string;
-  roleIds?: string[];
-};
-
-export type TenantUsersAssignRolesBody = {
-  roleIds: string[];
-};
-
-export type TenantUsersChangeUserStatusBody = {
-  status: UserStatus;
+export type TenantRoleMenusClearSysRoleMenusParams = {
+clientId: string;
 };
 
