@@ -22,7 +22,9 @@ faker 生成跨端一致 fixture。独立 HTTP 后端（ADR-0012 B 强度）：`
 
 ## 3. 技术栈与版本（钉死于 version-lock.json）
 
-MSW v2 + @mswjs/http-middleware + Express + faker + jose（JWT mock 签发）。明细见 `version-lock.json`。
+MSW v2 + @mswjs/http-middleware + Express + faker + jose（JWT mock 签发）+ Drizzle ORM schema types（**DB-First via drizzle-kit pull**，ADR-0025）。明细见 `version-lock.json`。
+
+DB schema 不在 msw 手写 — 由 `scripts/pull-schema.sh` 从真库（saas_dev）反推 `src/db/schema.ts`（commit 入 git）；CI L4.db.drift 子门守 schema 与 DB 一致。本仓无 DB 连接（B 强度，ADR-0012），schema 仅作 handler / seed fixture 的 PG column 类型参考。
 
 门禁命令见 `.harness/stack.json`。**不要改它来让门变松。**
 
@@ -30,6 +32,7 @@ MSW v2 + @mswjs/http-middleware + Express + faker + jose（JWT mock 签发）。
 
 - suite 根目录跑 `python scripts/gate.py -p saas-identity-platform-msw`
 - `npm run dev`（HTTP server `:5100`）/ `npm start`（生产路径）
+- DB schema 漂移：先确认 shared 已 `db:migrate`，再 `bash scripts/pull-schema.sh && git add src/db/schema.ts && git commit`
 
 ## 5. 指向别处
 

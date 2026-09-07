@@ -8,7 +8,13 @@
   "gates": {
     "L1": { "name": "格式", "cmd": ["npx", "--no", "tsc", "--noEmit"], "fix": "补全类型" },
     "L3": { "name": "类型", "cmd": ["npx", "--no", "tsc", "--noEmit"], "fix": "补全类型" },
-    "L4": { "name": "测试", "cmd": ["npx", "--no", "vitest", "run"], "fix": "先让测试变绿" }
+    "L4": { "name": "测试", "cmd": ["npx", "--no", "vitest", "run"], "fix": "先让测试变绿" },
+    "L4.db.drift": {
+      "name": "DB schema drift",
+      "cmd": ["bash", "scripts/pull-schema.sh"],
+      "fix": "DB 与 src/db/schema.ts 不一致：确认 shared 已 db:migrate，然后 bash scripts/pull-schema.sh && git add src/db/schema.ts && git commit",
+      "skip_env": "CI_DB_DRIFT_SKIP=1"
+    }
   },
   "trace_cmd": ["npx", "--no", "vitest", "run"],
   "trace_env": { "TRACE_MAP": "1", "PORT": "5100" }
