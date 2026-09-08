@@ -1,92 +1,306 @@
 # saas-identity-platform-msw 功能树
 
-> MSW v2 mock layer — consumes shared OpenAPI spec, produces MSW handlers + cross-frontend fixture data.
+> 多租户 SaaS 身份管理 — MSW v2 mock 边界（ADR-0012 B 强度，独立 HTTP-server at :5100）。
+> consumes `saas-identity-platform-shared` TypeSpec SSOT，handler 骨架由 `npm run gen:handlers`（orval）从 shared OpenAPI 自动生成。
+> function-tree.md **严格 ⊆ BASE 业务树**（M00/M01/M04 镜像 + 已废弃段）。M99 mock layer 内部责任由 ADR-0012 + `docs/msw-architecture.md` 承载，不进功能清单。
+> 字段照抄 BASE（ADR-0024）。
 
 ## 模块总览
 
 | 模块 ID | 模块名称 | 说明 | 状态 |
 |---|---|---|---|
-| M05 | API Key 管理 | tenant-scoped Key 生命周期 | 已废弃 |
-| M99 | MSW Mock Layer | 跨端 mock handlers + 共享 fixtures（ADR-0012 B 强度，HTTP-server only） | 规划 |
+| M00 | 租户管理 | tenant-admin 配置面：5 F（租户维护 / 租户成员 / 租户角色 / 角色权限 / 租户应用） | 开发中 |
+| M01 | 用户管理 | 当前用户视图 + 自然人关系网：4 F（用户维护 / 角色成员 / 租户成员 / SSO 登录） | 开发中 |
+| M04 | 应用管理 | 应用 / OAuth client 维度：4 F（应用维护 / 应用启用/停用 / 身份认证 / 菜单管理） | 开发中 |
+
+**已迁移 / 已废弃段**：M02 角色权限 / M03 SSO 登录 / M05 API Key / M06 审计 / M08 菜单 / M09 菜单授权（详见各段头部说明 + [§已废弃功能子项](#已废弃功能子项) + [§0.x 模块重组迁移记录](#0x-模块重组迁移记录2026-09-07)）。
 
 ---
 
-## M05 API Key 管理
+## M00 租户管理
+
+> 视角：**tenant-admin 配置面**。op 全部带 `tenantId` 路径或 `/admin/*` 平台 admin 路径。
+> 落表覆盖 `tenant` / `tenant_member` / `tenant_member_role` / `sys_role` / `sys_role_menu` / `tenant_application`。
 
 | 功能 ID | 功能名称 | 说明 | 状态 |
 |---|---|---|---|
-| M05.F01 | API Key 生命周期（tenant-scoped） | 接口 | 已废弃 |
+| M00.F01 | 租户维护 | 平台 admin 范围管理租户 | 已上线 |
+| M00.F02 | 租户成员 | tenant-scoped 成员 CRUD + 邀请/接受/状态 | 开发中 |
+| M00.F03 | 租户角色 | tenant × client 作用域角色 CRUD | 已上线 |
+| M00.F04 | 角色权限 | role↔permission 矩阵 + 角色菜单授权 | 开发中 |
+| M00.F05 | 租户应用 | `tenant_application` 订阅管理 | 开发中 |
 
-### M05.F01 API Key 生命周期（tenant-scoped）
+### M00.F01 租户维护
+
+> 端点路径：`/admin/tenants`（要求 platform_admin）
 
 | 子项 ID | 名称 | 类型 | 交付 | 说明 | 状态 |
 |---|---|---|---|---|---|
-| M05.F01.I05 | `http.delete` /tenants/:tenantId/api-keys/:keyId 物理删（区别于 I03 revoke 软删；幂等——重复删 → 404，无 audit） | 接口 | 前端+后端 |  | 已废弃 |
+| M00.F01.I01 | 租户列表 | 接口 | 前端+后端 | 平台 admin 分页查看全部租户（含名称/状态过滤） | 已上线 |
+| M00.F01.I02 | 创建租户 | 接口 | 前端+后端 | 注册新租户并绑定初始管理员与默认配置 | 已上线 |
+| M00.F01.I03 | 租户详情 | 接口 | 前端+后端 | 查看单个租户的完整配置（含状态/到期时间/订阅应用数） | 已上线 |
+| M00.F01.I04 | 更新租户 | 接口 | 前端+后端 | 修改租户名称、状态或到期时间等基础字段 | 已上线 |
+| M00.F01.I05 | 删除租户 | 接口 | 前端+后端 | 移除租户并级联清理其成员、角色与应用订阅 | 已上线 |
+
+### M00.F02 租户成员
+
+> op 落表：`sys_user` + `tenant_member` + `tenant_member_role`。API 路径用 `userId`，内部按 `(userId, tenant_id)` 解析为 `member_id`；删除只断 membership，不删全局 `sys_user`。
+
+| 子项 ID | 名称 | 类型 | 交付 | 说明 | 状态 |
+|---|---|---|---|---|---|
+| M00.F02.I01 | 成员列表 | 接口 | 前端+后端 | 查看租户内全部成员（分页+角色/状态过滤） | 开发中 |
+| M00.F02.I02 | 创建成员 | 接口 | 前端+后端 | 在租户下创建成员记录，可一并绑定默认角色 | 开发中 |
+| M00.F02.I03 | 成员详情 | 接口 | 前端+后端 | 查看成员完整信息（含所属租户、当前角色与状态） | 开发中 |
+| M00.F02.I04 | 更新成员 | 接口 | 前端+后端 | 修改成员的姓名/邮箱/电话等基础字段（不动角色关系） | 开发中 |
+| M00.F02.I05 | 删除成员 | 接口 | 前端+后端 | 解除成员与租户的关系（不删除全局用户记录） | 开发中 |
+| M00.F02.I06 | 邀请成员 | 接口 | 前端+后端 | 生成 7 天有效邀请链接并发送邮件 | 开发中 |
+| M00.F02.I07 | 接受邀请 | 接口 | 前端+后端 | 凭邀请 token 完成加入；过期返 410 | 规划 |
+| M00.F02.I08 | 状态切换 | 接口 | 前端+后端 | 启用/停用成员账号（不影响全局用户记录） | 开发中 |
+
+### M00.F03 租户角色
+
+> op 落表：`sys_role`（作用域 = `tenant_id` × `client_id`）。
+
+| 子项 ID | 名称 | 类型 | 交付 | 说明 | 状态 |
+|---|---|---|---|---|---|
+| M00.F03.I01 | 角色列表 | 接口 | 前端+后端 | 查看租户×client 作用域下全部角色（分页+过滤） | 已上线 |
+| M00.F03.I02 | 创建角色 | 接口 | 前端+后端 | 新建一个租户×client 作用域的自定义角色 | 已上线 |
+| M00.F03.I03 | 角色详情 | 接口 | 前端+后端 | 查看角色元信息（名称/描述/作用域） | 已上线 |
+| M00.F03.I04 | 更新角色 | 接口 | 前端+后端 | 修改角色名称或描述（不动权限与菜单绑定） | 已上线 |
+| M00.F03.I05 | 删除角色 | 接口 | 前端+后端 | 移除角色并清理所有成员角色绑定与权限关联 | 已上线 |
+
+### M00.F04 角色权限
+
+> op 落表：`role_permissions` + `sys_role_menu`。配置视角：role 这个身份能做什么（permission + 哪些菜单）。
+
+| 子项 ID | 名称 | 类型 | 交付 | 说明 | 状态 |
+|---|---|---|---|---|---|
+| M00.F04.I01 | 权限矩阵绑定 | 接口 | 前端+后端 | 用权限码 ID 集合全量替换角色绑定的权限 | 已上线 |
+| M00.F04.I02 | 角色已授权菜单查询 | 接口 | 前端+后端 | 查看角色当前已分配的菜单 ID 列表（用于 UI 勾选回显） | 开发中 |
+| M00.F04.I03 | 整批设置角色菜单 | 接口 | 前端+后端 | 用菜单 ID 集合覆盖角色菜单授权（PUT 全量替换） | 已上线 |
+| M00.F04.I04 | 清空角色菜单 | 接口 | 前端+后端 | 清空角色所有菜单授权（角色登录后不再渲染菜单） | 已上线 |
+
+### M00.F05 租户应用
+
+> op 落表：`tenant_application`。订阅状态和到期时间参与授权上下文。
+
+| 子项 ID | 名称 | 类型 | 交付 | 说明 | 状态 |
+|---|---|---|---|---|---|
+| M00.F05.I01 | 列出租户应用 | 接口 | 前端+后端 | 查看租户当前订阅的全部应用（含状态/到期时间） | 开发中 |
+| M00.F05.I02 | 订阅应用 | 接口 | 前端+后端 | 为租户启用应用订阅（绑定 clientId 与生效时间） | 开发中 |
+| M00.F05.I03 | 更新应用订阅 | 接口 | 前端+后端 | 修改订阅的状态或到期时间 | 开发中 |
+| M00.F05.I04 | 移除应用订阅 | 接口 | 前端+后端 | 取消应用订阅（不删除应用本体） | 开发中 |
 
 ---
 
-## M99 MSW Mock Layer
+## M01 用户管理
+
+> 视角：**当前用户视图 + 用户作为自然人的关系网**。F01 = 当前用户信息；F02 = 用户被赋予的角色（member→role 视角）；F03 = 当前用户跨租户视图；F04 = 鉴权入口。
 
 | 功能 ID | 功能名称 | 说明 | 状态 |
 |---|---|---|---|
-| M99.F01 | Fixture data consistency | 跨端 seed + 进程内 Map 状态 | 规划 |
-| M99.F02 | MSW handlers emit OAuth 2.0 server（RFC 6749 字段 + code/refresh 映射 + grant_type 校验） | MSW handlers emit OAuth 2.0 server（RFC 6749 字段 + code/refresh 映射 + grant_type 校验） | 开发中 |
-| M99.F03 | 独立 HTTP 服务暴露（Express + @mswjs/http-middleware，ADR-0012 B 强度） | 独立 HTTP 服务暴露（Express + @mswjs/http-middleware，ADR-0012 B 强度） | 开发中 |
-| M99.F04 | handler 覆盖范围 / 全局一致性 | handler 派生 + 手写扩展 + 分页 / 错误 / method 白名单 | 规划 |
-| M99.F05 | trace.json fns 集合 | fnReporter 正则兼容 + trace_env PORT | 规划 |
-| M99.F06 | Contract-test live mode（ADR-0016） | msw-as-HTTP-server 供 4 后端 + ct 仓断言；重启即清契约 | 规划 |
+| M01.F01 | 用户维护 | 当前用户 whoami | 开发中 |
+| M01.F02 | 角色成员 | 给 member 分配角色（member→role binding；与 M00.F02 字段维护是不同维度） | 已上线 |
+| M01.F03 | 租户成员 | 当前用户的跨租户成员关系 + 切换 | 开发中 |
+| M01.F04 | SSO 登录 | 密码登录 + 失败锁定 + OIDC + 登出 | 开发中 |
 
-### M99.F01 Fixture data consistency
+### M01.F01 用户维护
 
-| 子项 ID | 名称 | 类型 | 交付 | 说明 | 状态 |
-|---|---|---|---|---|---|
-| M99.F01.I01 | 跨端 seed data 一致性 | 接口 | 前端+后端 |  | 规划 |
-| M99.F01.I02 | seed manifest + 13 个 seed JSON 家族（saas: api-keys/apps/audit-events/audit-retention-policies/memberships/menus/permissions/role-menu-grants/role-permissions/roles/tenants/users + manifest.json） | 接口 | 前端+后端 |  | 规划 |
-| M99.F01.I03 | 运行时内存状态（saasSessions / oauthCodes / oauthRefreshTokens / saasRefreshTokens 进程内 Map） | 接口 | 前端+后端 |  | 规划 |
-
-### M99.F02 MSW handlers emit OAuth 2.0 server（RFC 6749 字段 + code/refresh 映射 + grant_type 校验）
+> 当前用户身份视图（自然人）。落表：`sys_user`。
 
 | 子项 ID | 名称 | 类型 | 交付 | 说明 | 状态 |
 |---|---|---|---|---|---|
-| M99.F02.I01 | MSW handlers 与 shared OpenAPI 同步 | 接口 | 前端+后端 |  | 规划 |
-| M99.F02.I02 | /oauth/authorize 签发 authorization code（RFC 6749 §4.1.1：response_type=code + client_id + redirect_uri + state） | 接口 | 前端+后端 |  | 规划 |
-| M99.F02.I03 | /oauth/token code→access_token+refresh_token 交换（RFC 6749 §4.1.3：grant_type=authorization_code） | 接口 | 前端+后端 |  | 规划 |
-| M99.F02.I04 | refresh token rotate（M03.F02.I04 contract-test 第三期：一次性消费 + 旧签新） | 接口 | 前端+后端 |  | 规划 |
-| M99.F02.I05 | Set-Cookie HttpOnly + msw node fetch API 屏蔽（debug export 模式暴露 saasSessionsForTest / saasRefreshTokensForTest） | 接口 | 前端+后端 |  | 规划 |
-| M99.F02.I06 | grant_type 校验 + client_id 必带（RFC 6749 §4.1.1） | 接口 | 前端+后端 |  | 规划 |
+| M01.F01.I01 | 当前用户 whoami | 查询 | 前端+后端 | 返回当前会话用户的基础身份信息（id/email/displayName） | 开发中 |
 
-### M99.F03 独立 HTTP 服务暴露（Express + @mswjs/http-middleware，ADR-0012 B 强度）
+### M01.F02 角色成员
+
+> op 落表：`tenant_member_role`。**与 M00.F02 字段维护不同维度**——M00.F02 管 member 自身字段/状态/邀请；M01.F02 管 member↔role 关系。
 
 | 子项 ID | 名称 | 类型 | 交付 | 说明 | 状态 |
 |---|---|---|---|---|---|
-| M99.F03.I01 | Express + @mswjs/http-middleware 装配（src/server.ts + handlers 零修改） | 接口 | 前端+后端 |  | 规划 |
-| M99.F03.I02 | 健康检查端点 /healthz（{ ok, mode:'msw', uptime }） | 接口 | 前端+后端 |  | 规划 |
-| M99.F03.I03 | Dockerfile 与容器化（multi-stage + registry.npmmirror.com） | 接口 | 前端+后端 |  | 规划 |
-| M99.F03.I04 | 端口约定（saas-msw=5100）+ multi-repo-family §6 端口表同步 | 接口 | 前端+后端 |  | 规划 |
-| M99.F03.I05 | CORS 白名单（跨源前端 dev origin：http://localhost:5102 react / :5103 vue / :5201 nextjs） | 接口 | 前端+后端 |  | 规划 |
-| M99.F03.I06 | handler URL 相对路径规范（禁止 :port 硬编码；@mswjs/http-middleware 自动补 origin） | 接口 | 前端+后端 |  | 规划 |
+| M01.F02.I01 | 分配角色 | 接口 | 前端+后端 | 用角色 ID 集合全量覆盖该成员的当前角色绑定 | 已上线 |
 
-### M99.F04 handler 覆盖范围 / 全局一致性
+### M01.F03 租户成员
+
+> 当前用户视角的跨租户成员关系。落表：`tenant_member`。
 
 | 子项 ID | 名称 | 类型 | 交付 | 说明 | 状态 |
 |---|---|---|---|---|---|
-| M99.F04.I01 | handlers-array.ts 自动派生（orval 从 shared OpenAPI 生成，npm run gen:handlers） | 接口 | 前端+后端 |  | 规划 |
-| M99.F04.I02 | handlers-extra.ts 手写扩展（M00 admin tenants / M01 tenant users / M03 auth / M05 api-keys / M07 apps + menus / M09 roles + role-menu-grants 共 56+ 端点） | 接口 | 前端+后端 |  | 规划 |
-| M99.F04.I03 | 分页对齐家族约定（page 0-indexed / pageSize 默认 20 / total=tenant-scoped；contract-test I44 2026-09-01 修订） | 接口 | 前端+后端 |  | 规划 |
-| M99.F04.I04 | 全局错误格式（4xx/5xx 统一响应 shape：{ error: { code, message, details } }） | 接口 | 前端+后端 |  | 规划 |
-| M99.F04.I05 | HTTP method whitelist（GET/POST/PUT/PATCH/DELETE；其他方法返 405） | 接口 | 前端+后端 |  | 规划 |
+| M01.F03.I01 | 列出我的租户成员关系 | 查询 | 前端+后端 | 查看当前用户在指定应用下所属的全部租户成员身份 | 开发中 |
+| M01.F03.I02 | 切换当前租户 | 接口 | 前端+后端 | 把当前会话切换到指定租户，更新后续请求的 tenantId 上下文 | 已上线 |
 
-### M99.F05 trace.json fns 集合
+### M01.F04 SSO 登录
 
-| 子项 ID | 名称 | 类型 | 交付 | 说明 | 状态 |
-|---|---|---|---|---|---|
-| M99.F05.I01 | fnReporter 正则 `M\d{2}\.F\d{2}\.I\d{2}` 兼容（it() 标题走同一正则，msw handlers 注释与 orval types 双源都可挂 ID） | 接口 | 前端+后端 |  | 规划 |
-| M99.F05.I02 | trace_env PORT 默认值（saas-msw=5100，harness 启动时注入 .harness/stack.json） | 接口 | 前端+后端 |  | 规划 |
-
-### M99.F06 Contract-test live mode（ADR-0016）
+> 鉴权入口：saas session cookie + OIDC + 登出。
 
 | 子项 ID | 名称 | 类型 | 交付 | 说明 | 状态 |
 |---|---|---|---|---|---|
-| M99.F06.I01 | msw :5100 启动 + ct 仓 fetch `http://localhost:5100/api/v1/*` 断言（contract-test-run-live.md 步骤） | 接口 | 前端+后端 |  | 规划 |
-| M99.F06.I02 | 跨进程并发假设（handlers 内存数组进程内 Map 共享；Node 单线程 + 事件循环天然串行，不需加锁） | 接口 | 前端+后端 |  | 规划 |
-| M99.F06.I03 | 重启即清契约 + /healthz mode='msw' 让消费者识别「不可当 staging 用」 | 接口 | 前端+后端 |  | 规划 |
+| M01.F04.I01 | 密码登录 API | 接口 | 仅后端 | 用邮箱+密码换取 saas session cookie | 已上线 |
+| M01.F04.I02 | 失败锁定 | 接口 | 仅后端 | 连续 5 次密码错误锁定账户 15 分钟，窗口内拒绝登录 | 已上线 |
+| M01.F04.I04 | OIDC Code 换取 | 接口 | 仅后端 | 用 authorization_code 换取 access_token + refresh_token | 已上线 |
+| M01.F04.I05 | refresh token | 接口 | 仅后端 | 用 refresh_token 换取新的 access_token | 已上线 |
+| M01.F04.I06 | 登出（本地清理） | 接口 | 前端+后端 | 清理当前浏览器 session cookie | 已上线 |
+| M01.F04.I07 | 登出（全局 SSO） | 接口 | 前端+后端 | 预留位；待 ADR 决策 | 规划 |
+
+---
+
+## M04 应用管理
+
+> 视角：**应用 / OAuth client 维度**。F01 管应用 CRUD + 公共元数据；F02 管 status 切换；F03 管 OAuth 身份认证流程；F04 管菜单 + 角色菜单授权 + 当前用户菜单渲染。
+> 落表：`oauth_client` / `sys_menu` / `sys_role_menu` / `oauth_access_token` / `oauth_refresh_token` / `oauth_code`。
+
+| 功能 ID | 功能名称 | 说明 | 状态 |
+|---|---|---|---|
+| M04.F01 | 应用维护 | 应用 CRUD + 公共元数据 | 已上线 |
+| M04.F02 | 应用启用/停用 | `status` 字段切换 | 已上线 |
+| M04.F03 | 身份认证 | OAuth authorize + token + refresh | 已上线 |
+| M04.F04 | 菜单管理 | 菜单 CRUD + 结构 + 当前用户菜单 | 开发中 |
+
+### M04.F01 应用维护
+
+> 落表：`oauth_client`。应用是菜单承载 + OAuth client 二合一。
+
+| 子项 ID | 名称 | 类型 | 交付 | 说明 | 状态 |
+|---|---|---|---|---|---|
+| M04.F01.I01 | OAuth 应用列表 | 接口 | 前端+后端 |【平台】平台 admin 列出全部 OAuth 应用（分页+过滤） | 已上线 |
+| M04.F01.I02 | 创建 OAuth 应用 | 接口 | 前端+后端 |【平台】注册新 OAuth client（含 redirect_uri 白名单与密钥生成） | 已上线 |
+| M04.F01.I03 | OAuth 应用详情 | 接口 | 前端+后端 |【平台】查看应用完整配置（密钥仅回指纹，不返明文） | 已上线 |
+| M04.F01.I04 | 更新 OAuth 应用 | 接口 | 前端+后端 |【平台】修改名称/redirect_uri 白名单/允许的 scope 等 | 已上线 |
+| M04.F01.I05 | 删除 OAuth 应用 | 接口 | 前端+后端 |【平台】移除应用并吊销该 client 名下所有 access/refresh token | 已上线 |
+| M04.F01.I06 | 公共 client 元数据 | 接口 | 前端+后端 | 公开端点匿名可读 clientId/name/logo（供登录页应用选择） | 已上线 |
+
+### M04.F02 应用启用/停用
+
+| 子项 ID | 名称 | 类型 | 交付 | 说明 | 状态 |
+|---|---|---|---|---|---|
+| M04.F02.I01 | 启用/停用应用 | 接口 | 前端+后端 |【平台】切换 status 字段；禁用后该 client 的所有 OAuth/token 端点立即拒绝 | 已上线 |
+
+### M04.F03 身份认证
+
+> OAuth 2.0 authorization_code + refresh_token。
+
+| 子项 ID | 名称 | 类型 | 交付 | 说明 | 状态 |
+|---|---|---|---|---|---|
+| M04.F03.I01 | 授权码签发 | 接口 | 仅后端 | 校验 session+redirect_uri+scope 后签发一次性 authorization_code | 已上线 |
+| M04.F03.I02 | 令牌交换 | 接口 | 仅后端 | 用 authorization_code 换取 access_token + refresh_token | 已上线 |
+| M04.F03.I03 | 令牌刷新 | 接口 | 仅后端 | 用 refresh_token 换取新的 access_token（可同时轮换 refresh_token） | 已上线 |
+
+### M04.F04 菜单管理
+
+> 落表：`sys_menu` + `sys_role_menu`。子段：菜单 CRUD（I01-I05）+ 菜单结构（I06-I07）+ 当前用户菜单渲染（I08）。
+> 角色菜单授权设置端点的 admin 入口在 **M00.F04**（I03-I04）。
+
+| 子项 ID | 名称 | 类型 | 交付 | 说明 | 状态 |
+|---|---|---|---|---|---|
+| M04.F04.I01 | 菜单列表 | 接口 | 前端+后端 | 查看应用下全部菜单（含层级结构） | 已上线 |
+| M04.F04.I02 | 创建菜单 | 接口 | 前端+后端 | 新建菜单项（含父子关系/icon/path/权限码） | 已上线 |
+| M04.F04.I03 | 菜单详情 | 接口 | 前端+后端 | 查看菜单完整字段 | 已上线 |
+| M04.F04.I04 | 更新菜单 | 接口 | 前端+后端 | 修改菜单名称/path/icon/权限码（不动父子结构） | 已上线 |
+| M04.F04.I05 | 删除菜单 | 接口 | 前端+后端 | 删除菜单并级联清理子菜单与权限菜单授权 | 已上线 |
+| M04.F04.I06 | 同级排序 | 接口 | 前端+后端 | 调整同级菜单的排序顺序 | 已上线 |
+| M04.F04.I07 | 切换父级 | 接口 | 前端+后端 | 把菜单移动到另一父级下 | 已上线 |
+| M04.F04.I08 | 当前用户有效菜单 | 查询 | 前端+后端 | 渲染当前用户在指定应用/租户下有权访问的菜单树 | 已上线 |
+
+---
+
+## 已废弃功能子项
+
+所有 `已废弃` / `已迁移` 状态的功能子项（I 级）统一汇总在这里，**按子项 ID 字典序排列**。模块级（F 级及以上）的已废弃 / 已迁移状态保留在各模块章节内说明；本节只收 I 级。
+
+**列入条件**：
+
+- 模块已迁：M02 / M03 / M08 / M09 的全部 I 级子项（已迁移）
+- 模块已废：M05 / M06 的全部 I 级子项（已废弃）
+- **msw 内部命名空间**：M99 命名空间下的 mock layer 子项（已废弃；msw 内部 mock 责任由 ADR-0012 + `docs/msw-architecture.md` 承载，不属于 shared 业务树）
+
+| 子项 ID | 名称 | 类型 | 交付 | 说明 / 迁移去向 | 状态 |
+|---|---|---|---|---|---|
+| M02.F01.I01 | 角色列表（tenant-scoped） | 接口 | 前端+后端 | 旧版：列出租户作用域下的角色 → **M00.F03.I01** | 已迁移 |
+| M02.F01.I02 | 创建角色 | 接口 | 前端+后端 | 旧版：在租户下创建角色 → **M00.F03.I02** | 已迁移 |
+| M02.F01.I03 | 角色详情 | 接口 | 前端+后端 | 旧版：查看角色元信息 → **M00.F03.I03** | 已迁移 |
+| M02.F01.I04 | 更新角色 | 接口 | 前端+后端 | 旧版：修改角色名称或描述 → **M00.F03.I04** | 已迁移 |
+| M02.F01.I05 | 删除角色 | 接口 | 前端+后端 | 旧版：删除角色（清理所有绑定） → **M00.F03.I05** | 已迁移 |
+| M02.F02.I01 | 权限矩阵 | 接口 | 前端+后端 | 旧版：权限码矩阵全量绑定 → **M00.F04.I01** | 已迁移 |
+| M03.F01.I01 | 密码登录 API | 接口 | 仅后端 | 旧版：邮箱+密码换 session cookie → **M01.F04.I01** | 已迁移 |
+| M03.F01.I02 | 失败锁定 | 接口 | 仅后端 | 旧版：连续失败锁定（5 次/15 min） → **M01.F04.I02** | 已迁移 |
+| M03.F02.I03 | OIDC Code 换取 | 接口 | 仅后端 | 旧版：authorization_code 换 token → **M01.F04.I04** | 已迁移 |
+| M03.F02.I04 | refresh token | 接口 | 仅后端 | 旧版：refresh_token 换新 token → **M01.F04.I05** | 已迁移 |
+| M03.F03.I05 | 登出（本地清理） | 接口 | 前端+后端 | 旧版：清理本地 session cookie → **M01.F04.I06** | 已迁移 |
+| M03.F03.I06 | 登出（全局 SSO） | 接口 | 前端+后端 | 旧版：全局 SSO 登出（待 ADR 决策） → **M01.F04.I07** | 已迁移 |
+| M05.F01.I05 | API Key 物理删除 | 接口 | 前端+后端 | 旧版：硬删除 API Key；目标 DDL 不再包含 `api_keys`，作废 | 已废弃 |
+| M06.F01.I01 | 审计事件列表 | 页面 | 前端+后端 | 旧版：分页查询审计事件；目标 DDL 不再包含 `audit_events`，作废 | 已废弃 |
+| M06.F01.I02 | 按用户查审计事件 | 查询 | 前端+后端 | 旧版：按用户维度过滤审计；目标 DDL 不再包含 `audit_events`，作废 | 已废弃 |
+| M06.F01.I03 | 导出审计事件 | 按钮 | 前端+后端 | 旧版：导出审计数据；目标 DDL 不再包含 `audit_events`，作废 | 已废弃 |
+| M06.F02.I04 | 留存策略设置 | 接口 | 前端+后端 | 历史重复编号；目标 DDL 全量切换后作废 | 已废弃 |
+| M06.F03 | 审计写入助手 | 接口 | 前端+后端 | 旧版：审计写入 helper；目标 DDL 不再保留，作废 | 已废弃 |
+| M08.F01.I01 | 菜单树 | 页面 | 仅前端 | 旧版：菜单树形查询 → **M04.F04.I01** | 已迁移 |
+| M08.F01.I02 | 创建菜单 | 按钮 | 仅前端 | 旧版：新建菜单 → **M04.F04.I02** | 已迁移 |
+| M08.F01.I03 | 菜单详情 | 页面 | 仅前端 | 旧版：查看菜单 → **M04.F04.I03** | 已迁移 |
+| M08.F01.I04 | 更新菜单 | 按钮 | 仅前端 | 旧版：修改菜单字段 → **M04.F04.I04** | 已迁移 |
+| M08.F01.I05 | 删除菜单 | 按钮 | 仅前端 | 旧版：删除菜单 → **M04.F04.I05** | 已迁移 |
+| M08.F02.I06 | 同级排序 | 接口 | 前端+后端 | 旧版：同级菜单排序 → **M04.F04.I06** | 已迁移 |
+| M08.F02.I07 | 切换父级 | 接口 | 前端+后端 | 旧版：菜单父级切换 → **M04.F04.I07** | 已迁移 |
+| M09.F01.I01 | 角色已授权菜单 | 查询 | 前端+后端 | 旧版：角色已授权菜单查询 → **M00.F04.I02** | 已迁移 |
+| M09.F02.I02 | 设置角色菜单 | 按钮 | 仅前端 | 旧版：菜单 ID 集合整批覆盖 → **M00.F04.I03** | 已迁移 |
+| M09.F02.I03 | 清空角色菜单 | 按钮 | 仅前端 | 旧版：清空角色所有菜单授权 → **M00.F04.I04** | 已迁移 |
+| M09.F03.I04 | 我的有效菜单 | 查询 | 前端+后端 | 旧版：装配可见菜单树 → **M04.F04.I08** | 已迁移 |
+| M99 | MSW Mock Layer | 模块 | — | msw 内部 mock 边界命名空间；职责由 ADR-0012 + docs/msw-architecture.md 承载（不进 shared 业务树） | 已废弃 |
+| M99.F01 | Fixture data consistency | 模块 | — | msw 内部 — 跨端 seed + 进程内 Map 状态 | 已废弃 |
+| M99.F01.I01 | 跨端 seed data 一致性 | — | — | msw 内部 — 跨端 seed 一致性 | 已废弃 |
+| M99.F01.I02 | seed manifest + 13 个 seed JSON 家族 | — | — | msw 内部 — seed manifest + 13 JSON 家族 | 已废弃 |
+| M99.F01.I03 | 运行时内存状态（saasSessions / oauthCodes / oauthRefreshTokens / saasRefreshTokens 进程内 Map） | — | — | msw 内部 — 进程内 Map 状态 | 已废弃 |
+| M99.F02 | MSW handlers emit OAuth 2.0 server | 模块 | — | msw 内部 — handlers emit OAuth 2.0 server（RFC 6749） | 已废弃 |
+| M99.F02.I01 | MSW handlers 与 shared OpenAPI 同步 | — | — | msw 内部 — handler 同步 | 已废弃 |
+| M99.F02.I02 | /oauth/authorize 签发 authorization code | — | — | msw 内部 — RFC 6749 §4.1.1 | 已废弃 |
+| M99.F02.I03 | /oauth/token code→access_token+refresh_token 交换 | — | — | msw 内部 — RFC 6749 §4.1.3 | 已废弃 |
+| M99.F02.I04 | refresh token rotate | — | — | msw 内部 — 一次性消费 + 旧签新 | 已废弃 |
+| M99.F02.I05 | Set-Cookie HttpOnly + msw node fetch API 屏蔽 | — | — | msw 内部 — debug export 模式 | 已废弃 |
+| M99.F02.I06 | grant_type 校验 + client_id 必带 | — | — | msw 内部 — RFC 6749 §4.1.1 校验 | 已废弃 |
+| M99.F03 | 独立 HTTP 服务暴露 | 模块 | — | msw 内部 — Express + @mswjs/http-middleware | 已废弃 |
+| M99.F03.I01 | Express + @mswjs/http-middleware 装配 | — | — | msw 内部 — Express 装配 | 已废弃 |
+| M99.F03.I02 | 健康检查端点 /healthz | — | — | msw 内部 — /healthz | 已废弃 |
+| M99.F03.I03 | Dockerfile 与容器化 | — | — | msw 内部 — Docker | 已废弃 |
+| M99.F03.I04 | 端口约定（saas-msw=5100） | — | — | msw 内部 — :5100 | 已废弃 |
+| M99.F03.I05 | CORS 白名单（跨源前端 dev origin） | — | — | msw 内部 — CORS | 已废弃 |
+| M99.F03.I06 | handler URL 相对路径规范 | — | — | msw 内部 — 路径规范 | 已废弃 |
+| M99.F04 | handler 覆盖范围 / 全局一致性 | 模块 | — | msw 内部 — handlers 覆盖 | 已废弃 |
+| M99.F04.I01 | handlers-array.ts 自动派生 | — | — | msw 内部 — orval 自动派生 | 已废弃 |
+| M99.F04.I02 | handlers-extra.ts 手写扩展 | — | — | msw 内部 — 56+ 端点扩展 | 已废弃 |
+| M99.F04.I03 | 分页对齐家族约定 | — | — | msw 内部 — page 0-indexed | 已废弃 |
+| M99.F04.I04 | 全局错误格式 | — | — | msw 内部 — 4xx/5xx 统一响应 | 已废弃 |
+| M99.F04.I05 | HTTP method whitelist | — | — | msw 内部 — GET/POST/PUT/PATCH/DELETE | 已废弃 |
+| M99.F05 | trace.json fns 集合 | 模块 | — | msw 内部 — fnReporter + trace_env | 已废弃 |
+| M99.F05.I01 | fnReporter 正则兼容 | — | — | msw 内部 — fnReporter 正则 | 已废弃 |
+| M99.F05.I02 | trace_env PORT 默认值 | — | — | msw 内部 — trace_env PORT | 已废弃 |
+| M99.F06 | Contract-test live mode | 模块 | — | msw 内部 — ADR-0016 实时断言 | 已废弃 |
+| M99.F06.I01 | msw :5100 启动 + ct 仓 fetch | — | — | msw 内部 — ADR-0016 入口 | 已废弃 |
+| M99.F06.I02 | 跨进程并发假设 | — | — | msw 内部 — Node 单线程串行 | 已废弃 |
+| M99.F06.I03 | 重启即清契约 + /healthz mode | — | — | msw 内部 — 重启清状态 | 已废弃 |
+
+---
+
+## 0.x 模块重组迁移记录（2026-09-07）
+
+> 本节是当前模块结构相对旧版（M00~M09 全集）的迁移依据。下游文档（REQ / design / contract-test）若引用旧 ID，按本表找新位置。
+
+- **M00.F01 租户 CRUD（admin）** → **M00.F01 租户维护**（同 op，名称对齐）
+- **M00.F02 当前用户跨租户切换** → 拆分：**M01.F01 用户维护**（I01 whoami）+ **M01.F03 租户成员**（I01 list / I02 switch）
+- **M01.F01 用户/成员 CRUD** → **M00.F02 租户成员**（I01-I05，切到租户配置视角）
+- **M01.F02 角色分配与状态** → 拆分：**M00.F02 租户成员**（I06-I08：admin 维护 member 字段/状态/邀请）+ **M01.F02 角色成员**（I01：member→role binding）
+- **M01.F03 邀请接受** → **M00.F02 租户成员**（I07 接受邀请，归 tenant-admin 闭环）
+- **M02.F01 角色 CRUD** → **M00.F03 租户角色**（切到租户配置视角）
+- **M02.F02 权限矩阵绑定** → **M00.F04 角色权限**（I01）
+- **M03.F01-F03 SSO + OIDC + logout** → **M01.F04 SSO 登录**（I01-I07，归用户管理；auth 是用户进入的入口）
+- **M04.F01 应用 CRUD** → **M04.F01 应用维护**（I01-I05，同 op）
+- **M04.F02 启用/停用** → **M04.F02 应用启用/停用**（I01，同 op）
+- **M04.F03 OAuth 授权码+令牌** → **M04.F03 身份认证**（I01-I03，名称对齐"身份认证"）
+- **M04.F04 租户应用订阅** → **M00.F05 租户应用**（I01-I04，切到租户配置视角）
+- **M04.F05 应用公开元数据** → **M04.F01 应用维护**（I06，合并到应用维护）
+- **M08.F01-F02 菜单 CRUD/结构** → **M04.F04 菜单管理**（I01-I07，切到应用配置视角）
+- **M09.F01-F03 角色菜单授权 + 我的菜单** → 拆分：**M00.F04 角色权限**（I02-I04 角色菜单 admin 授权）+ **M04.F04 菜单管理**（I08 当前用户菜单渲染）
+- **M05 / M06（已废弃）** → 不变；已废止，目标 DDL 不再保留
+- **M99（已废弃）** → 不变；msw 内部 mock layer 命名空间，详情由 [ADR-0012](msw-architecture.md) 承载；功能清单不再演进
+
+> 旧 ID 全部状态保持「已迁移（迁至新 ID）」，不删除行；下游合同测试 / 消费仓按本表换 ID。
+> I-level 编号：新 F 容器内重新编号，旧 I 编号不再保留。contract-test 与消费仓需在升级时同步。
+> 已迁移 / 已废弃 F 段下的旧 I 子项已统一移至「已废弃功能子项」段。
