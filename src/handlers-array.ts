@@ -8,13 +8,6 @@
 // this wrapper re-imports getTitleMock. If orval renames the factory, update
 // this wrapper.
 import { getTitleMock } from "./handlers.msw.msw";
-import {
-  getAuthLoginMockHandler,
-  getAuthLogoutMockHandler,
-  getOAuthAuthorizeMockHandler,
-  getOAuthTokenMockHandler,
-  getMeGetMyMenusMockHandler,
-} from "./handlers.msw.msw";
 import { extraHandlers } from "./handlers-extra";
 
 // 2026-08-27 (PLAN-2026-001 T-7)：过滤 orval 兜底的 OAuth + /auth/login +
