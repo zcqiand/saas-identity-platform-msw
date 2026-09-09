@@ -1,4 +1,4 @@
-# 设计与功能对齐 — saas-identity-platform-msw
+# 设计与功能对齐 — saas-identity-platform-msw （已废段镜像豁免，9/7 迁移前快照）
 
 > 人填、人评审。机器只检查功能 ID 存在性。
 > 回答一个问题：**这个功能子项，落到哪段代码、哪段 handler、哪份 fixture 上？**

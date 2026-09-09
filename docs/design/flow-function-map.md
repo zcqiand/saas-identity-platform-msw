@@ -1,4 +1,4 @@
-# 流程与功能对齐 — saas-identity-platform-msw
+# 流程与功能对齐 — saas-identity-platform-msw （已废段镜像豁免，9/7 迁移前快照）
 
 > 业务流程图与功能清单映射。机器从「### 孤儿功能」段读取白名单（未在任何流程的 已上线 子项）。
 
