@@ -13,10 +13,10 @@ beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 afterAll(() => server.close());
 
 describe("M96 audit 覆盖对齐 — invite 路径不写审计", () => {
-  it("POST /users/invitations 成功后 auditEvents 长度不变（不写 user_created）", async () => {
+  it("POST /members/invitations 成功后 auditEvents 长度不变（不写 user_created）", async () => {
     const before = auditEvents.length;
     const res = await fetch(
-      "http://localhost/api/v1/tenants/00000000-0000-0000-0000-000000000001/users/invitations",
+      "http://localhost/api/v1/tenants/00000000-0000-0000-0000-000000000001/members/invitations",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },

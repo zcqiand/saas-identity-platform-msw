@@ -26,10 +26,11 @@ const OVERRIDDEN_PATHS = new Set<string>([
   // 切到 seed-based handler，参见 handlers-extra.ts meTenantsExtraHandlers。
   "GET */api/v1/me/tenants",
   "GET */api/v1/me",
-  // 2026-08-30：orval 兜底 /apps/{code} 用 faker 随机 id，契约要求从 apps.json
-  // 取真实 AppPublicInfo。切到 publicAppsExtraHandlers。
-  // 路径字面量是 `:code`（orval 用冒号），不是 `{code}`（OpenAPI 用花括号）。
-  "GET */api/v1/apps/:code",
+  // 2026-08-30：orval 兜底公共 client 目录端点用 faker 随机 id，契约要求从
+  // apps.json 取真实展示信息。切到 publicAppsExtraHandlers。
+  // 2026-09-08 shared 重命名：/apps/{code} → /clients/{clientId}（已迁移）。
+  // 路径字面量是 `:clientId`（orval 用冒号），不是 `{clientId}`（OpenAPI 用花括号）。
+  "GET */api/v1/clients/:clientId",
   // 2026-08-31 contract-test 第三期：auth/refresh 与 me/tenants/switch 切到
   // 确定性 handler（rotate 存储 / membership 校验），faker 兜底是随机数据不能当 oracle。
   "POST */api/v1/auth/refresh",

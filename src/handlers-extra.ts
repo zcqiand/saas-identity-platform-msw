@@ -1,7 +1,10 @@
-// Custom MSW handlers for M00 / M01 / M02 / M03 / M05 / M07 / M08 / M09 —
+// Custom MSW handlers for M00 / M01 / M02 / M03 / M04 / M07 / M08 / M09 —
 // backed by deterministic seed fixtures so CRUD persists in-memory.
 // orval-generated handlers use faker data which would defeat cross-frontend
 // test stability, so we intercept these endpoints before the orval handlers.
+// 2026-09-08 shared 契约重命名：apps→clients、users→members（handler 逻辑保留
+// 原 fixture 形状，path 对齐 tsp）；M05 api-keys / M06 audit 域已废弃删除，
+// M02 permissions op 已废弃（由 role-menus 取代）。
 import { http, HttpResponse } from "msw";
 import { jwtVerify } from "jose";
 import { getAudience, getIssuer, getSigningKey, signAccessToken } from "./lib/jwt-signer";
@@ -12,9 +15,7 @@ import {
   tenants,
   users,
   roles,
-  apiKeys,
   auditEvents,
-  auditRetentionPolicies,
   memberships,
   TENANT_IDS,
   APP_IDS,
@@ -26,12 +27,9 @@ import {
   getTenant,
   getUser,
   getRole,
-  getApiKey,
   listMenus,
   listUsers,
   listRoles,
-  listApiKeys,
-  listAuditEvents,
   getRoleMenuGrant,
 } from "./fixtures/seed";
 
@@ -109,11 +107,11 @@ function uuidLike(prefix: string): string {
   return `00000000-0000-0000-0000-${ts.slice(-8)}${rand}`;
 }
 
-// === M07 — Apps ===
+// === M07 — Clients (2026-09-08 shared 重命名 apps→clients) ===
 export const appsExtraHandlers = [
   // 2026-09-01 contract-test I44：分页对齐家族约定（page 0-indexed / pageSize 默认 20，
   // 之前返 page:1 + pageSize:items.length 与 3 真后端分叉）
-  http.get(`*${BASE}/admin/apps`, ({ request }) => {
+  http.get(`*${BASE}/admin/clients`, ({ request }) => {
     const url = new URL(request.url);
     const page = Math.max(0, Number(url.searchParams.get("page") ?? 0));
     const pageSize = Math.min(100, Math.max(1, Number(url.searchParams.get("pageSize") ?? 20)));
@@ -126,14 +124,14 @@ export const appsExtraHandlers = [
     });
   }),
 
-  http.get(`*${BASE}/admin/apps/:appId`, ({ params }) => {
-    const a = getApp(String(params.appId));
+  http.get(`*${BASE}/admin/clients/:clientId`, ({ params }) => {
+    const a = getApp(String(params.clientId));
     return a
       ? HttpResponse.json(a)
       : HttpResponse.json({ code: "NOT_FOUND", message: "App not found" }, { status: 404 });
   }),
 
-  http.post(`*${BASE}/admin/apps`, async ({ request }) => {
+  http.post(`*${BASE}/admin/clients`, async ({ request }) => {
     // 2026-09-01 contract-test I64：缺必填字段 → 4xx，对齐 nextjs zod 契约面
     // （CreateAppRequest 必填: code / name / clientId / redirectUris）
     const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
@@ -147,7 +145,7 @@ export const appsExtraHandlers = [
       return HttpResponse.json(
         {
           code: "INVALID_REQUEST",
-          message: "POST /admin/apps: 缺必填字段（code/name/clientId/redirectUris）",
+          message: "POST /admin/clients: 缺必填字段（code/name/clientId/redirectUris）",
         },
         { status: 400 },
       );
@@ -173,23 +171,23 @@ export const appsExtraHandlers = [
     return HttpResponse.json(newApp, { status: 201 });
   }),
 
-  http.patch(`*${BASE}/admin/apps/:appId`, async ({ params, request }) => {
-    const a = getApp(String(params.appId));
+  http.patch(`*${BASE}/admin/clients/:clientId`, async ({ params, request }) => {
+    const a = getApp(String(params.clientId));
     if (!a) return HttpResponse.json({ code: "NOT_FOUND", message: "App not found" }, { status: 404 });
     const body = (await request.json()) as Record<string, unknown>;
     Object.assign(a, body, { updatedAt: NOW() });
     return HttpResponse.json(a);
   }),
 
-  http.delete(`*${BASE}/admin/apps/:appId`, ({ params }) => {
-    const i = apps.findIndex((a) => a.id === resolveAppId(String(params.appId)));
+  http.delete(`*${BASE}/admin/clients/:clientId`, ({ params }) => {
+    const i = apps.findIndex((a) => a.id === resolveAppId(String(params.clientId)));
     if (i < 0) return HttpResponse.json({ code: "NOT_FOUND", message: "App not found" }, { status: 404 });
     apps.splice(i, 1);
     return new HttpResponse(null, { status: 204 });
   }),
 
-  http.patch(`*${BASE}/admin/apps/:appId/status`, async ({ params, request }) => {
-    const a = getApp(String(params.appId));
+  http.patch(`*${BASE}/admin/clients/:clientId/status`, async ({ params, request }) => {
+    const a = getApp(String(params.clientId));
     if (!a) return HttpResponse.json({ code: "NOT_FOUND", message: "App not found" }, { status: 404 });
     const body = (await request.json()) as { status: "active" | "disabled" };
     a.status = body.status;
@@ -198,25 +196,25 @@ export const appsExtraHandlers = [
   }),
 ];
 
-// === M08 — Menus ===
+// === M08 — Client menus (2026-09-08 shared 重命名：/admin/apps/{appId}/menus → /clients/{clientId}/menus) ===
 export const menusExtraHandlers = [
-  http.get(`*${BASE}/admin/apps/:appId/menus`, ({ params }) =>
-    HttpResponse.json(listMenus(String(params.appId))),
+  http.get(`*${BASE}/clients/:clientId/menus`, ({ params }) =>
+    HttpResponse.json(listMenus(String(params.clientId))),
   ),
 
-  http.get(`*${BASE}/admin/apps/:appId/menus/:menuId`, ({ params }) => {
+  http.get(`*${BASE}/clients/:clientId/menus/:menuId`, ({ params }) => {
     const m = getMenu(String(params.menuId));
-    const resolvedAppId = resolveAppId(String(params.appId));
+    const resolvedAppId = resolveAppId(String(params.clientId));
     if (!m || m.appId !== resolvedAppId)
       return HttpResponse.json({ code: "NOT_FOUND", message: "Menu not found" }, { status: 404 });
     return HttpResponse.json(m);
   }),
 
-  http.post(`*${BASE}/admin/apps/:appId/menus`, async ({ params, request }) => {
+  http.post(`*${BASE}/clients/:clientId/menus`, async ({ params, request }) => {
     const body = (await request.json()) as Record<string, unknown>;
     const newMenu = {
       id: `00000000-0000-0000-0000-${Date.now().toString(16).padStart(12, "0").slice(-12)}`,
-      appId: resolveAppId(String(params.appId)),
+      appId: resolveAppId(String(params.clientId)),
       parentId: body.parentId as string | undefined,
       code: String(body.code ?? ""),
       name: String(body.name ?? ""),
@@ -232,9 +230,9 @@ export const menusExtraHandlers = [
     return HttpResponse.json(newMenu, { status: 201 });
   }),
 
-  http.patch(`*${BASE}/admin/apps/:appId/menus/:menuId`, async ({ params, request }) => {
+  http.patch(`*${BASE}/clients/:clientId/menus/:menuId`, async ({ params, request }) => {
     const m = getMenu(String(params.menuId));
-    const resolvedAppId = resolveAppId(String(params.appId));
+    const resolvedAppId = resolveAppId(String(params.clientId));
     if (!m || m.appId !== resolvedAppId)
       return HttpResponse.json({ code: "NOT_FOUND", message: "Menu not found" }, { status: 404 });
     const body = (await request.json()) as Record<string, unknown>;
@@ -242,17 +240,17 @@ export const menusExtraHandlers = [
     return HttpResponse.json(m);
   }),
 
-  http.delete(`*${BASE}/admin/apps/:appId/menus/:menuId`, ({ params }) => {
-    const resolvedAppId = resolveAppId(String(params.appId));
+  http.delete(`*${BASE}/clients/:clientId/menus/:menuId`, ({ params }) => {
+    const resolvedAppId = resolveAppId(String(params.clientId));
     const i = menus.findIndex((m) => m.id === params.menuId && m.appId === resolvedAppId);
     if (i < 0) return HttpResponse.json({ code: "NOT_FOUND", message: "Menu not found" }, { status: 404 });
     menus.splice(i, 1);
     return new HttpResponse(null, { status: 204 });
   }),
 
-  http.put(`*${BASE}/admin/apps/:appId/menus/:menuId/reorder`, async ({ params, request }) => {
+  http.put(`*${BASE}/clients/:clientId/menus/:menuId/reorder`, async ({ params, request }) => {
     const m = getMenu(String(params.menuId));
-    const resolvedAppId = resolveAppId(String(params.appId));
+    const resolvedAppId = resolveAppId(String(params.clientId));
     if (!m || m.appId !== resolvedAppId)
       return HttpResponse.json({ code: "NOT_FOUND", message: "Menu not found" }, { status: 404 });
     const body = (await request.json()) as { orderedMenuIds: string[] };
@@ -263,9 +261,9 @@ export const menusExtraHandlers = [
     return HttpResponse.json(listMenus(resolvedAppId));
   }),
 
-  http.patch(`*${BASE}/admin/apps/:appId/menus/:menuId/parent`, async ({ params, request }) => {
+  http.patch(`*${BASE}/clients/:clientId/menus/:menuId/parent`, async ({ params, request }) => {
     const m = getMenu(String(params.menuId));
-    const resolvedAppId = resolveAppId(String(params.appId));
+    const resolvedAppId = resolveAppId(String(params.clientId));
     if (!m || m.appId !== resolvedAppId)
       return HttpResponse.json({ code: "NOT_FOUND", message: "Menu not found" }, { status: 404 });
     const body = (await request.json()) as { parentId?: string };
@@ -1001,9 +999,9 @@ export const tenantsExtraHandlers = [
   }),
 ];
 
-// === M01 — Users (tenant-scoped CRUD) ===
+// === M01 — Members (tenant-scoped CRUD; 2026-09-08 shared 重命名 users→members) ===
 export const usersExtraHandlers = [
-  http.get(`*${BASE}/tenants/:tenantId/users`, ({ params }) => {
+  http.get(`*${BASE}/tenants/:tenantId/members`, ({ params }) => {
     const items = listUsers(String(params.tenantId));
     return HttpResponse.json({
       items,
@@ -1015,14 +1013,14 @@ export const usersExtraHandlers = [
     });
   }),
 
-  http.get(`*${BASE}/tenants/:tenantId/users/:userId`, ({ params }) => {
+  http.get(`*${BASE}/tenants/:tenantId/members/:userId`, ({ params }) => {
     const u = getUser(String(params.tenantId), String(params.userId));
     return u
       ? HttpResponse.json(u)
       : HttpResponse.json({ code: "NOT_FOUND", message: "User not found" }, { status: 404 });
   }),
 
-  http.post(`*${BASE}/tenants/:tenantId/users`, async ({ params, request }) => {
+  http.post(`*${BASE}/tenants/:tenantId/members`, async ({ params, request }) => {
     const body = (await request.json()) as Record<string, unknown>;
     const username = String(body.username ?? "").trim();
     const email = String(body.email ?? "").trim();
@@ -1056,7 +1054,7 @@ export const usersExtraHandlers = [
     return HttpResponse.json(newUser, { status: 201 });
   }),
 
-  http.patch(`*${BASE}/tenants/:tenantId/users/:userId`, async ({ params, request }) => {
+  http.patch(`*${BASE}/tenants/:tenantId/members/:userId`, async ({ params, request }) => {
     const u = getUser(String(params.tenantId), String(params.userId));
     if (!u) return HttpResponse.json({ code: "NOT_FOUND", message: "User not found" }, { status: 404 });
     const body = (await request.json()) as Record<string, unknown>;
@@ -1064,14 +1062,14 @@ export const usersExtraHandlers = [
     return HttpResponse.json(u);
   }),
 
-  http.delete(`*${BASE}/tenants/:tenantId/users/:userId`, ({ params }) => {
+  http.delete(`*${BASE}/tenants/:tenantId/members/:userId`, ({ params }) => {
     const i = users.findIndex((u) => u.tenantId === params.tenantId && u.id === params.userId);
     if (i < 0) return HttpResponse.json({ code: "NOT_FOUND", message: "User not found" }, { status: 404 });
     users.splice(i, 1);
     return new HttpResponse(null, { status: 204 });
   }),
 
-  http.put(`*${BASE}/tenants/:tenantId/users/:userId/roles`, async ({ params, request }) => {
+  http.put(`*${BASE}/tenants/:tenantId/members/:userId/roles`, async ({ params, request }) => {
     const u = getUser(String(params.tenantId), String(params.userId));
     if (!u) return HttpResponse.json({ code: "NOT_FOUND", message: "User not found" }, { status: 404 });
     const body = (await request.json()) as { roleIds: string[] };
@@ -1080,7 +1078,7 @@ export const usersExtraHandlers = [
     return HttpResponse.json(u);
   }),
 
-  http.patch(`*${BASE}/tenants/:tenantId/users/:userId/status`, async ({ params, request }) => {
+  http.patch(`*${BASE}/tenants/:tenantId/members/:userId/status`, async ({ params, request }) => {
     const u = getUser(String(params.tenantId), String(params.userId));
     if (!u) return HttpResponse.json({ code: "NOT_FOUND", message: "User not found" }, { status: 404 });
     const body = (await request.json()) as { status: "active" | "invited" | "suspended" | "disabled" };
@@ -1092,7 +1090,7 @@ export const usersExtraHandlers = [
   // M01.F02.I02 — /users/invitations（2026-09-01 contract-test I42）。
   // 邀请语义：按 email 建占位 user（status=invited），roleIds 取 body.roleIds ?? []。
   // faker 兜底会返随机 email 破坏 oracle，此处确定性实现（对齐 nextjs invitations route）。
-  http.post(`*${BASE}/tenants/:tenantId/users/invitations`, async ({ params, request }) => {
+  http.post(`*${BASE}/tenants/:tenantId/members/invitations`, async ({ params, request }) => {
     const body = (await request.json().catch(() => null)) as {
       email?: string;
       roleIds?: string[];
@@ -1186,248 +1184,21 @@ export const rolesExtraHandlers = [
     return new HttpResponse(null, { status: 204 });
   }),
 
-  // M02.F02.I01 — PUT permissions（2026-09-01 contract-test I36）。
-  // 整批替换 role.permissionIds 并回带。faker 兜底返随机串破坏 oracle。
-  // 注意：permissionIds 是权限码（如 "users:read"），不是 uuid —— SSOT 声明 string[]。
-  http.put(`*${BASE}/tenants/:tenantId/roles/:roleId/permissions`, async ({ params, request }) => {
-    const r = getRole(String(params.tenantId), String(params.roleId));
-    if (!r) return HttpResponse.json({ code: "NOT_FOUND", message: "Role not found" }, { status: 404 });
-    const body = (await request.json().catch(() => null)) as { permissionIds?: string[] } | null;
-    if (!Array.isArray(body?.permissionIds)) {
-      return HttpResponse.json(
-        { code: "BAD_REQUEST", message: "permissionIds must be an array" },
-        { status: 400 },
-      );
-    }
-    r.permissionIds = body!.permissionIds;
-    r.updatedAt = NOW();
-    return HttpResponse.json(r);
-  }),
+  // M02.F02.I01 — PUT permissions：已废弃删除（2026-09-08 shared tenant-roles.tsp
+  // 无此 op，权限面由 role-menus grants 取代）。
 ];
+// === M05 api-keys / M06 audit 域：已废弃删除（2026-09-08 shared 契约整域移除）===
+// 对应 handler / DTO 助手 / fixture 读取代码一并清理；auditEvents 数组保留
+// （login / member 创建 handler 仍写审计事件，包导出与 seed-parity 测试依赖）。
 
-// === M05 — API Keys (tenant-scoped) ===
-// 2026-08-30 contract-test M96.F02.I15: OpenAPI 标准分页 + 字段对齐 nextjs toDto
-function apiKeyToDto(k: (typeof apiKeys)[number]) {
-  return {
-    id: k.id,
-    tenantId: k.tenantId,
-    name: k.name,
-    prefix: k.prefix,
-    status: k.status,
-    scopes: k.scopes ?? [],
-    createdAt: k.createdAt,
-    lastUsedAt: k.lastUsedAt ?? undefined,
-    expiresAt: k.expiresAt ?? undefined,
-    revokedAt: k.revokedAt ?? undefined,
-  };
-}
-
-// M06.F02 写端点助手 — msw 是 oracle，发 audit 用相同形状（actorUserId=undefined，
-// targetUserId=null, metadata={apiKeyId}）让 contract-test M96.F02.I18 在 4 后端都绿。
-function emitApiKeyAudit(
-  tenantId: string,
-  action: "api_key_created" | "api_key_revoked",
-  apiKeyId: string,
-): void {
-  auditEvents.push({
-    id: `${tenantId}-evt-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
-    tenantId,
-    actorUserId: undefined,
-    action,
-    targetUserId: undefined,
-    metadata: { apiKeyId },
-    occurredAt: NOW(),
-  });
-}
-
-export const apiKeysExtraHandlers = [
-  http.get(`*${BASE}/tenants/:tenantId/api-keys`, ({ request, params }) => {
-    const url = new URL(request.url);
-    const page = Math.max(0, Number(url.searchParams.get("page") ?? 0));
-    const pageSize = Math.min(100, Math.max(1, Number(url.searchParams.get("pageSize") ?? 20)));
-    const all = listApiKeys(String(params.tenantId));
-    const items = all.slice(page * pageSize, page * pageSize + pageSize).map(apiKeyToDto);
-    return HttpResponse.json({ items, page, pageSize, total: all.length });
-  }),
-
-  http.post(`*${BASE}/tenants/:tenantId/api-keys`, async ({ params, request }) => {
-    const body = (await request.json()) as Record<string, unknown>;
-    const name = String(body.name ?? "").trim();
-    if (!name) {
-      return HttpResponse.json(
-        { code: "BAD_REQUEST", message: "name is required" },
-        { status: 400 },
-      );
-    }
-    const id = uuidLike("key");
-    const newKey = {
-      id,
-      tenantId: String(params.tenantId),
-      name,
-      prefix: "sk_live",
-      status: "active" as const,
-      scopes: (body.scopes as string[]) ?? [],
-      createdAt: NOW(),
-    };
-    apiKeys.push(newKey);
-    emitApiKeyAudit(newKey.tenantId, "api_key_created", id);
-    // CreateApiKeyResponse = { apiKey: ApiKey, secret: string } — 与 shared OpenAPI 对齐
-    return HttpResponse.json(
-      { apiKey: { ...newKey }, secret: `secret-${id}` },
-      { status: 201 },
-    );
-  }),
-
-  http.post(`*${BASE}/tenants/:tenantId/api-keys/:keyId/revoke`, ({ params }) => {
-    const k = getApiKey(String(params.tenantId), String(params.keyId));
-    if (!k) return HttpResponse.json({ code: "NOT_FOUND", message: "API Key not found" }, { status: 404 });
-    k.status = "revoked";
-    k.revokedAt = NOW();
-    emitApiKeyAudit(k.tenantId, "api_key_revoked", k.id);
-    return HttpResponse.json(k);
-  }),
-
-  http.post(`*${BASE}/tenants/:tenantId/api-keys/:keyId/rotate`, ({ params }) => {
-    const k = getApiKey(String(params.tenantId), String(params.keyId));
-    if (!k) return HttpResponse.json({ code: "NOT_FOUND", message: "API Key not found" }, { status: 404 });
-    const id = uuidLike("key");
-    const rotated = {
-      ...k,
-      id,
-      // rotate 语义：新行必有新 prefix（server 端随机生成，同 create 路径）。
-      // 2026-09-01 contract-test I57：旧实现沿用 "sk_live" 常量 → 新旧 prefix 相同被断言拦下。
-      prefix: `sk_live_${id.slice(0, 8)}`,
-      status: "active" as const,
-      createdAt: NOW(),
-    };
-    apiKeys.push(rotated);
-    k.status = "revoked";
-    emitApiKeyAudit(rotated.tenantId, "api_key_revoked", k.id);
-    emitApiKeyAudit(rotated.tenantId, "api_key_created", id);
-    return HttpResponse.json({ apiKey: { ...rotated }, secret: `secret-${id}` });
-  }),
-
-  // M05.F01.I05 物理删除（区别于 I03 revoke 软删：直接删 in-memory apiKeys 元素，无审计事件）
-  // 与 I03 revoke 并存：revoke 保留元素（status=revoked+revokedAt）；本 op 元素消失。
-  // 幂等：重复删已不存在的 keyId 返 404。
-  // @entry M05.F01.I05
-  http.delete(`*${BASE}/tenants/:tenantId/api-keys/:keyId`, ({ params }) => {
-    const tenantId = String(params.tenantId);
-    const keyId = String(params.keyId);
-    const idx = apiKeys.findIndex((k) => k.tenantId === tenantId && k.id === keyId);
-    if (idx === -1) {
-      return HttpResponse.json(
-        { code: "NOT_FOUND", message: "API Key not found" },
-        { status: 404 },
-      );
-    }
-    apiKeys.splice(idx, 1);
-    // 不写 audit event（物理删不留痕；与 revoke 写 api_key_revoked 形成对照）
-    return new HttpResponse(null, { status: 204 });
-  }),
-];
-
-// === M06 — Audit (read-only, list by tenant) ===
-// 2026-08-30 contract-test M96.F02.I12/I13/I14: OpenAPI 标准分页 (page=0, pageSize=20),
-// 字段对齐 nextjs Drizzle mapper (id/tenantId/actorUserId/action/targetUserId/metadata/occurredAt)
-function auditToDto(e: (typeof auditEvents)[number]) {
-  return {
-    id: e.id,
-    tenantId: e.tenantId,
-    actorUserId: e.actorUserId ?? undefined,
-    action: e.action,
-    targetUserId: e.targetUserId ?? undefined,
-    metadata: e.metadata ?? {},
-    occurredAt: e.occurredAt,
-  };
-}
-
-export const auditExtraHandlers = [
-  // I12: list by tenant
-  http.get(`*${BASE}/tenants/:tenantId/audit-events`, ({ request, params }) => {
-    const url = new URL(request.url);
-    const page = Math.max(0, Number(url.searchParams.get("page") ?? 0));
-    const pageSize = Math.min(100, Math.max(1, Number(url.searchParams.get("pageSize") ?? 20)));
-    const action = url.searchParams.get("action");
-    let all = listAuditEvents(String(params.tenantId));
-    if (action) all = all.filter((e) => e.action === action);
-    const items = all.slice(page * pageSize, page * pageSize + pageSize).map(auditToDto);
-    return HttpResponse.json({ items, page, pageSize, total: all.length });
-  }),
-
-  // I13: by user
-  http.get(`*${BASE}/tenants/:tenantId/audit-events/by-user/:userId`, ({ request, params }) => {
-    const url = new URL(request.url);
-    const page = Math.max(0, Number(url.searchParams.get("page") ?? 0));
-    const pageSize = Math.min(100, Math.max(1, Number(url.searchParams.get("pageSize") ?? 20)));
-    const all = listAuditEvents(String(params.tenantId)).filter(
-      (e) => e.actorUserId === String(params.userId),
-    );
-    const items = all.slice(page * pageSize, page * pageSize + pageSize).map(auditToDto);
-    return HttpResponse.json({ items, page, pageSize, total: all.length });
-  }),
-
-  // I14: retention policy (单对象 {retentionDays:int32})
-  http.get(`*${BASE}/tenants/:tenantId/audit-events/retention`, ({ params }) => {
-    const p = auditRetentionPolicies.find((x) => x.tenantId === String(params.tenantId));
-    return HttpResponse.json({ retentionDays: p?.retentionDays ?? 90 });
-  }),
-
-  // M06.F02.I02 — PUT retention（2026-09-01 contract-test I59）。
-  // upsert 单行并回显；faker 兜底返随机数破坏 oracle，此处确定性实现。
-  http.put(`*${BASE}/tenants/:tenantId/audit-events/retention`, async ({ params, request }) => {
-    const body = (await request.json().catch(() => null)) as { retentionDays?: number } | null;
-    const days = Number(body?.retentionDays);
-    if (!Number.isInteger(days) || days < 1) {
-      return HttpResponse.json(
-        { code: "BAD_REQUEST", message: "retentionDays must be a positive integer" },
-        { status: 400 },
-      );
-    }
-    const tenantId = String(params.tenantId);
-    const existing = auditRetentionPolicies.find((x) => x.tenantId === tenantId);
-    if (existing) {
-      existing.retentionDays = days;
-      existing.updatedAt = NOW();
-    } else {
-      auditRetentionPolicies.push({ tenantId, retentionDays: days, updatedAt: NOW() });
-    }
-    return HttpResponse.json({ retentionDays: days });
-  }),
-
-  // M06.F01.I03 — POST export（2026-09-01 contract-test I58）。
-  // 契约面：{downloadUrl: string}；URL 本身含随机成分，contract-test 只比 shape。
-  http.post(`*${BASE}/tenants/:tenantId/audit-events/export`, async ({ params, request }) => {
-    const body = (await request.json().catch(() => null)) as {
-      from?: string;
-      to?: string;
-      format?: string;
-    } | null;
-    if (!body?.from || !body.to || !body.format) {
-      return HttpResponse.json(
-        { code: "BAD_REQUEST", message: "from/to/format are required" },
-        { status: 400 },
-      );
-    }
-    if (body.format !== "csv" && body.format !== "json") {
-      return HttpResponse.json(
-        { code: "BAD_REQUEST", message: "format must be csv or json" },
-        { status: 400 },
-      );
-    }
-    const tenantId = String(params.tenantId);
-    return HttpResponse.json({
-      downloadUrl: `/api/v1/tenants/${tenantId}/audit-events/export/${Date.now().toString(36)}.${body.format}`,
-    });
-  }),
-];
-
-// === M04.F01 公共读侧 - App 目录（免鉴权） ===
-// 供接入方（lab 各前端）按 appCode 取应用展示信息；
-// 只返回展示字段（AppPublicInfo），不暴露 OAuth 集成字段。
+// === M04.F01 公共读侧 - Client 目录（免鉴权；2026-09-08 shared 重命名 /apps/{code} → /clients/{clientId}） ===
+// 供接入方（lab 各前端）按 client 标识取应用展示信息；
+// 只返回展示字段，不暴露 OAuth 集成字段。
+// seed 内 client 标识以 code 表示（如 lab-management），handler 兼容 id/code/clientId 查找。
 export const publicAppsExtraHandlers = [
-  http.get(`*${BASE}/apps/:code`, ({ params }) => {
-    const a = apps.find((x) => x.code === String(params.code));
+  http.get(`*${BASE}/clients/:clientId`, ({ params }) => {
+    const c = String(params.clientId);
+    const a = apps.find((x) => x.id === c || x.code === c || x.clientId === c);
     if (!a || a.status !== "active") {
       return HttpResponse.json(
         { code: "NOT_FOUND", message: "App not found" },
@@ -1444,8 +1215,6 @@ export const extraHandlers = [
   ...tenantsExtraHandlers,
   ...usersExtraHandlers,
   ...rolesExtraHandlers,
-  ...apiKeysExtraHandlers,
-  ...auditExtraHandlers,
   ...appsExtraHandlers,
   ...publicAppsExtraHandlers,
   ...menusExtraHandlers,
