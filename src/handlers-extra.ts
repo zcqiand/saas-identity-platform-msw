@@ -1087,13 +1087,13 @@ export const usersExtraHandlers = [
     return HttpResponse.json(u);
   }),
 
-  // M01.F02.I02 — /users/invitations（2026-09-01 contract-test I42）。
-  // 邀请语义：按 email 建占位 user（status=invited），roleIds 取 body.roleIds ?? []。
+  // M01.F02.I02 — /users/invitations（2026-09-01 contract-test I42；2026-09-10 方案 C 改嵌套 view）。
+  // 邀请语义：按 email 建占位 user（status=invited），member 行写 memberships。
   // faker 兜底会返随机 email 破坏 oracle，此处确定性实现（对齐 nextjs invitations route）。
   http.post(`*${BASE}/tenants/:tenantId/members/invitations`, async ({ params, request }) => {
     const body = (await request.json().catch(() => null)) as {
       email?: string;
-      roleIds?: string[];
+      mobile?: string;
     } | null;
     const email = String(body?.email ?? "").trim();
     if (!email) {
@@ -1102,21 +1102,50 @@ export const usersExtraHandlers = [
         { status: 400 },
       );
     }
-    const invited = {
-      id: uuidLike("user"),
+    const now = NOW();
+    const userId = uuidLike("user");
+    // 存储行：本地 shim User 仍是旧扁平 shape（tenantId/roleIds 必填，同 seeds/users.json），
+    // 重 gen（Task 7）后可去掉这两个字段。
+    const user = {
+      id: userId,
       tenantId: String(params.tenantId),
       username: email.split("@")[0] ?? email,
       email,
-      status: "invited" as const,
-      roleIds: body?.roleIds ?? [],
-      createdAt: NOW(),
-      updatedAt: NOW(),
+      status: "invited" as const, // SSOT SysUserStatus 2026-09-10 补 invited（I42）
+      roleIds: [] as string[],
+      createdAt: now,
+      updatedAt: now,
     };
-    users.push(invited);
+    users.push(user);
+    const member = {
+      id: uuidLike("member"),
+      tenantId: String(params.tenantId),
+      userId,
+      memberName: user.username,
+      isOwner: false,
+      status: "active",
+      createdAt: now,
+      updatedAt: now,
+    };
+    // memberships 是 seed 的 TenantMembership 表（id/userId/tenantId/roleIds/status/joinedAt）。
+    memberships.push({
+      id: member.id,
+      tenantId: member.tenantId,
+      userId,
+      roleIds: [],
+      status: "active",
+      joinedAt: now,
+    });
+    // 嵌套 TenantMemberView（SSOT tenant-members.tsp:54）；邀请态挂 user.status。
+    // user 视图剔除存储行的 tenantId/roleIds（SSOT SysUserView 无此二字段）。
     // 2026-09-02 contract-test M96 audit 覆盖对齐（用户拍板）：invite 不写审计事件。
     // AuditAction 枚举无 user_invited；此前用 user_created 近似，但 3 真后端
     // Invitations 端点都不写 —— oracle 对齐真后端，删。
-    return HttpResponse.json(invited, { status: 201 });
+    const { tenantId: _t, roleIds: _r, ...userView } = user;
+    return HttpResponse.json(
+      { member, user: userView, roles: [] as string[] },
+      { status: 201 },
+    );
   }),
 ];
 

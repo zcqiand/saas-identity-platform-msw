@@ -191,7 +191,7 @@ export interface ReorderMenuRequest {
   orderedMenuIds: string[];
 }
 
-// === M09 — Role ↔ Menu grant ===
+// === M09 — Role ↔ Menu grant（2026-09-10 起入 SSOT：tenant-role-menus.tsp）===
 export interface RoleMenuGrant {
   roleId: string;
   menuIds: string[];

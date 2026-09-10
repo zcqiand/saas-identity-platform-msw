@@ -24,6 +24,14 @@ describe("M96 audit 覆盖对齐 — invite 路径不写审计", () => {
       },
     );
     expect(res.status).toBe(201);
+    const body = (await res.json()) as {
+      member: { tenantId: string; userId: string };
+      user: { email: string; status: string };
+      roles: string[];
+    };
+    expect(body.user.status, "invitation 必须返嵌套 view 且 user.status=invited").toBe("invited");
+    expect(body.user.email).toContain("@");
+    expect(body.member.tenantId).toBe("00000000-0000-0000-0000-000000000001");
     expect(auditEvents.length, "invite 不得写审计事件（对齐 3 真后端）").toBe(before);
   });
 });
