@@ -1146,24 +1146,27 @@ export const rolesExtraHandlers = [
 
   http.post(`*${BASE}/tenants/:tenantId/roles`, async ({ params, request }) => {
     const body = (await request.json()) as Record<string, unknown>;
-    const code = String(body.code ?? "").trim();
-    const name = String(body.name ?? "").trim();
-    if (!code || !name) {
+    // 9/7 SSOT：CreateSysRoleRequest {clientId, roleCode, roleName}（permissions 域已废弃）
+    const clientId = String(body.clientId ?? "").trim();
+    const roleCode = String(body.roleCode ?? body.code ?? "").trim();
+    const roleName = String(body.roleName ?? body.name ?? "").trim();
+    if (!clientId || !roleCode || !roleName) {
       return HttpResponse.json(
-        { code: "BAD_REQUEST", message: "code and name are required" },
+        { code: "BAD_REQUEST", message: "clientId, roleCode and roleName are required" },
         { status: 400 },
       );
     }
     const newRole = {
       id: uuidLike("role"),
       tenantId: String(params.tenantId),
-      code,
-      name,
-      permissionIds: (body.permissionIds as string[]) ?? [],
+      clientId,
+      roleCode,
+      roleName,
+      isPreset: false,
       createdAt: NOW(),
       updatedAt: NOW(),
     };
-    roles.push(newRole);
+    roles.push(newRole as unknown as typeof roles[number]);
     return HttpResponse.json(newRole, { status: 201 });
   }),
 
