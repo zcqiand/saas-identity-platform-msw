@@ -20,7 +20,7 @@ describe("M96 audit 覆盖对齐 — invite 路径不写审计", () => {
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: `invite-noaudit-${Date.now()}@x.io`, roleIds: [] }),
+        body: JSON.stringify({ email: `invite-noaudit-${Date.now()}@x.io` }),
       },
     );
     expect(res.status).toBe(201);
