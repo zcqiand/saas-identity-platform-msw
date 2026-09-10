@@ -30,8 +30,8 @@
     {
       "file": "apps.json",
       "type": "App[]",
-      "count": 3,
-      "note": "v0.4.0 M04 统一 (OAuth client + 菜单承载). lab(27 menus) + erp(7) + crm(7)。app id 用 backup 语义键 (lab-management/app-erp/app-crm)，不再 UUID"
+      "count": 4,
+      "note": "v0.4.0 M04 统一 (OAuth client + 菜单承载). lab(27 menus) + erp(7) + crm(7)。app id 用 backup 语义键 (lab-management/app-erp/app-crm)，不再 UUID；2026-09-11 B 方案 +saas-console（first-party client，登录页 clientId 兜底，无菜单）"
     },
     {
       "file": "menus.json",

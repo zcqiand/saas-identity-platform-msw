@@ -32,6 +32,8 @@ export const APP_IDS = {
   lab: _APPS[0].id,
   erp: _APPS[1].id,
   crm: _APPS[2].id,
+  // 2026-09-11 B 方案：saas-console 自身应用（first-party client，登录页 clientId 兜底）
+  saas: _APPS[3].id,
 } as const;
 
 // MENU_IDS 派生自 menus.json（避免硬编码漂移）

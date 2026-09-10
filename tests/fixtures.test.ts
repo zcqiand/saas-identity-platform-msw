@@ -94,13 +94,16 @@ describe("M99.F01 fixture data consistency", () => {
 // === M99.F02 — Apps / Menus / RoleMenuGrants fixtures ===
 describe("M99.F02 apps+menus+grants fixture consistency", () => {
   it("apps are platform-level (no tenantId)", () => {
-    expect(apps.length).toBe(3);
-    expect(apps.map((a) => a.id).sort()).toEqual([APP_IDS.crm, APP_IDS.erp, APP_IDS.lab].sort());
+    // 2026-09-11 B 方案（ADR-0030 REQ-2026-001）：+saas-console（first-party client，登录页 clientId 兜底）
+    expect(apps.length).toBe(4);
+    expect(apps.map((a) => a.id).sort()).toEqual(
+      [APP_IDS.crm, APP_IDS.erp, APP_IDS.lab, APP_IDS.saas].sort(),
+    );
     for (const a of apps) {
       expect((a as { tenantId?: unknown }).tenantId).toBeUndefined();
       // 2026-08-29: app id 收敛为 canonical UUID（shared V016），与 PG 逐字相同
-      // 语义仍可读：11111111-…-1111/1112/1113 分别是 lab / erp / crm
-      expect(a.id).toMatch(/^11111111-1111-1111-1111-11111111111[123]$/);
+      // 语义仍可读：11111111-…-1111/1112/1113/1114 分别是 lab / erp / crm / saas-console
+      expect(a.id).toMatch(/^11111111-1111-1111-1111-11111111111[1234]$/);
     }
   });
 
