@@ -132,42 +132,41 @@ export const appsExtraHandlers = [
   }),
 
   http.post(`*${BASE}/admin/clients`, async ({ request }) => {
-    // 2026-09-01 contract-test I64：缺必填字段 → 4xx，对齐 nextjs zod 契约面
-    // （CreateAppRequest 必填: code / name / clientId / redirectUris）
+    // 2026-09-10 contract-test I45：缺必填字段 → 4xx，对齐 OAuthClient SSOT 契约面
+    // （CreateOAuthClientRequest 必填: clientId / clientName / clientSecret / grantTypes / redirectUris）。
+    // 9/7 pivot 后 admin/clients 返回 OAuthClient（不是老 App shape）。
     const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
     if (
       !body ||
-      !body.code ||
-      !body.name ||
       !body.clientId ||
-      !Array.isArray(body.redirectUris)
+      !body.clientName ||
+      !body.clientSecret ||
+      !body.grantTypes ||
+      !body.redirectUris
     ) {
       return HttpResponse.json(
         {
           code: "INVALID_REQUEST",
-          message: "POST /admin/clients: 缺必填字段（code/name/clientId/redirectUris）",
+          message: "POST /admin/clients: 缺必填字段（clientId/clientName/clientSecret/grantTypes/redirectUris）",
         },
         { status: 400 },
       );
     }
     const newApp = {
       id: `app-${Date.now().toString(36)}`,
-      code: String(body.code),
-      name: String(body.name),
-      description: body.description as string | undefined,
-      icon: body.icon as string | undefined,
-      sortOrder: Number(body.sortOrder ?? 0),
-      status: (body.status as "active" | "disabled") ?? "active",
       clientId: String(body.clientId),
-      clientSecret: body.clientSecret as string | undefined,
-      redirectUris: body.redirectUris as string[],
-      scopes: (body.scopes as string[]) ?? [],
-      grantTypes: (body.grantTypes as Array<"authorization_code" | "refresh_token" | "client_credentials" | "password">) ?? [],
-      isFirstParty: Boolean(body.isFirstParty ?? false),
+      clientName: String(body.clientName),
+      grantTypes: String(body.grantTypes),
+      redirectUris: String(body.redirectUris),
+      scopes: body.scopes == null ? null : String(body.scopes),
+      accessTokenValidity: Number(body.accessTokenValidity ?? 3600),
+      refreshTokenValidity: Number(body.refreshTokenValidity ?? 86400),
+      autoApprove: Boolean(body.autoApprove ?? false),
+      status: 1,
       createdAt: NOW(),
       updatedAt: NOW(),
     };
-    apps.push(newApp);
+    apps.push(newApp as unknown as App);
     return HttpResponse.json(newApp, { status: 201 });
   }),
 
