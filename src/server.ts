@@ -37,6 +37,14 @@ app.use(
   }),
 )
 app.use(express.json()) // body 解析后由 @mswjs/http-middleware 重建 Request
+// E2E reset（2026-09-11）：mock-server 专属调试端点——fixtures 内存还原到启动快照。
+// 必须挂在 createMiddleware 之前：501 兜底(http.all */api/v1/*)会截走未匹配请求。
+app.post('/api/v1/__e2e/reset', (_req, res) => {
+  resetFixtures()
+  resetTenantApplications()
+  res.json({ ok: true, reset: true })
+})
+
 app.use(createMiddleware(...handlers)) // ★ 核心：handlers 零修改
 
 // 健康检查（容器探活 + 显式 mode 标识防止被当 staging）
@@ -44,13 +52,6 @@ app.get('/healthz', (_req, res) => {
   res.json({ ok: true, mode: 'msw', uptime: process.uptime() })
 })
 
-// E2E reset（2026-09-11）：mock-server 专属调试端点——fixtures 内存还原到启动快照。
-// 必须挂在 createMiddleware 之前（msw 不认识 /__e2e/*，交它只会 404）。
-app.post('/api/v1/__e2e/reset', (_req, res) => {
-  resetFixtures()
-  resetTenantApplications()
-  res.json({ ok: true, reset: true })
-})
 
 app.listen(PORT, () => {
   // eslint-disable-next-line no-console

@@ -1,59 +1,37 @@
-// Wraps the orval-generated handlers array with a stable `handlers` export.
-// orval emits `getTitleMock()` as a default factory — we wrap it for the
-// conventional `handlers` symbol used by setupWorker(...handlers) and
-// setupServer(...handlers).
+// Wraps the MSW handler array with a stable `handlers` export for
+// setupWorker(...handlers) / setupServer(...handlers).
 //
-// orval will write src/handlers.ts (axios client) AND src/handlers.msw.ts
-// (mock handlers). After each codegen run, this file is regenerated and
-// this wrapper re-imports getTitleMock. If orval renames the factory, update
-// this wrapper.
-import { getTitleMock } from "./handlers.msw.msw";
+// 2026-09-11 C 扫尾（用户裁定）：**orval faker 兜底全部废除**。
+//
+// 历史：未接 extra handler 的端点会落到 orval faker 兜底 —— 返回 200 + 随机数据
+// （随机 UUID / status 巨数 / 与路径无关的 tenantId）。比 404 更有欺骗性：
+// 页面「有数据」但全是假的，shape/值域断言全部失效（租户应用页状态列乱码即此根因）。
+//
+// 新规则：
+//  1. 暴露给前端的每个端点必须在 handlers-extra.ts 里有确定性 handler（seed fixtures）；
+//  2. 未覆盖的请求 → 501 NOT_MOCKED，第一次请求就炸，而不是静默放假数据；
+//  3. 确需临时恢复 faker 的端点：登记进 FAKER_ALLOWED 并写理由 + 移除条件
+//     （当前为空；发现 501 的正确动作是去 handlers-extra.ts 写确定性 handler）。
+import { HttpResponse, http } from "msw";
 import { extraHandlers } from "./handlers-extra";
 
-// 2026-08-27 (PLAN-2026-001 T-7)：过滤 orval 兜底的 OAuth + /auth/login +
-// /auth/logout + /me/menus — 这些端点由 extra 接管 (ADR-0013 saas session
-// 改造: cookie 检查 + user_id 从 session 取), orval faker 兜底会抢走并
-// 破坏 dev 体验 (返 200 OK 而非 401 miss session)。
-// 改用 handler 路径匹配过滤 (instance ref 在 orval 多次调用可能不一致)。
-const OVERRIDDEN_PATHS = new Set<string>([
-  "POST */api/v1/auth/login",
-  "POST */api/v1/auth/logout",
-  "POST */api/v1/oauth/authorize",
-  "POST */api/v1/oauth/token",
-  "GET */api/v1/me/menus",
-  // 2026-08-30：orval 自动生成用 faker.date.past() 写随机 joinedAt，
-  // 与契约测试要求 deterministic 不符（shared V016 写 2026-01-20）。
-  // 切到 seed-based handler，参见 handlers-extra.ts meTenantsExtraHandlers。
-  "GET */api/v1/me/tenants",
-  "GET */api/v1/me",
-  // 2026-08-30：orval 兜底公共 client 目录端点用 faker 随机 id，契约要求从
-  // oauth_client.json 取真实展示信息。切到 publicAppsExtraHandlers。
-  // 2026-09-08 shared 重命名：/apps/{code} → /clients/{clientId}（已迁移）。
-  // 路径字面量是 `:clientId`（orval 用冒号），不是 `{clientId}`（OpenAPI 用花括号）。
-  "GET */api/v1/clients/:clientId",
-  // 2026-08-31 contract-test 第三期：auth/refresh 与 me/tenants/switch 切到
-  // 确定性 handler（rotate 存储 / membership 校验），faker 兜底是随机数据不能当 oracle。
-  "POST */api/v1/auth/refresh",
-  "POST */api/v1/me/tenants/:tenantId/switch",
-  // 2026-08-31 contract-test I25：oidc/callback faker 兜底缺 code 也返 200，
-  // 切到确定性 handler（错误分支 400 对齐 nextjs zod 契约面）。
-  "POST */api/v1/auth/oidc/callback",
-]);
-function handlerKey(h: { method?: unknown; path?: unknown }): string {
-  // MSW v2 handler.info.method/path 类型混合 (string | RegExp | HttpCustomPredicate);
-  // 仅取 string|RegExp 的 source 部分作 key
-  const m = h.method instanceof RegExp ? h.method.source : (typeof h.method === "string" ? h.method : "*");
-  const p = h.path instanceof RegExp ? h.path.source : (typeof h.path === "string" ? h.path : "*");
-  return `${m} ${p}`;
-}
-const orvalMockHandlers = getTitleMock().filter((h) => !OVERRIDDEN_PATHS.has(handlerKey(h.info)));
-if (process.env.DEBUG_HANDLERS) {
-  console.log("orval mocks total:", getTitleMock().length);
-  console.log("filtered orval mocks:", orvalMockHandlers.length);
-  console.log("extra handlers count:", extraHandlers.length);
-}
+// 显式 faker 白名单（当前为空）。条目格式：`${method} */api/v1/path`。
+const FAKER_ALLOWED = new Set<string>([]);
+void FAKER_ALLOWED;
 
-// Custom M07/M08/M09 handlers (deterministic fixtures) take precedence over
-// orval-generated faker handlers for those routes.
-export const handlers = [...extraHandlers, ...orvalMockHandlers];
+// 兜底：所有未被 extra 覆盖的 /api/v1 请求 → 501，loudly 失败。
+const notMockedHandler = http.all("*/api/v1/*", async ({ request }) => {
+  return HttpResponse.json(
+    {
+      code: "NOT_MOCKED",
+      message:
+        "[saas-msw] 该端点没有确定性 handler（handlers-extra.ts）。" +
+        "正确动作：接 seed fixtures，而不是让 orval faker 返回假数据。 " +
+        `未匹配请求：${request.method} ${request.url}`,
+    },
+    { status: 501 },
+  );
+});
+
+export const handlers = [...extraHandlers, notMockedHandler];
 export default handlers;
