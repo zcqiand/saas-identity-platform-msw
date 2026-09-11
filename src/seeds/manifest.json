@@ -4,46 +4,46 @@
   "source": "src/fixtures/seed.ts (v0.1.0 → v0.4.0 M04 合并 OAuthApp + M07 → M04); V008 补齐 3 张空表; app 清单从 backup/saas-identity-platform-shared/seeds/apps.json 对齐",
   "tables": [
     {
-      "file": "tenants.json",
+      "file": "tenant.json",
       "type": "Tenant[]",
       "count": 3,
-      "note": "3 canonical demo tenants (acme/globex/initech), all UUIDs fixed"
+      "note": "3 canonical demo tenants (acme/globex/initech), all UUIDs fixed；2026-09-11 文件名对齐 DB 表名（用户裁定）"
     },
     {
-      "file": "roles.json",
+      "file": "sys_role.json",
       "type": "Role[]",
       "count": 4,
-      "note": "tenant-scoped. admin role has 4 permissions; member has 1"
+      "note": "tenant-scoped. admin role has 4 permissions; member has 1；2026-09-11 文件名对齐 DB 表名（用户裁定）"
     },
     {
-      "file": "users.json",
+      "file": "sys_user.json",
       "type": "User[]",
       "count": 5,
-      "note": "per-tenant. carol=invited, eve=suspended; 含 roleIds[] 字段（V008 补 SQL 列）"
+      "note": "per-tenant. carol=invited, eve=suspended; 含 roleIds[] 字段（V008 补 SQL 列）；2026-09-11 文件名对齐 DB 表名（用户裁定）"
     },
     {
-      "file": "apps.json",
+      "file": "oauth_client.json",
       "type": "App[]",
       "count": 4,
-      "note": "v0.4.0 M04 统一 (OAuth client + 菜单承载). lab(27 menus) + erp(7) + crm(7)。app id 用 backup 语义键 (lab-management/app-erp/app-crm)，不再 UUID；2026-09-11 B 方案 +saas-console（first-party client，登录页 clientId 兜底，无菜单）"
+      "note": "v0.4.0 M04 统一 (OAuth client + 菜单承载). lab(27 menus) + erp(7) + crm(7)。app id 用 backup 语义键 (lab-management/app-erp/app-crm)，不再 UUID；2026-09-11 B 方案 +saas-console（first-party client，登录页 clientId 兜底，无菜单）；2026-09-11 文件名对齐 DB 表名（用户裁定）"
     },
     {
-      "file": "menus.json",
+      "file": "sys_menu.json",
       "type": "Menu[]",
       "count": 41,
-      "note": "从 backup 全面导入：lab-management 27 条（含 5 个 group 容器：grp-res/grp-biz/grp-stat/grp-insp/grp-master）+ app-erp 7 条 + app-crm 7 条（新造）"
+      "note": "从 backup 全面导入：lab-management 27 条（含 5 个 group 容器：grp-res/grp-biz/grp-stat/grp-insp/grp-master）+ app-erp 7 条 + app-crm 7 条（新造）；2026-09-11 文件名对齐 DB 表名（用户裁定）"
     },
     {
-      "file": "role-menu-grants.json",
+      "file": "sys_role_menu.json",
       "type": "RoleMenuGrant[]",
       "count": 3,
-      "note": "tenant-scoped. acme admin 看 lab 全部 27 个菜单；globex admin 看 erp + crm 全部 14 个；TypeSpec V008 补 tenantId 字段"
+      "note": "tenant-scoped. acme admin 看 lab 全部 27 个菜单；globex admin 看 erp + crm 全部 14 个；TypeSpec V008 补 tenantId 字段；2026-09-11 文件名对齐 DB 表名（用户裁定）"
     },
     {
-      "file": "memberships.json",
+      "file": "tenant_member.json",
       "type": "TenantMembership[]",
-      "count": 5,
-      "note": "derived from users × tenant"
+      "count": 6,
+      "note": "derived from users × tenant；2026-09-11 文件名对齐 DB 表名（用户裁定）；2026-09-11 +alice→globex（E2E 切换场景）"
     }
   ],
   "notes": [

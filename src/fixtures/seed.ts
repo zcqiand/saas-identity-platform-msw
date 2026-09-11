@@ -66,7 +66,7 @@ export const listRoles = (tenantId: string) =>
   roles.filter((r) => r.tenantId === tenantId);
 
 // URL `:appId` 既可能是内部 id（`lab-management`）也可能是 code（`lab-management`）。
-// 两者都映射到同一个 App 记录（[src/seeds/apps.json](seeds/apps.json)）。
+// 两者都映射到同一个 App 记录（[src/seeds/oauth_client.json](seeds/oauth_client.json)）。
 // ADR-0014 相关无关；saas 镜像早期未统一约定导致 seed 内 id 而 URL 用 code。
 function resolveAppId(idOrCode: string): string {
   return apps.find((a) => a.id === idOrCode || a.code === idOrCode)?.id ?? idOrCode;
@@ -87,6 +87,29 @@ export const listMenus = (appId: string) =>
 
 export const getRoleMenuGrant = (roleId: string) =>
   roleMenuGrants.find((g) => g.roleId === roleId);
+
+// === E2E reset（2026-09-11）===
+// msw 无持久化，但 handlers 会对数组 push/splice——跨运行累积（如 E2E 每轮创建的租户）
+// 会撑爆分页首屏，制造 flaky。启动时快照，POST /__e2e/reset 时整体还原。
+const SNAP = {
+  tenants: structuredClone(tenants),
+  roles: structuredClone(roles),
+  users: structuredClone(users),
+  apps: structuredClone(apps),
+  menus: structuredClone(menus),
+  roleMenuGrants: structuredClone(roleMenuGrants),
+  memberships: structuredClone(memberships),
+};
+
+export function resetFixtures(): void {
+  tenants.splice(0, tenants.length, ...SNAP.tenants);
+  roles.splice(0, roles.length, ...SNAP.roles);
+  users.splice(0, users.length, ...SNAP.users);
+  apps.splice(0, apps.length, ...SNAP.apps);
+  menus.splice(0, menus.length, ...SNAP.menus);
+  roleMenuGrants.splice(0, roleMenuGrants.length, ...SNAP.roleMenuGrants);
+  memberships.splice(0, memberships.length, ...SNAP.memberships);
+}
 
 export default {
   tenants,

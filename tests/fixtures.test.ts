@@ -175,13 +175,13 @@ describe("M99.F03 seeds/ JSON-per-table structure (v0.4.0)", () => {
   // 2026-09-11 与 DB 对齐：7 张种子表（tenant/oauth_client/sys_user/sys_role/sys_menu/sys_role_menu/tenant_member）
   const expectedFiles = [
     "manifest.json",
-    "tenants.json",
-    "roles.json",
-    "users.json",
-    "apps.json",
-    "menus.json",
-    "role-menu-grants.json",
-    "memberships.json",
+    "tenant.json",
+    "sys_role.json",
+    "sys_user.json",
+    "oauth_client.json",
+    "sys_menu.json",
+    "sys_role_menu.json",
+    "tenant_member.json",
     "index.ts",
   ];
   for (const f of expectedFiles) {
@@ -197,7 +197,7 @@ describe("M99.F03 seeds/ JSON-per-table structure (v0.4.0)", () => {
   });
 
   it("every JSON table is a top-level array", () => {
-    const tables = ["tenants", "roles", "users", "apps", "menus", "role-menu-grants", "memberships"];
+    const tables = ["tenant", "sys_role", "sys_user", "oauth_client", "sys_menu", "sys_role_menu", "tenant_member"];
     for (const t of tables) {
       const data = JSON.parse(readFileSync(resolve(SEEDS_DIR, `${t}.json`), "utf-8"));
       expect(Array.isArray(data)).toBe(true);

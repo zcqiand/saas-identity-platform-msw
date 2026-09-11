@@ -421,14 +421,30 @@ export const authExtraHandlers = [
       tenantId: user.tenantId,
       scope: "openid profile email",
     });
+    // 2026-09-11 REQ-2026-004：补齐 LoginResponse 契约 required 字段（user/availableTenants/clientId）。
+    // 此前缺失导致三端 currentTenantId 落空 —— react 切换器条件渲染直接消失（E2E 抓出）。
+    // user 按 SysUser 契约字段挑拣（fixture 扁平 user 的 tenantId/roleIds 不进契约响应）。
+    const mine = memberships.filter(
+      (m) => m.userId === user.id && m.status === "active",
+    );
     return HttpResponse.json(
       {
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          status: user.status,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt,
+        },
+        availableTenants: mine,
+        clientId: String((body as { clientId?: string }).clientId ?? ""),
         accessToken: await signAccessToken({ sub: user.id, tenant_id: user.tenantId }),
         refreshToken: loginRefreshToken,
         tokenType: "Bearer",
         expiresIn: 3600,
         userId: user.id,
-        currentTenantId: user.tenantId,
+        currentTenantId: mine[0]?.tenantId ?? user.tenantId,
       },
       {
         headers: {
@@ -581,7 +597,7 @@ export const authExtraHandlers = [
     }
   }),
 
-  // GET /me/tenants：从 canonical seed（memberships.json）返回当前用户的所有成员关系。
+  // GET /me/tenants：从 canonical seed（tenant_member.json）返回当前用户的所有成员关系。
   // 2026-08-30：覆盖 orval 自动生成（faker.date.past() 写随机 joinedAt，违反
   // 契约测试 deterministic 要求 + 与 shared V016 不一致）。
   http.get(`*${BASE}/me/tenants`, async ({ request }) => {
@@ -1085,7 +1101,7 @@ export const usersExtraHandlers = [
     }
     const now = NOW();
     const userId = uuidLike("user");
-    // 存储行：本地 shim User 仍是旧扁平 shape（tenantId/roleIds 必填，同 seeds/users.json），
+    // 存储行：本地 shim User 仍是旧扁平 shape（tenantId/roleIds 必填，同 seeds/sys_user.json），
     // 重 gen（Task 7）后可去掉这两个字段。
     const user = {
       id: userId,

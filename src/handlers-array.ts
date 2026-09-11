@@ -27,7 +27,7 @@ const OVERRIDDEN_PATHS = new Set<string>([
   "GET */api/v1/me/tenants",
   "GET */api/v1/me",
   // 2026-08-30：orval 兜底公共 client 目录端点用 faker 随机 id，契约要求从
-  // apps.json 取真实展示信息。切到 publicAppsExtraHandlers。
+  // oauth_client.json 取真实展示信息。切到 publicAppsExtraHandlers。
   // 2026-09-08 shared 重命名：/apps/{code} → /clients/{clientId}（已迁移）。
   // 路径字面量是 `:clientId`（orval 用冒号），不是 `{clientId}`（OpenAPI 用花括号）。
   "GET */api/v1/clients/:clientId",

@@ -21,13 +21,13 @@ const NEXTJS_SEEDS = resolve(
 
 /** DB 真实种子表对应的 JSON 文件集合（不含 manifest.json 元数据）。 */
 const EXPECTED_TABLES = [
-  "apps.json",
-  "memberships.json",
-  "menus.json",
-  "role-menu-grants.json",
-  "roles.json",
-  "tenants.json",
-  "users.json",
+  "oauth_client.json",
+  "sys_menu.json",
+  "sys_role.json",
+  "sys_role_menu.json",
+  "sys_user.json",
+  "tenant.json",
+  "tenant_member.json",
 ];
 
 function jsonFiles(dir: string): string[] {
@@ -41,6 +41,14 @@ describe("M99.F01 种子 parity — msw ↔ nextjs 严格镜像（= DB 种子表
     const nextjs = jsonFiles(NEXTJS_SEEDS);
     expect(msw).toEqual(EXPECTED_TABLES);
     expect(nextjs).toEqual(EXPECTED_TABLES);
+  });
+
+  it("两仓 manifest tables 声明一致（防目录删了声明残留）", () => {
+    const read = (dir: string) =>
+      JSON.parse(readFileSync(resolve(dir, "manifest.json"), "utf-8")).tables
+        .map((t: { file: string }) => t.file)
+        .sort();
+    expect(read(MSW_SEEDS)).toEqual(read(NEXTJS_SEEDS));
   });
 
   for (const file of EXPECTED_TABLES) {

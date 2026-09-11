@@ -8,13 +8,13 @@
 // view, but we cast to mutable arrays in fixtures/seed.ts where handlers
 // need to write. Type-level readonly is not enforced at runtime.
 
-import _TENANTS from "./tenants.json" with { type: "json" };
-import _ROLES from "./roles.json" with { type: "json" };
-import _USERS from "./users.json" with { type: "json" };
-import _APPS from "./apps.json" with { type: "json" };
-import _MENUS from "./menus.json" with { type: "json" };
-import _ROLE_MENU_GRANTS from "./role-menu-grants.json" with { type: "json" };
-import _MEMBERSHIPS from "./memberships.json" with { type: "json" };
+import _TENANTS from "./tenant.json" with { type: "json" };
+import _ROLES from "./sys_role.json" with { type: "json" };
+import _USERS from "./sys_user.json" with { type: "json" };
+import _APPS from "./oauth_client.json" with { type: "json" };
+import _MENUS from "./sys_menu.json" with { type: "json" };
+import _ROLE_MENU_GRANTS from "./sys_role_menu.json" with { type: "json" };
+import _MEMBERSHIPS from "./tenant_member.json" with { type: "json" };
 
 // === Identity constants (canonical UUIDs; readable from react/vue/nextjs) ===
 export const TENANT_IDS = {
@@ -55,7 +55,7 @@ const _TENANT_CODE_BY_ID: Readonly<Record<string, string>> = Object.freeze(
 export const ROLE_IDS: Readonly<Record<string, string>> = Object.freeze(
   Object.fromEntries(
     _ROLES.map((r) => [
-      `${_TENANT_CODE_BY_ID[r.tenantId]}${r.code.charAt(0).toUpperCase()}${r.code.slice(1)}`,
+      `${_TENANT_CODE_BY_ID[r.tenantId]}${r.roleCode.charAt(0).toUpperCase()}${r.roleCode.slice(1)}`,
       r.id,
     ]),
   ),
