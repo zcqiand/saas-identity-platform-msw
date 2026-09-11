@@ -1228,6 +1228,114 @@ export const publicAppsExtraHandlers = [
   }),
 ];
 
+// === M00.F05 — Tenant applications（2026-09-11 dev fixture 接线）===
+// 走进程内 store（saasSessions 先例），不进 seeds/ —— seed-parity 锁 seeds 文件集合
+// = DB 种子表集合（saas_dev seed-db.mjs 未含该表），单边加文件即红。
+// 之前无 extra handler 时请求落到 orval faker 兜底（随机 UUID / status 巨数 /
+// tenantId 与路径无关），前端应用名称、状态列全废 —— 这里按家族约定接真数据：
+// status: 0=待激活 / 1=启用 / 2=停用（2026-09-10 家族约定）。
+interface TenantAppRecord {
+  id: string;
+  tenantId: string;
+  clientId: string;
+  status: number;
+  expireTime?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+const TENANT_APP_SEED: TenantAppRecord[] = [
+  { id: "00000000-0000-0000-0000-e00000000001", tenantId: TENANT_IDS.acme, clientId: "lab-management", status: 1, expireTime: "2027-01-01T00:00:00Z", createdAt: "2026-01-20T08:00:00Z", updatedAt: "2026-08-12T10:00:00Z" },
+  { id: "00000000-0000-0000-0000-e00000000002", tenantId: TENANT_IDS.acme, clientId: "erp", status: 0, createdAt: "2026-02-14T09:30:00Z", updatedAt: "2026-08-12T10:00:00Z" },
+  { id: "00000000-0000-0000-0000-e00000000003", tenantId: TENANT_IDS.globex, clientId: "erp", status: 1, createdAt: "2026-03-01T10:00:00Z", updatedAt: "2026-08-12T10:00:00Z" },
+  { id: "00000000-0000-0000-0000-e00000000004", tenantId: TENANT_IDS.initech, clientId: "crm", status: 2, createdAt: "2026-04-11T11:00:00Z", updatedAt: "2026-08-12T10:00:00Z" },
+];
+const tenantApplications = structuredClone(TENANT_APP_SEED);
+
+/** e2e reset 用：还原订阅 store（server.ts 与 resetFixtures 一起调）。 */
+export function resetTenantApplications(): void {
+  tenantApplications.splice(0, tenantApplications.length, ...structuredClone(TENANT_APP_SEED));
+}
+
+/** PATCH 契约宽容：数字（0/1/2）或字符串（contract-test I76 发 "disabled"）都收。 */
+function normalizeTenantAppStatus(v: unknown): number {
+  if (typeof v === "number") return v;
+  const s = String(v ?? "").trim().toLowerCase();
+  if (["0", "pending"].includes(s)) return 0;
+  if (["1", "active", "enabled"].includes(s)) return 1;
+  if (["2", "disabled"].includes(s)) return 2;
+  return Number.NaN;
+}
+
+export const tenantApplicationsExtraHandlers = [
+  http.get(`*${BASE}/tenants/:tenantId/applications`, ({ params, request }) => {
+    const url = new URL(request.url);
+    const page = Math.max(0, Number(url.searchParams.get("page") ?? 0));
+    const pageSize = Math.min(100, Math.max(1, Number(url.searchParams.get("pageSize") ?? 20)));
+    const items = tenantApplications.filter((a) => a.tenantId === String(params.tenantId));
+    return HttpResponse.json({
+      items: items.slice(page * pageSize, page * pageSize + pageSize),
+      page,
+      pageSize,
+      total: items.length,
+    });
+  }),
+
+  http.post(`*${BASE}/tenants/:tenantId/applications`, async ({ params, request }) => {
+    const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
+    const clientId = String(body?.clientId ?? "").trim();
+    if (!clientId) {
+      return HttpResponse.json({ code: "BAD_REQUEST", message: "clientId is required" }, { status: 400 });
+    }
+    if (tenantApplications.some((a) => a.tenantId === params.tenantId && a.clientId === clientId)) {
+      return HttpResponse.json({ code: "CONFLICT", message: "already subscribed" }, { status: 409 });
+    }
+    const rec: TenantAppRecord = {
+      id: uuidLike("tenant-app"),
+      tenantId: String(params.tenantId),
+      clientId,
+      status: 1,
+      expireTime: body?.expireTime ? String(body.expireTime) : undefined,
+      createdAt: NOW(),
+      updatedAt: NOW(),
+    };
+    tenantApplications.push(rec);
+    return HttpResponse.json(rec, { status: 201 });
+  }),
+
+  http.patch(`*${BASE}/tenants/:tenantId/applications/:clientId`, async ({ params, request }) => {
+    const rec = tenantApplications.find(
+      (a) => a.tenantId === params.tenantId && a.clientId === String(params.clientId),
+    );
+    if (!rec) {
+      return HttpResponse.json({ code: "NOT_FOUND", message: "Subscription not found" }, { status: 404 });
+    }
+    const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+    if (body.status !== undefined) {
+      const s = normalizeTenantAppStatus(body.status);
+      if (Number.isNaN(s)) {
+        return HttpResponse.json({ code: "BAD_REQUEST", message: "invalid status" }, { status: 400 });
+      }
+      rec.status = s;
+    }
+    if (body.expireTime !== undefined) {
+      rec.expireTime = body.expireTime ? String(body.expireTime) : undefined;
+    }
+    rec.updatedAt = NOW();
+    return HttpResponse.json(rec);
+  }),
+
+  http.delete(`*${BASE}/tenants/:tenantId/applications/:clientId`, ({ params }) => {
+    const i = tenantApplications.findIndex(
+      (a) => a.tenantId === params.tenantId && a.clientId === String(params.clientId),
+    );
+    if (i < 0) {
+      return HttpResponse.json({ code: "NOT_FOUND", message: "Subscription not found" }, { status: 404 });
+    }
+    tenantApplications.splice(i, 1);
+    return new HttpResponse(null, { status: 204 });
+  }),
+];
+
 export const extraHandlers = [
   ...authExtraHandlers,
   ...tenantsExtraHandlers,
@@ -1238,4 +1346,5 @@ export const extraHandlers = [
   ...menusExtraHandlers,
   ...roleMenuExtraHandlers,
   ...meExtraHandlers,
+  ...tenantApplicationsExtraHandlers,
 ];

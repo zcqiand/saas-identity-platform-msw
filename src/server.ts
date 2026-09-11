@@ -9,6 +9,7 @@ import cors from 'cors'
 import { createMiddleware } from '@mswjs/http-middleware'
 import { handlers } from './handlers-array'
 import { resetFixtures } from './fixtures/seed'
+import { resetTenantApplications } from './handlers-extra'
 
 const PORT = Number(process.env.PORT ?? 5100)
 
@@ -47,6 +48,7 @@ app.get('/healthz', (_req, res) => {
 // 必须挂在 createMiddleware 之前（msw 不认识 /__e2e/*，交它只会 404）。
 app.post('/api/v1/__e2e/reset', (_req, res) => {
   resetFixtures()
+  resetTenantApplications()
   res.json({ ok: true, reset: true })
 })
 
