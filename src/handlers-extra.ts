@@ -976,6 +976,24 @@ export const tenantsExtraHandlers = [
       );
     }
     tenants.push(newTenant);
+    // 默认设置（2026-09-12 用户裁定，与 nextjs 后端对齐）：建租户自动授予
+    // 创建者（当前 session 用户）成员关系 + 默认订阅应用 lab-management。
+    memberships.push({
+      id: uuidLike("member"),
+      tenantId: newTenant.id,
+      userId: USER_IDS.alice, // dev mock：admin 操作均为 alice
+      roleIds: [],
+      status: "active",
+      joinedAt: NOW(),
+    });
+    tenantApplications.push({
+      id: uuidLike("tenant-app"),
+      tenantId: newTenant.id,
+      clientId: "lab-management",
+      status: 1,
+      createdAt: NOW(),
+      updatedAt: NOW(),
+    });
     return HttpResponse.json(newTenant, { status: 201 });
   }),
 
