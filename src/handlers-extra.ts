@@ -204,7 +204,7 @@ export const menusExtraHandlers = [
   http.get(`*${BASE}/clients/:clientId/menus/:menuId`, ({ params }) => {
     const m = getMenu(String(params.menuId));
     const resolvedAppId = resolveAppId(String(params.clientId));
-    if (!m || m.appId !== resolvedAppId)
+    if (!m || m.clientId !== resolvedAppId)
       return HttpResponse.json({ code: "NOT_FOUND", message: "Menu not found" }, { status: 404 });
     return HttpResponse.json(m);
   }),
@@ -213,15 +213,15 @@ export const menusExtraHandlers = [
     const body = (await request.json()) as Record<string, unknown>;
     const newMenu = {
       id: `00000000-0000-0000-0000-${Date.now().toString(16).padStart(12, "0").slice(-12)}`,
-      appId: resolveAppId(String(params.clientId)),
-      parentId: body.parentId as string | undefined,
-      code: String(body.code ?? ""),
-      name: String(body.name ?? ""),
+      clientId: resolveAppId(String(params.clientId)),
+      parentId: (body.parentId as string | undefined) ?? "00000000-0000-0000-0000-000000000000",
+      title: String(body.title ?? ""),
       path: body.path as string | undefined,
       icon: body.icon as string | undefined,
-      type: (body.type as "group" | "page" | "action") ?? "page",
+      // 2026-09-11 契约对齐：SysMenuType directory|menu|button；status smallint
+      type: (body.type as "directory" | "menu" | "button") ?? "menu",
       sortOrder: Number(body.sortOrder ?? 0),
-      status: (body.status as "active" | "disabled") ?? "active",
+      status: (body.status as 0 | 1) ?? 1,
       createdAt: NOW(),
       updatedAt: NOW(),
     };
@@ -232,7 +232,7 @@ export const menusExtraHandlers = [
   http.patch(`*${BASE}/clients/:clientId/menus/:menuId`, async ({ params, request }) => {
     const m = getMenu(String(params.menuId));
     const resolvedAppId = resolveAppId(String(params.clientId));
-    if (!m || m.appId !== resolvedAppId)
+    if (!m || m.clientId !== resolvedAppId)
       return HttpResponse.json({ code: "NOT_FOUND", message: "Menu not found" }, { status: 404 });
     const body = (await request.json()) as Record<string, unknown>;
     Object.assign(m, body, { updatedAt: NOW() });
@@ -241,7 +241,7 @@ export const menusExtraHandlers = [
 
   http.delete(`*${BASE}/clients/:clientId/menus/:menuId`, ({ params }) => {
     const resolvedAppId = resolveAppId(String(params.clientId));
-    const i = menus.findIndex((m) => m.id === params.menuId && m.appId === resolvedAppId);
+    const i = menus.findIndex((m) => m.id === params.menuId && m.clientId === resolvedAppId);
     if (i < 0) return HttpResponse.json({ code: "NOT_FOUND", message: "Menu not found" }, { status: 404 });
     menus.splice(i, 1);
     return new HttpResponse(null, { status: 204 });
@@ -250,7 +250,7 @@ export const menusExtraHandlers = [
   http.put(`*${BASE}/clients/:clientId/menus/:menuId/reorder`, async ({ params, request }) => {
     const m = getMenu(String(params.menuId));
     const resolvedAppId = resolveAppId(String(params.clientId));
-    if (!m || m.appId !== resolvedAppId)
+    if (!m || m.clientId !== resolvedAppId)
       return HttpResponse.json({ code: "NOT_FOUND", message: "Menu not found" }, { status: 404 });
     const body = (await request.json()) as { orderedMenuIds: string[] };
     body.orderedMenuIds.forEach((mid, idx) => {
@@ -263,10 +263,10 @@ export const menusExtraHandlers = [
   http.patch(`*${BASE}/clients/:clientId/menus/:menuId/parent`, async ({ params, request }) => {
     const m = getMenu(String(params.menuId));
     const resolvedAppId = resolveAppId(String(params.clientId));
-    if (!m || m.appId !== resolvedAppId)
+    if (!m || m.clientId !== resolvedAppId)
       return HttpResponse.json({ code: "NOT_FOUND", message: "Menu not found" }, { status: 404 });
     const body = (await request.json()) as { parentId?: string };
-    m.parentId = body.parentId;
+    m.parentId = body.parentId ?? m.parentId;
     m.updatedAt = NOW();
     return HttpResponse.json(m);
   }),
@@ -343,24 +343,22 @@ export const meExtraHandlers = [
     const allowed = new Set(acmeAdminGrant?.menuIds ?? []);
     const tree = (parentId: string | null | undefined, appId: string): Array<Record<string, unknown>> =>
       menus
-        .filter((m) => m.appId === appId && m.parentId == parentId && m.status === "active")
+        .filter((m) => m.clientId === appId && m.parentId == parentId && m.status === 1)
         .filter((m) => allowed.has(m.id) || parentId == null) // group 节点若不在 grant 中也保留作容器
         .sort((a, b) => a.sortOrder - b.sortOrder)
         .map((m) => {
-          // 2026-08-30 contract-test: 只取 OpenAPI 字段 (id/appId/parentId/code/name/path/icon/type/sortOrder + children),
-          // 不带 status/createdAt/updatedAt. 与 nextjs Drizzle 选择的字段对齐.
-          const { id, appId: aId, parentId, code, name, path, icon, type, sortOrder } = m;
+          // 2026-09-11 契约对齐：SysMenu 字段（clientId/title）；不带 status/createdAt/updatedAt.
+          const { id, clientId: aId, parentId, title, path, icon, type, sortOrder } = m;
           return {
             id,
-            appId: aId,
+            clientId: aId,
             parentId,
-            code,
-            name,
+            title,
             path,
             icon,
             type,
             sortOrder,
-            children: tree(m.id, m.appId),
+            children: tree(m.id, m.clientId),
           };
         });
 
@@ -369,7 +367,7 @@ export const meExtraHandlers = [
     // 单纯靠 tree() 判空不准 —— tree 里 `|| parentId == null` 让所有根菜单恒通过 filter，
     // 所以「无 grant 命中」app 也会返回一条根菜单占位。改在 app 级别先做集合交集判断。
     const allowedInApp = (appId: string): number =>
-      menus.filter((m) => m.appId === appId && m.status === "active" && allowed.has(m.id)).length;
+      menus.filter((m) => m.clientId === appId && m.status === 1 && allowed.has(m.id)).length;
 
     const result: Record<string, Array<Record<string, unknown>>> = {};
     for (const a of apps) {
@@ -728,18 +726,13 @@ export const authExtraHandlers = [
       state?: string;
       tenantId?: string;
     };
-    if (
-      !body.clientId ||
-      !body.redirectUri ||
-      !body.responseType ||
-      !body.scope ||
-      !body.state ||
-      !body.tenantId
-    ) {
+    // 2026-09-11 契约对齐（E2E ④ 抓出 msw 校验过严）：AuthorizeCodeRequest
+    // required = clientId/redirectUri/responseType/state（scope 可选，tenantId 非契约字段）。
+    if (!body.clientId || !body.redirectUri || !body.responseType || !body.state) {
       return HttpResponse.json(
         {
           code: "INVALID_REQUEST",
-          message: "OAuth 2.0 authorize: 缺必填字段（clientId/redirectUri/responseType/scope/state/tenantId）",
+          message: "OAuth 2.0 authorize: 缺必填字段（clientId/redirectUri/responseType/state）",
         },
         { status: 400 },
       );
@@ -774,21 +767,17 @@ export const authExtraHandlers = [
         { status: 401 },
       );
     }
-    // 校验 effective tenantId 与请求 body.tenantId 一致 (与真后端同款)
-    if (effectiveTenantId !== body.tenantId) {
-      return HttpResponse.json(
-        { code: "INVALID_GRANT", message: "session vs request tenantId mismatch" },
-        { status: 401 },
-      );
-    }
+    // 2026-09-11 契约对齐：tenantId 不在 AuthorizeCodeRequest——code 绑定当前
+    // 认证身份（session/Bearer 的 tenant），不信 body。
     // 生成一次性 code 存映射
     const code = `saas-code-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     oauthCodes.set(code, {
       appId: app.id,
       userId: devUser.id,
-      tenantId: body.tenantId,
-      scope: body.scope,
-      redirectUri: body.redirectUri,
+      // effectiveTenantId 带 null（bearer 无 tenant claim 的兜底）——code 绑定用 ?? 兜底
+      tenantId: effectiveTenantId ?? devUser.tenantId,
+      scope: body.scope ?? "",
+      redirectUri: body.redirectUri ?? "",
     });
     return HttpResponse.json({ code, state: body.state });
   }),

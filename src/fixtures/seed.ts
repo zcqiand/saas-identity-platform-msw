@@ -83,7 +83,7 @@ export const listApps = () => apps;
 export const getMenu = (id: string) => menus.find((m) => m.id === id);
 // `appId` 入参兼容内部 id 与 URL code；统一 resolve 到内部 id 再过滤
 export const listMenus = (appId: string) =>
-  menus.filter((m) => m.appId === resolveAppId(appId));
+  menus.filter((m) => m.clientId === resolveAppId(appId));
 
 export const getRoleMenuGrant = (roleId: string) =>
   roleMenuGrants.find((g) => g.roleId === roleId);

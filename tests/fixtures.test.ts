@@ -121,12 +121,12 @@ describe("M99.F02 apps+menus+grants fixture consistency", () => {
   it("menus are scoped under an appId (41 total: lab 27 + erp 7 + crm 7)", () => {
     expect(menus.length).toBe(41);
     const appIds = new Set(apps.map((a) => a.id));
-    for (const m of menus) expect(appIds.has(m.appId)).toBe(true);
+    for (const m of menus) expect(appIds.has(m.clientId)).toBe(true);
     const byApp = { lab: 0, erp: 0, crm: 0 } as Record<string, number>;
     for (const m of menus) {
-      if (m.appId === APP_IDS.lab) byApp.lab++;
-      else if (m.appId === APP_IDS.erp) byApp.erp++;
-      else if (m.appId === APP_IDS.crm) byApp.crm++;
+      if (m.clientId === APP_IDS.lab) byApp.lab++;
+      else if (m.clientId === APP_IDS.erp) byApp.erp++;
+      else if (m.clientId === APP_IDS.crm) byApp.crm++;
     }
     expect(byApp).toEqual({ lab: 27, erp: 7, crm: 7 });
   });
@@ -135,20 +135,23 @@ describe("M99.F02 apps+menus+grants fixture consistency", () => {
     for (const m of menus) {
       if (m.parentId) {
         const parent = menus.find((x) => x.id === m.parentId);
-        expect(parent, `menu ${m.code} has orphan parentId`).toBeDefined();
-        expect(parent?.appId).toBe(m.appId);
+        expect(parent, `menu ${m.title} has orphan parentId`).toBeDefined();
+        expect(parent?.clientId).toBe(m.clientId);
       }
     }
   });
 
   it("listMenus returns only menus for the requested app", () => {
     const labMenus = listMenus(APP_IDS.lab);
-    for (const m of labMenus) expect(m.appId).toBe(APP_IDS.lab);
+    for (const m of labMenus) expect(m.clientId).toBe(APP_IDS.lab);
     expect(labMenus.length).toBe(27);
   });
 
   it("getMenu finds by id and MENU_IDS keys are stable", () => {
-    expect(MENU_IDS.iamTenants).toBe(getMenu(MENU_IDS.iamTenants)?.id);
+    // 2026-09-11 契约对齐：code 删除，键按 path 派生；旧 iamTenants 是退化断言（双侧恒 undefined）
+    const firstKey = Object.keys(MENU_IDS)[0];
+    expect(firstKey).toBeTruthy();
+    expect(MENU_IDS[firstKey]).toBe(getMenu(MENU_IDS[firstKey])?.id);
     expect(getMenu("nope")).toBeUndefined();
   });
 

@@ -112,18 +112,21 @@ export interface UpdateAppRequest {
 }
 
 // === M08 — Menus (nested under an App) ===
-export type MenuType = "group" | "page" | "action";
-export type MenuStatus = "active" | "disabled";
+// 2026-09-11 契约对齐：SysMenuType 枚举
+export type MenuType = "directory" | "menu" | "button";
+// 2026-09-11 契约对齐：SysMenu.status 是 smallint（1=active / 0=disabled）
+export type MenuStatus = 0 | 1;
 
 export interface Menu {
   id: string;
-  appId: string;
-  parentId?: string;
-  code: string;
-  name: string;
-  path?: string;
-  icon?: string;
+  clientId: string;
+  parentId: string;
+  title: string;
   type: MenuType;
+  path?: string;
+  component?: string;
+  perms?: string;
+  icon?: string;
   sortOrder: number;
   status: MenuStatus;
   createdAt: string;

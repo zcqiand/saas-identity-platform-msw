@@ -36,7 +36,8 @@ function toCamel(code: string): string {
   return code.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
 }
 export const MENU_IDS: Readonly<Record<string, string>> = Object.freeze(
-  Object.fromEntries(_MENUS.map((m) => [toCamel(m.code), m.id])),
+  // 2026-09-11 契约对齐：code 字段删除，键改按 path 派生（空 path 用 id 兜底）
+  Object.fromEntries(_MENUS.map((m) => [toCamel(m.path || m.id), m.id])),
 );
 
 // USER_IDS / ROLE_IDS 同样派生自 JSON。
