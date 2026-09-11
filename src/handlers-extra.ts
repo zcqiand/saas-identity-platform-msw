@@ -8,6 +8,7 @@
 import { http, HttpResponse } from "msw";
 import { jwtVerify } from "jose";
 import { getAudience, getIssuer, getSigningKey, signAccessToken } from "./lib/jwt-signer";
+import type { App, TenantStatus } from "./generated_ts_shim";
 import {
   apps,
   menus,
@@ -15,7 +16,6 @@ import {
   tenants,
   users,
   roles,
-  auditEvents,
   memberships,
   TENANT_IDS,
   APP_IDS,
@@ -406,15 +406,7 @@ export const authExtraHandlers = [
         { status: 401 },
       );
     }
-    auditEvents.push({
-      id: `${user.tenantId}-evt-${Date.now().toString(36)}`,
-      tenantId: user.tenantId,
-      actorUserId: user.id,
-      action: "login_success",
-      // 2026-08-30 contract-test M96: 与 nextjs Drizzle 写入对齐, normalize 才能字节级相等
-      metadata: { username: user.username },
-      occurredAt: NOW(),
-    });
+    // 2026-09-11 与 DB 对齐：audit-events 域已随 b749c18 契约下线整体移除（DB 无表）。
     // M03.F01.I01 — 写 saas session cookie (HttpOnly + SameSite=Lax)
     const sid = generateSid();
     saasSessions.set(sid, {
@@ -964,17 +956,17 @@ export const tenantsExtraHandlers = [
     const body = (await request.json()) as Record<string, unknown>;
     const newTenant = {
       id: uuidLike("tenant"),
-      code: String(body.code ?? "").trim(),
+      tenantKey: String(body.tenantKey ?? "").trim(),
       name: String(body.name ?? "").trim(),
-      status: (body.status as "active" | "suspended" | "archived") ?? "active",
+      status: (body.status as TenantStatus) ?? "active",
       // 2026-08-31 contract-test I30：settings 是 Tenant DTO 契约字段（真后端 jsonb 默认 {}）
       settings: {},
       createdAt: NOW(),
       updatedAt: NOW(),
     };
-    if (!newTenant.code || !newTenant.name) {
+    if (!newTenant.tenantKey || !newTenant.name) {
       return HttpResponse.json(
-        { code: "BAD_REQUEST", message: "code and name are required" },
+        { code: "BAD_REQUEST", message: "tenantKey and name are required" },
         { status: 400 },
       );
     }
@@ -1040,16 +1032,6 @@ export const usersExtraHandlers = [
       updatedAt: NOW(),
     };
     users.push(newUser);
-    auditEvents.push({
-      id: `${newUser.tenantId}-evt-${Date.now().toString(36)}`,
-      tenantId: newUser.tenantId,
-      actorUserId: undefined,
-      action: "user_created",
-      targetUserId: newUser.id,
-      // 2026-09-02 contract-test M96 audit 覆盖对齐：metadata 对齐 nextjs/springboot/aspnetcore
-      metadata: { userId: newUser.id },
-      occurredAt: NOW(),
-    });
     return HttpResponse.json(newUser, { status: 201 });
   }),
 
@@ -1219,8 +1201,8 @@ export const rolesExtraHandlers = [
   // 无此 op，权限面由 role-menus grants 取代）。
 ];
 // === M05 api-keys / M06 audit 域：已废弃删除（2026-09-08 shared 契约整域移除）===
-// 对应 handler / DTO 助手 / fixture 读取代码一并清理；auditEvents 数组保留
-// （login / member 创建 handler 仍写审计事件，包导出与 seed-parity 测试依赖）。
+// 2026-09-11 与 DB 对齐（用户裁定）：auditEvents 数组与 login/member 处的残写一并清除，
+// seeds 五个死文件（api-keys/audit-events/audit-retention-policies/permissions/role-permissions）删除。
 
 // === M04.F01 公共读侧 - Client 目录（免鉴权；2026-09-08 shared 重命名 /apps/{code} → /clients/{clientId}） ===
 // 供接入方（lab 各前端）按 client 标识取应用展示信息；

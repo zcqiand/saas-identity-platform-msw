@@ -22,12 +22,6 @@
       "note": "per-tenant. carol=invited, eve=suspended; 含 roleIds[] 字段（V008 补 SQL 列）"
     },
     {
-      "file": "api-keys.json",
-      "type": "ApiKey[]",
-      "count": 2,
-      "note": "per-tenant. acme + globex prod keys"
-    },
-    {
       "file": "apps.json",
       "type": "App[]",
       "count": 4,
@@ -46,34 +40,10 @@
       "note": "tenant-scoped. acme admin 看 lab 全部 27 个菜单；globex admin 看 erp + crm 全部 14 个；TypeSpec V008 补 tenantId 字段"
     },
     {
-      "file": "audit-events.json",
-      "type": "AuditEvent[]",
-      "count": 3,
-      "note": "per-tenant. user_created/login_success/api_key_created"
-    },
-    {
       "file": "memberships.json",
       "type": "TenantMembership[]",
       "count": 5,
       "note": "derived from users × tenant"
-    },
-    {
-      "file": "permissions.json",
-      "type": "Permission[]",
-      "count": 4,
-      "note": "V008 补齐（msw 此前无 fixture，V003 SQL 表空）；4 个 code 与 roles.permissionIds 对齐"
-    },
-    {
-      "file": "role-permissions.json",
-      "type": "RolePermission[]",
-      "count": 13,
-      "note": "V008 补齐；派生 roles × permissions (3 admin × 4 + 1 member × 1)"
-    },
-    {
-      "file": "audit-retention-policies.json",
-      "type": "AuditRetentionPolicy[]",
-      "count": 3,
-      "note": "V008 补齐（每租户 1 行 90 天 retention）"
     }
   ],
   "notes": [

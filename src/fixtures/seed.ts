@@ -1,17 +1,19 @@
 // Cross-frontend seed data — re-exports JSON-loaded tables from src/seeds/.
 // MSW handlers re-export from src/handlers-array.ts (orval-generated).
 //
-// v0.4.0: 9 tables live in src/seeds/*.json. This file is now a thin layer
-// that exposes the mutable arrays (handlers write to them) + ID constants +
-// lookup helpers. The actual data shape comes from the shared TypeSpec —
-// see src/generated_ts_shim.ts for the runtime types.
+// 2026-09-11 与 DB 对齐（用户裁定）：只保留 saas_dev 真实存在的 7 张种子表
+// （tenant/oauth_client/sys_user/sys_role/sys_menu/sys_role_menu/tenant_member*）；
+// api-keys / audit-events / audit-retention-policies / permissions /
+// role-permissions 五个旧域（b749c18 契约下线 + DB 无表）整体删除。
+//
+// This file is a thin layer that exposes the mutable arrays (handlers write
+// to them) + ID constants + lookup helpers. The actual data shape comes from
+// the shared TypeSpec — see src/generated_ts_shim.ts for the runtime types.
 
 import type {
   Tenant,
   User,
   Role,
-  ApiKey,
-  AuditEvent,
   TenantMembership,
   App,
   Menu,
@@ -21,12 +23,9 @@ import {
   tenants as _tenants,
   roles as _roles,
   users as _users,
-  apiKeys as _apiKeys,
   apps as _apps,
   menus as _menus,
   roleMenuGrants as _roleMenuGrants,
-  auditEvents as _auditEvents,
-  auditRetentionPolicies as _auditRetentionPolicies,
   memberships as _memberships,
   TENANT_IDS as _TENANT_IDS,
   APP_IDS as _APP_IDS,
@@ -40,16 +39,9 @@ import {
 export const tenants = _tenants as unknown as Tenant[];
 export const roles = _roles as unknown as Role[];
 export const users = _users as unknown as User[];
-export const apiKeys = _apiKeys as unknown as ApiKey[];
 export const apps = _apps as unknown as App[];
 export const menus = _menus as unknown as Menu[];
 export const roleMenuGrants = _roleMenuGrants as unknown as RoleMenuGrant[];
-export const auditEvents = _auditEvents as unknown as AuditEvent[];
-export const auditRetentionPolicies = _auditRetentionPolicies as unknown as Array<{
-  tenantId: string;
-  retentionDays: number;
-  updatedAt: string;
-}>;
 export const memberships = _memberships as unknown as TenantMembership[];
 
 // === Identity constants ===
@@ -72,11 +64,6 @@ export const getRole = (tenantId: string, roleId: string) =>
   roles.find((r) => r.tenantId === tenantId && r.id === roleId);
 export const listRoles = (tenantId: string) =>
   roles.filter((r) => r.tenantId === tenantId);
-
-export const getApiKey = (tenantId: string, keyId: string) =>
-  apiKeys.find((k) => k.tenantId === tenantId && k.id === keyId);
-export const listApiKeys = (tenantId: string) =>
-  apiKeys.filter((k) => k.tenantId === tenantId);
 
 // URL `:appId` 既可能是内部 id（`lab-management`）也可能是 code（`lab-management`）。
 // 两者都映射到同一个 App 记录（[src/seeds/apps.json](seeds/apps.json)）。
@@ -101,17 +88,12 @@ export const listMenus = (appId: string) =>
 export const getRoleMenuGrant = (roleId: string) =>
   roleMenuGrants.find((g) => g.roleId === roleId);
 
-export const listAuditEvents = (tenantId: string) =>
-  auditEvents.filter((e) => e.tenantId === tenantId);
-
 export default {
   tenants,
   users,
   roles,
-  apiKeys,
   apps,
   menus,
   roleMenuGrants,
-  auditEvents,
   memberships,
 };

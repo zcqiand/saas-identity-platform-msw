@@ -3,7 +3,7 @@
 // hooks that aren't relevant for MSW handlers).
 // Keep in sync with @saas/identity-platform-shared's openapi.yaml.
 
-export type TenantStatus = "active" | "suspended" | "archived";
+export type TenantStatus = "active" | "suspended";
 
 export interface TenantSettings {
   themeColor?: string;
@@ -13,7 +13,8 @@ export interface TenantSettings {
 
 export interface Tenant {
   id: string;
-  code: string;
+  // 2026-09-11 契约对齐：shared OpenAPI Tenant.tenantKey（9/7 起 code→tenantKey）
+  tenantKey: string;
   name: string;
   status: TenantStatus;
   settings?: TenantSettings;
@@ -44,43 +45,6 @@ export interface Role {
   permissionIds: string[];
   createdAt: string;
   updatedAt: string;
-}
-
-export type ApiKeyStatus = "active" | "revoked" | "expired";
-
-export interface ApiKey {
-  id: string;
-  tenantId: string;
-  name: string;
-  prefix: string;
-  status: ApiKeyStatus;
-  scopes: string[];
-  createdAt: string;
-  lastUsedAt?: string;
-  expiresAt?: string;
-  revokedAt?: string;
-}
-
-export type AuditAction =
-  | "user_created"
-  | "user_updated"
-  | "user_deleted"
-  | "role_assigned"
-  | "role_revoked"
-  | "login_success"
-  | "login_failed"
-  | "oauth_token_issued"
-  | "api_key_created"
-  | "api_key_revoked";
-
-export interface AuditEvent {
-  id: string;
-  tenantId: string;
-  actorUserId?: string;
-  action: AuditAction;
-  targetUserId?: string;
-  metadata?: Record<string, unknown>;
-  occurredAt: string;
 }
 
 export type MembershipStatus = "active" | "invited" | "removed";

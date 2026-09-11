@@ -5,9 +5,12 @@
 
 ## 1. 项目定位
 
-SaaS 多租户多应用身份平台的 mock 边界（MSW v2）。从 shared 仓 OpenAPI 派生 handler 结构，
-faker 生成跨端一致 fixture。独立 HTTP 后端（ADR-0012 B 强度）：`src/server.ts` listen `:5100`，
-健康检查 `/healthz`，不持久化。
+SaaS 多租户多应用身份平台的 mock 边界。**传统 Mock Server / HTTP 中间件模式**（ADR-0012 B 强度）：
+MSW v2 handlers 经 `@mswjs/http-middleware` 挂载到 Express，`src/server.ts` 监听**真 TCP :5100**
+（健康检查 `/healthz`），请求真实穿越网络栈——CORS / Set-Cookie / HttpOnly 均为真语义。
+**MSW 原生浏览器 SW / Node 内存拦截模式已废弃**（v0.3.0 删；勿回引 `mockServiceWorker.js` / `setupWorker`）。
+seeds 与 saas_dev 真库**严格镜像**（`tests/seed-parity.test.ts` 锁文件集合= DB 种子表集合 + 内容深度相等）；
+**前端仓对本仓零 npm 依赖**（单测 fixtures 走相对路径直连本仓 `src/fixtures/seed.ts`）。不持久化。
 
 ## 2. 铁律
 
@@ -19,6 +22,8 @@ faker 生成跨端一致 fixture。独立 HTTP 后端（ADR-0012 B 强度）：`
 - 禁止对外 axios/fetch 调真后端（只服务 mock；不调任何外部 backend，ADR-0012）
 - 禁止改 shared 的 OpenAPI（API 变了改 shared 仓 main.tsp）
 - 禁止在某端单独修改 fixture（破坏跨端一致性）
+- 禁止发布为 npm 包 / 被前端 `file:` 依赖（node_modules 拷贝漂移致门禁假绿，2026-09-11 已根除）
+- 禁止 seeds 里出现 DB 没有的表（契约下线连 seeds 一起删；守门= seed-parity 严格镜像）
 
 ## 3. 技术栈与版本（钉死于 version-lock.json）
 

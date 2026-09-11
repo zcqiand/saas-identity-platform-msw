@@ -6,8 +6,6 @@ import {
   tenants,
   users,
   roles,
-  apiKeys,
-  auditEvents,
   memberships,
   apps,
   menus,
@@ -41,7 +39,7 @@ describe("M99.F01 fixture data consistency", () => {
 
   it("getTenant finds tenant by id", () => {
     const t = getTenant(TENANT_IDS.acme);
-    expect(t?.code).toBe("acme");
+    expect(t?.tenantKey).toBe("acme");
     expect(getTenant("does-not-exist")).toBeUndefined();
   });
 
@@ -70,18 +68,7 @@ describe("M99.F01 fixture data consistency", () => {
     }
   });
 
-  it("apiKeys are scoped under tenants", () => {
-    for (const k of apiKeys) {
-      expect(tenants.some((t) => t.id === k.tenantId)).toBe(true);
-    }
-  });
-
-  it("auditEvents reference existing users", () => {
-    const userIds = new Set(users.map((u) => u.id));
-    for (const e of auditEvents) {
-      if (e.actorUserId) expect(userIds.has(e.actorUserId)).toBe(true);
-    }
-  });
+  // 2026-09-11 与 DB 对齐：api-keys / audit-events 域整体删除（b749c18 契约下线 + DB 无表）
 
   it("memberships cover all users", () => {
     const userIds = new Set(users.map((u) => u.id));
@@ -185,16 +172,15 @@ describe("M99.F02 apps+menus+grants fixture consistency", () => {
 
 // === M99.F03 — src/seeds/ JSON-per-table structure ===
 describe("M99.F03 seeds/ JSON-per-table structure (v0.4.0)", () => {
+  // 2026-09-11 与 DB 对齐：7 张种子表（tenant/oauth_client/sys_user/sys_role/sys_menu/sys_role_menu/tenant_member）
   const expectedFiles = [
     "manifest.json",
     "tenants.json",
     "roles.json",
     "users.json",
-    "api-keys.json",
     "apps.json",
     "menus.json",
     "role-menu-grants.json",
-    "audit-events.json",
     "memberships.json",
     "index.ts",
   ];
@@ -204,14 +190,14 @@ describe("M99.F03 seeds/ JSON-per-table structure (v0.4.0)", () => {
     });
   }
 
-  it("manifest.json declares 12 tables + version", () => {
+  it("manifest.json declares 7 tables + version", () => {
     const m = JSON.parse(readFileSync(resolve(SEEDS_DIR, "manifest.json"), "utf-8"));
     expect(m.version).toBe("0.4.0");
-    expect(m.tables).toHaveLength(12);
+    expect(m.tables).toHaveLength(7);
   });
 
   it("every JSON table is a top-level array", () => {
-    const tables = ["tenants", "roles", "users", "api-keys", "apps", "menus", "role-menu-grants", "audit-events", "memberships"];
+    const tables = ["tenants", "roles", "users", "apps", "menus", "role-menu-grants", "memberships"];
     for (const t of tables) {
       const data = JSON.parse(readFileSync(resolve(SEEDS_DIR, `${t}.json`), "utf-8"));
       expect(Array.isArray(data)).toBe(true);
