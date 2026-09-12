@@ -101,20 +101,27 @@ describe("M99.F02 apps+menus+grants fixture consistency", () => {
     expect(getApp("nope")).toBeUndefined();
   });
 
-  it("apps carry OAuth client fields (clientId, redirectUris, isFirstParty)", () => {
+  // 2026-09-12 OAuthClient 收敛：旧 code/name 键已删除，clientId 即业务 code
+  it("apps 行是纯 OAuthClient + 展示扩展形状（无 code/name 旧键）", () => {
     for (const a of apps) {
-      // V017（2026-08-31）：client_id 收敛为 UUID（= app.id，V014 Phase 6 决策）
-      expect(a.clientId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
-      expect(Array.isArray(a.redirectUris)).toBe(true);
-      expect(typeof a.isFirstParty).toBe("boolean");
+      expect((a as unknown as Record<string, unknown>).code).toBeUndefined();
+      expect((a as unknown as Record<string, unknown>).name).toBeUndefined();
+      expect(typeof a.clientId).toBe("string");
+      expect((a.clientId as string).length).toBeGreaterThan(0);
+      expect(typeof a.clientName).toBe("string");
+      expect((a.clientName as string).length).toBeGreaterThan(0);
+      expect(typeof a.status).toBe("number");
     }
+    // clientId = code 形字面值（lab-management / erp / crm / saas-console）
+    const codes = apps.map((a) => a.clientId).sort();
+    expect(codes).toEqual(["crm", "erp", "lab-management", "saas-console"]);
   });
 
   it("getAppByClientId finds the same app", () => {
-    // V017：clientId = app.id（UUID），不再是 'lab-mgmt' 字符串
-    expect(getAppByClientId(APP_IDS.lab)?.id).toBe(APP_IDS.lab);
-    expect(getAppByClientId(APP_IDS.erp)?.id).toBe(APP_IDS.erp);
-    expect(getAppByClientId(APP_IDS.crm)?.id).toBe(APP_IDS.crm);
+    // ADR-0032 D4：clientId = code 形（lab-management / erp / crm）
+    expect(getAppByClientId("lab-management")?.id).toBe(APP_IDS.lab);
+    expect(getAppByClientId("erp")?.id).toBe(APP_IDS.erp);
+    expect(getAppByClientId("crm")?.id).toBe(APP_IDS.crm);
     expect(getAppByClientId("nope")).toBeUndefined();
   });
 

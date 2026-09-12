@@ -68,13 +68,12 @@ export type OAuthGrantType =
 
 export interface App {
   id: string;
-  code: string;
-  name: string;
   description?: string;
   icon?: string;
   sortOrder: number;
-  status: AppStatus;
+  status: number;
   clientId: string;
+  clientName: string;
   clientSecret?: string;
   redirectUris: string[];
   scopes: string[];

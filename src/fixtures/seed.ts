@@ -39,7 +39,12 @@ import {
 export const tenants = _tenants as unknown as Tenant[];
 export const roles = _roles as unknown as Role[];
 export const users = _users as unknown as User[];
-export const apps = _apps as unknown as App[];
+
+// App 行运行时 shape —— SSOT OAuthClient（openapi.yaml #/components/schemas/OAuthClient）。
+// 2026-09-12 收敛：oauth_client.json 本体已契约化（clientName 必填、status:number、
+// 旧 code/name 键删除，用户裁定推翻「旧键保留不删」），装载层不再归一化，直接 cast。
+export interface AppRow extends App {}
+export const apps = _apps as unknown as AppRow[];
 export const menus = _menus as unknown as Menu[];
 export const roleMenuGrants = _roleMenuGrants as unknown as RoleMenuGrant[];
 export const memberships = _memberships as unknown as TenantMembership[];
@@ -69,13 +74,19 @@ export const listRoles = (tenantId: string) =>
 // 两者都映射到同一个 App 记录（[src/seeds/oauth_client.json](seeds/oauth_client.json)）。
 // ADR-0014 相关无关；saas 镜像早期未统一约定导致 seed 内 id 而 URL 用 code。
 function resolveAppId(idOrCode: string): string {
-  return apps.find((a) => a.id === idOrCode || a.code === idOrCode)?.id ?? idOrCode;
+  // 2026-09-12 收敛后 id|clientId 双路寻址：POST /admin/clients 创建的新行只有
+  // clientId 可寻址（id 是 `app-<ts>` 串），contract-test I45-I49 全程用返回的
+  // clientId 走 GET/PATCH/DELETE /admin/clients/{clientId}。
+  return (
+    apps.find((a) => a.id === idOrCode || a.clientId === idOrCode)?.id ??
+    idOrCode
+  );
 }
 
 export { resolveAppId };
 
 export const getApp = (idOrCode: string) =>
-  apps.find((a) => a.id === idOrCode || a.code === idOrCode);
+  apps.find((a) => a.id === idOrCode || a.clientId === idOrCode);
 export const getAppByClientId = (clientId: string) =>
   apps.find((a) => a.clientId === clientId);
 export const listApps = () => apps;
@@ -84,6 +95,17 @@ export const getMenu = (id: string) => menus.find((m) => m.id === id);
 // `appId` 入参兼容内部 id 与 URL code；统一 resolve 到内部 id 再过滤
 export const listMenus = (appId: string) =>
   menus.filter((m) => m.clientId === resolveAppId(appId));
+
+// 2026-09-12 表示层归一（contract-test I05 四方 normalize 分叉根因）：
+// msw 的 sys_menu.json 里 clientId 存的是 oauth_client 行 id（UUID 形，如
+// 11111111-…-113），而 DB 系后端（nextjs/aspnetcore/springboot）的
+// sys_menu.client_id 是 FK→oauth_client.client_id（varchar，code 形如 "crm"）。
+// seed JSON 本体不能动（seed-parity 门锁 msw↔nextjs 深等），所以内部过滤仍按行 id
+// （resolveAppId / listMenus 不变），只在**响应输出**时把行 id 解析回该 app 的
+// clientId（code 形）。找不到对应行时原样返回（防御：POST /admin/clients 造的
+// 新 app 也带 clientId 字段，同样可解析）。
+export const toClientCode = (appRowId: string): string =>
+  apps.find((a) => a.id === appRowId)?.clientId ?? appRowId;
 
 export const getRoleMenuGrant = (roleId: string) =>
   roleMenuGrants.find((g) => g.roleId === roleId);

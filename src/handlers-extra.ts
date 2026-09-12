@@ -8,7 +8,8 @@
 import { http, HttpResponse } from "msw";
 import { jwtVerify } from "jose";
 import { getAudience, getIssuer, getSigningKey, signAccessToken } from "./lib/jwt-signer";
-import type { App, TenantStatus } from "./generated_ts_shim";
+import type { TenantStatus } from "./generated_ts_shim";
+import type { AppRow } from "./fixtures/seed";
 import {
   apps,
   menus,
@@ -28,6 +29,7 @@ import {
   getUser,
   getRole,
   listMenus,
+  toClientCode,
   listUsers,
   listRoles,
   getRoleMenuGrant,
@@ -166,7 +168,7 @@ export const appsExtraHandlers = [
       createdAt: NOW(),
       updatedAt: NOW(),
     };
-    apps.push(newApp as unknown as App);
+    apps.push(newApp as unknown as AppRow);
     return HttpResponse.json(newApp, { status: 201 });
   }),
 
@@ -188,17 +190,36 @@ export const appsExtraHandlers = [
   http.patch(`*${BASE}/admin/clients/:clientId/status`, async ({ params, request }) => {
     const a = getApp(String(params.clientId));
     if (!a) return HttpResponse.json({ code: "NOT_FOUND", message: "App not found" }, { status: 404 });
-    const body = (await request.json()) as { status: "active" | "disabled" };
-    a.status = body.status;
+    // 2026-09-12 SSOT 对齐：requestBody.status 是 int32（contract-test I49 发 0/1），
+    // 不再收 pre-pivot "active"/"disabled" 字符串。
+    const body = (await request.json()) as { status: number };
+    a.status = Number(body.status);
     a.updatedAt = NOW();
     return HttpResponse.json(a);
   }),
 ];
 
 // === M08 — Client menus (2026-09-08 shared 重命名：/admin/apps/{appId}/menus → /clients/{clientId}/menus) ===
+
+// SysMenuType 白名单（openapi.yaml #/components/schemas/SysMenuType，shared generated 2028-2033 行）。
+// 2026-09-12 ADR-0032 D3：此前 type 无校验透传（`body.type as ... ?? "menu"`），
+// 非法值（如 "page"）静默落库，与 3 真后端 400 语义分叉。
+const MENU_TYPES = ["directory", "menu", "button"] as const;
+type MenuType = (typeof MENU_TYPES)[number];
+const isMenuType = (v: unknown): v is MenuType =>
+  typeof v === "string" && (MENU_TYPES as readonly string[]).includes(v);
+
+// 2026-09-12 表示层归一（I05 四方分叉根因）：菜单响应行里的 clientId 必须 code 形
+// （"lab-management"/"erp"/"crm"），与 DB 系后端 sys_menu.client_id FK→oauth_client.client_id
+// 一致。存储层不动（行内仍持 oauth_client 行 id，过滤逻辑依赖它），只在输出前转换。
+const menuOut = <T extends { clientId: string }>(m: T): T => ({
+  ...m,
+  clientId: toClientCode(m.clientId),
+});
+
 export const menusExtraHandlers = [
   http.get(`*${BASE}/clients/:clientId/menus`, ({ params }) =>
-    HttpResponse.json(listMenus(String(params.clientId))),
+    HttpResponse.json(listMenus(String(params.clientId)).map(menuOut)),
   ),
 
   http.get(`*${BASE}/clients/:clientId/menus/:menuId`, ({ params }) => {
@@ -206,11 +227,18 @@ export const menusExtraHandlers = [
     const resolvedAppId = resolveAppId(String(params.clientId));
     if (!m || m.clientId !== resolvedAppId)
       return HttpResponse.json({ code: "NOT_FOUND", message: "Menu not found" }, { status: 404 });
-    return HttpResponse.json(m);
+    return HttpResponse.json(menuOut(m));
   }),
 
   http.post(`*${BASE}/clients/:clientId/menus`, async ({ params, request }) => {
     const body = (await request.json()) as Record<string, unknown>;
+    // ADR-0032 D3：type 必填 + SysMenuType 白名单（CreateSysMenuRequest.type 枚举）
+    if (!isMenuType(body.type)) {
+      return HttpResponse.json(
+        { code: "BAD_REQUEST", message: "type must be one of: directory, menu, button" },
+        { status: 400 },
+      );
+    }
     const newMenu = {
       id: `00000000-0000-0000-0000-${Date.now().toString(16).padStart(12, "0").slice(-12)}`,
       clientId: resolveAppId(String(params.clientId)),
@@ -219,14 +247,14 @@ export const menusExtraHandlers = [
       path: body.path as string | undefined,
       icon: body.icon as string | undefined,
       // 2026-09-11 契约对齐：SysMenuType directory|menu|button；status smallint
-      type: (body.type as "directory" | "menu" | "button") ?? "menu",
+      type: body.type,
       sortOrder: Number(body.sortOrder ?? 0),
       status: (body.status as 0 | 1) ?? 1,
       createdAt: NOW(),
       updatedAt: NOW(),
     };
     menus.push(newMenu);
-    return HttpResponse.json(newMenu, { status: 201 });
+    return HttpResponse.json(menuOut(newMenu), { status: 201 });
   }),
 
   http.patch(`*${BASE}/clients/:clientId/menus/:menuId`, async ({ params, request }) => {
@@ -235,8 +263,15 @@ export const menusExtraHandlers = [
     if (!m || m.clientId !== resolvedAppId)
       return HttpResponse.json({ code: "NOT_FOUND", message: "Menu not found" }, { status: 404 });
     const body = (await request.json()) as Record<string, unknown>;
+    // ADR-0032 D3：PATCH 带 type 时同样过 SysMenuType 白名单
+    if ("type" in body && !isMenuType(body.type)) {
+      return HttpResponse.json(
+        { code: "BAD_REQUEST", message: "type must be one of: directory, menu, button" },
+        { status: 400 },
+      );
+    }
     Object.assign(m, body, { updatedAt: NOW() });
-    return HttpResponse.json(m);
+    return HttpResponse.json(menuOut(m));
   }),
 
   http.delete(`*${BASE}/clients/:clientId/menus/:menuId`, ({ params }) => {
@@ -257,7 +292,7 @@ export const menusExtraHandlers = [
       const target = menus.find((x) => x.id === mid);
       if (target) target.sortOrder = idx;
     });
-    return HttpResponse.json(listMenus(resolvedAppId));
+    return HttpResponse.json(listMenus(resolvedAppId).map(menuOut));
   }),
 
   http.patch(`*${BASE}/clients/:clientId/menus/:menuId/parent`, async ({ params, request }) => {
@@ -268,7 +303,7 @@ export const menusExtraHandlers = [
     const body = (await request.json()) as { parentId?: string };
     m.parentId = body.parentId ?? m.parentId;
     m.updatedAt = NOW();
-    return HttpResponse.json(m);
+    return HttpResponse.json(menuOut(m));
   }),
 ];
 
@@ -348,10 +383,12 @@ export const meExtraHandlers = [
         .sort((a, b) => a.sortOrder - b.sortOrder)
         .map((m) => {
           // 2026-09-11 契约对齐：SysMenu 字段（clientId/title）；不带 status/createdAt/updatedAt.
+          // 2026-09-12 表示层归一：children 递归仍传行内 clientId（过滤用），
+          // 输出的 clientId 字段转 code 形（与 DB 系后端 sys_menu.client_id FK 语义一致）。
           const { id, clientId: aId, parentId, title, path, icon, type, sortOrder } = m;
           return {
             id,
-            clientId: aId,
+            clientId: toClientCode(aId),
             parentId,
             title,
             path,
@@ -371,9 +408,12 @@ export const meExtraHandlers = [
 
     const result: Record<string, Array<Record<string, unknown>>> = {};
     for (const a of apps) {
-      if (a.status !== "active") continue;
+      // 2026-09-12 SSOT 对齐：status int32（1=active），装载层已归一化（fixtures/seed.ts）
+      if (a.status !== 1) continue;
       if (allowedInApp(a.id) === 0) continue;
-      result[a.code] = tree(undefined, a.id);
+      // 2026-09-12 表示层归一：组键与节点 clientId 统一走 toClientCode（code 形，
+      // 如 "crm"），不再依赖行内 code 字段（POST /admin/clients 新行无 code）。
+      result[toClientCode(a.id)] = tree(undefined, a.id);
     }
     return HttpResponse.json(result);
   }),
@@ -1008,6 +1048,26 @@ export const tenantsExtraHandlers = [
   http.delete(`*${BASE}/admin/tenants/:id`, ({ params }) => {
     const i = tenants.findIndex((t) => t.id === params.id);
     if (i < 0) return HttpResponse.json({ code: "NOT_FOUND", message: "Tenant not found" }, { status: 404 });
+    const tid = tenants[i]!.id;
+    // 镜像 DB ON DELETE CASCADE（0000_target_ddl.sql）：tenant 删除级联
+    // tenant_member / sys_role（连带 sys_role_menu）/ tenant_application；
+    // 否则 membership 幽灵行残留内存，污染后续 /me、/me/tenants 比对。
+    for (let j = memberships.length - 1; j >= 0; j--) {
+      if (memberships[j]!.tenantId === tid) memberships.splice(j, 1);
+    }
+    for (let j = users.length - 1; j >= 0; j--) {
+      if (users[j]!.tenantId === tid) users.splice(j, 1);
+    }
+    const deadRoleIds = new Set(roles.filter((r) => r.tenantId === tid).map((r) => r.id));
+    for (let j = roles.length - 1; j >= 0; j--) {
+      if (roles[j]!.tenantId === tid) roles.splice(j, 1);
+    }
+    for (let j = roleMenuGrants.length - 1; j >= 0; j--) {
+      if (deadRoleIds.has(roleMenuGrants[j]!.roleId)) roleMenuGrants.splice(j, 1);
+    }
+    for (let j = tenantApplications.length - 1; j >= 0; j--) {
+      if (tenantApplications[j]!.tenantId === tid) tenantApplications.splice(j, 1);
+    }
     tenants.splice(i, 1);
     return new HttpResponse(null, { status: 204 });
   }),
@@ -1196,6 +1256,9 @@ export const rolesExtraHandlers = [
       roleCode,
       roleName,
       isPreset: false,
+      // 2026-09-12 SSOT 对齐：SysRole.status required int32（seed 行均为 1）；
+      // 缺 status 让新建行与 seed 行 isPreset/status 双分叉（contract-test I34）。
+      status: 1,
       createdAt: NOW(),
       updatedAt: NOW(),
     };
@@ -1229,20 +1292,23 @@ export const rolesExtraHandlers = [
 
 // === M04.F01 公共读侧 - Client 目录（免鉴权；2026-09-08 shared 重命名 /apps/{code} → /clients/{clientId}） ===
 // 供接入方（lab 各前端）按 client 标识取应用展示信息；
-// 只返回展示字段，不暴露 OAuth 集成字段。
-// seed 内 client 标识以 code 表示（如 lab-management），handler 兼容 id/code/clientId 查找。
+// 返 SSOT OAuthClientPublicInfo {clientId, clientName, status:int32}，不暴露 OAuth 集成字段。
+// seed 内 client 标识以 clientId 表示（如 lab-management），handler 兼容 id/clientId 查找。
 export const publicAppsExtraHandlers = [
   http.get(`*${BASE}/clients/:clientId`, ({ params }) => {
     const c = String(params.clientId);
-    const a = apps.find((x) => x.id === c || x.code === c || x.clientId === c);
-    if (!a || a.status !== "active") {
+    // 2026-09-12 SSOT 对齐：返 OAuthClientPublicInfo {clientId, clientName, status:int32}
+    // （shared oauth-client.tsp:56-66 / openapi.yaml #/components/schemas/OAuthClientPublicInfo，
+    // contract-test I06 断言 clientId==入参），不再返 pre-pivot App 展示字段。
+    // 查找兼容 id / clientId 两形（2026-09-12 收敛后 seed 无 code 键，clientId=code 形）。
+    const a = apps.find((x) => x.id === c || x.clientId === c);
+    if (!a || a.status !== 1) {
       return HttpResponse.json(
         { code: "NOT_FOUND", message: "App not found" },
         { status: 404 },
       );
     }
-    const { id, code, name, description, icon, status } = a;
-    return HttpResponse.json({ id, code, name, description, icon, status });
+    return HttpResponse.json({ clientId: a.clientId, clientName: a.clientName, status: a.status });
   }),
 ];
 

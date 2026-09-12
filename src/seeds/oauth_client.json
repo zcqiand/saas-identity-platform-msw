@@ -1,13 +1,11 @@
 [
   {
     "id": "11111111-1111-1111-1111-111111111111",
-    "code": "lab-management",
-    "name": "建筑工程实验室管理系统",
     "description": "建筑工程质量检测实验室信息化管理系统",
     "icon": "FlaskConical",
     "sortOrder": 1,
-    "status": "active",
-    "clientId": "11111111-1111-1111-1111-111111111111",
+    "status": 1,
+    "clientId": "lab-management",
     "clientSecret": "lab-mgmt-secret",
     "redirectUris": [
       "http://localhost:5201/callback",
@@ -28,17 +26,16 @@
     ],
     "isFirstParty": true,
     "createdAt": "2026-01-01T00:00:00Z",
-    "updatedAt": "2026-08-10T14:00:00Z"
+    "updatedAt": "2026-08-10T14:00:00Z",
+    "clientName": "建筑工程实验室管理系统"
   },
   {
     "id": "11111111-1111-1111-1111-111111111112",
-    "code": "erp",
-    "name": "企业资源计划系统",
     "description": "企业核心资源计划与管理平台",
     "icon": "Boxes",
     "sortOrder": 2,
-    "status": "active",
-    "clientId": "11111111-1111-1111-1111-111111111112",
+    "status": 1,
+    "clientId": "erp",
     "clientSecret": "erp-secret",
     "redirectUris": [
       "http://localhost:3010/callback"
@@ -53,17 +50,16 @@
     ],
     "isFirstParty": true,
     "createdAt": "2026-01-01T00:00:00Z",
-    "updatedAt": "2026-08-10T14:00:00Z"
+    "updatedAt": "2026-08-10T14:00:00Z",
+    "clientName": "企业资源计划系统"
   },
   {
     "id": "11111111-1111-1111-1111-111111111113",
-    "code": "crm",
-    "name": "客户关系管理系统",
     "description": "客户/商机/合同全生命周期管理",
     "icon": "Users",
     "sortOrder": 3,
-    "status": "active",
-    "clientId": "11111111-1111-1111-1111-111111111113",
+    "status": 1,
+    "clientId": "crm",
     "clientSecret": "crm-secret",
     "redirectUris": [
       "http://localhost:3020/callback"
@@ -78,23 +74,23 @@
     ],
     "isFirstParty": true,
     "createdAt": "2026-01-01T00:00:00Z",
-    "updatedAt": "2026-08-10T14:00:00Z"
+    "updatedAt": "2026-08-10T14:00:00Z",
+    "clientName": "客户关系管理系统"
   },
   {
     "id": "11111111-1111-1111-1111-111111111114",
-    "code": "saas-console",
-    "name": "SaaS 控制台",
     "description": "SaaS 身份平台自身控制台（first-party client；登录页 clientId 兜底，ADR-0030 后续 / B 方案 2026-09-11）",
     "icon": "ShieldCheck",
     "sortOrder": 4,
-    "status": "active",
-    "clientId": "11111111-1111-1111-1111-111111111114",
+    "status": 1,
+    "clientId": "saas-console",
     "clientSecret": "console-secret",
     "redirectUris": [],
     "scopes": [],
     "grantTypes": [],
     "isFirstParty": true,
     "createdAt": "2026-01-01T00:00:00Z",
-    "updatedAt": "2026-09-11T00:00:00Z"
+    "updatedAt": "2026-09-11T00:00:00Z",
+    "clientName": "SaaS 控制台"
   }
 ]
