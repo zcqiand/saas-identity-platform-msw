@@ -111,6 +111,9 @@ describe("M99.F02 apps+menus+grants fixture consistency", () => {
       expect(typeof a.clientName).toBe("string");
       expect((a.clientName as string).length).toBeGreaterThan(0);
       expect(typeof a.status).toBe("number");
+      // 仍有效的旧断言（原「apps carry OAuth client fields」段补回）
+      expect(Array.isArray(a.redirectUris)).toBe(true);
+      expect(typeof a.isFirstParty).toBe("boolean");
     }
     // clientId = code 形字面值（lab-management / erp / crm / saas-console）
     const codes = apps.map((a) => a.clientId).sort();

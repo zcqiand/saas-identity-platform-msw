@@ -47,7 +47,7 @@ describe("M03.F02.I04 POST /auth/refresh 确定性 handler", () => {
       body: JSON.stringify({
         grantType: "refresh_token",
         refreshToken,
-        clientId: "11111111-1111-1111-1111-111111111111",
+        clientId: "lab-management",
         tenantId: TENANT_1,
       }),
     });
@@ -69,7 +69,7 @@ describe("M03.F02.I04 POST /auth/refresh 确定性 handler", () => {
       body: JSON.stringify({
         grantType: "refresh_token",
         refreshToken,
-        clientId: "11111111-1111-1111-1111-111111111111",
+        clientId: "lab-management",
         tenantId: TENANT_1,
       }),
     });
@@ -80,7 +80,7 @@ describe("M03.F02.I04 POST /auth/refresh 确定性 handler", () => {
       body: JSON.stringify({
         grantType: "refresh_token",
         refreshToken,
-        clientId: "11111111-1111-1111-1111-111111111111",
+        clientId: "lab-management",
         tenantId: TENANT_1,
       }),
     });
@@ -94,7 +94,7 @@ describe("M03.F02.I04 POST /auth/refresh 确定性 handler", () => {
       body: JSON.stringify({
         grantType: "refresh_token",
         refreshToken: "saas-rt-00000000-0000-0000-0000-0000000000ff-0-xyz",
-        clientId: "11111111-1111-1111-1111-111111111111",
+        clientId: "lab-management",
         tenantId: TENANT_1,
       }),
     });

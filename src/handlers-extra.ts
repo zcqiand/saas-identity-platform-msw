@@ -408,7 +408,8 @@ export const meExtraHandlers = [
 
     const result: Record<string, Array<Record<string, unknown>>> = {};
     for (const a of apps) {
-      // 2026-09-12 SSOT 对齐：status int32（1=active），装载层已归一化（fixtures/seed.ts）
+      // 2026-09-12 SSOT 对齐：status int32（1=active）。2026-09-12 收敛后
+      // oauth_client.json 源头已是数值（装载层无归一化，见 fixtures/seed.ts）。
       if (a.status !== 1) continue;
       if (allowedInApp(a.id) === 0) continue;
       // 2026-09-12 表示层归一：组键与节点 clientId 统一走 toClientCode（code 形，

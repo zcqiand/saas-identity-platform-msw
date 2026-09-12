@@ -70,7 +70,8 @@ export const getRole = (tenantId: string, roleId: string) =>
 export const listRoles = (tenantId: string) =>
   roles.filter((r) => r.tenantId === tenantId);
 
-// URL `:appId` 既可能是内部 id（`lab-management`）也可能是 code（`lab-management`）。
+// URL `:appId` 既可能是内部 id（canonical UUID，如 11111111-…-111），
+// 也可能是 clientId（业务 code 形，如 "lab-management"）。
 // 两者都映射到同一个 App 记录（[src/seeds/oauth_client.json](seeds/oauth_client.json)）。
 // ADR-0014 相关无关；saas 镜像早期未统一约定导致 seed 内 id 而 URL 用 code。
 function resolveAppId(idOrCode: string): string {

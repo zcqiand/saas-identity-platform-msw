@@ -59,7 +59,7 @@ describe("M03.F01.I01 + M04.F03.I01/I02 + M09.F03.I01 saas session", () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        clientId: "11111111-1111-1111-1111-111111111111",
+        clientId: "lab-management",
         redirectUri: "http://localhost:5201/callback",
         responseType: "code",
         scope: "openid profile email",
@@ -77,7 +77,7 @@ describe("M03.F01.I01 + M04.F03.I01/I02 + M09.F03.I01 saas session", () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        clientId: "11111111-1111-1111-1111-111111111111",
+        clientId: "lab-management",
         redirectUri: "http://localhost:5201/callback",
         responseType: "code",
         scope: "openid profile email",
@@ -99,7 +99,7 @@ describe("M03.F01.I01 + M04.F03.I01/I02 + M09.F03.I01 saas session", () => {
       body: JSON.stringify({
         grantType: "authorization_code",
         code: "anything",
-        clientId: "11111111-1111-1111-1111-111111111111",
+        clientId: "lab-management",
         tenantId: "00000000-0000-0000-0000-000000000001",
         redirectUri: "http://localhost:5201/callback",
       }),
@@ -215,7 +215,7 @@ describe("M03.F01.I01 + M04.F03.I02/I03 + M09.F03.I01 cookie jar 行为", () => 
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          clientId: "11111111-1111-1111-1111-111111111111",
+          clientId: "lab-management",
           redirectUri: "http://localhost:5201/callback",
           responseType: "code",
           scope: "openid profile email",
@@ -238,7 +238,7 @@ describe("M03.F01.I01 + M04.F03.I02/I03 + M09.F03.I01 cookie jar 行为", () => 
         body: JSON.stringify({
           grantType: "authorization_code",
           code,
-          clientId: "11111111-1111-1111-1111-111111111111",
+          clientId: "lab-management",
           tenantId,
           redirectUri: "http://localhost:5201/callback",
         }),
