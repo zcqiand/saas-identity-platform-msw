@@ -15,6 +15,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # M99.F01 seed-parity 对照物：tests/seed-parity.test.ts 深比 msw ↔ nextjs 两仓
+      # seeds。CI 默认只 checkout 本仓 → 对照目录缺失 → 该组必红。把 nextjs 检出到
+      # workspace 内 sibling-nextjs/（本地 suite 布局走另一候选路径，见测试 CANDIDATES）。
+      - uses: actions/checkout@v4
+        with:
+          repository: zcqiand/saas-identity-platform-nextjs
+          path: sibling-nextjs
       - uses: actions/setup-node@v4
         with:
           node-version: "24"

@@ -14,10 +14,17 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const MSW_SEEDS = resolve(import.meta.dirname, "../src/seeds");
-const NEXTJS_SEEDS = resolve(
-  import.meta.dirname,
-  "../../saas-identity-platform-nextjs/src/seeds",
-);
+// 对照物候选布局（2026-09-13 修 CI 红：CI 只 checkout 本仓 → 对照目录缺失必红）：
+// - suite 本地：output/ 下 sibling 平级
+// - CI：actions/checkout path=sibling-nextjs（workspace 内，见 .github/workflows/ci.yml）
+// 两个都缺 → 照旧 throw（守门不静默 skip，本文件头注释的教训）。
+const NEXTJS_SEEDS =
+  [
+    resolve(import.meta.dirname, "../../saas-identity-platform-nextjs/src/seeds"),
+    resolve(import.meta.dirname, "../sibling-nextjs/src/seeds"),
+  ].find((dir) => existsSync(dir)) ??
+  // 都缺 → 落回主路径，让 jsonFiles 的 throw 报出期望位置（补 CI checkout，而非跳过）
+  resolve(import.meta.dirname, "../../saas-identity-platform-nextjs/src/seeds");
 
 /** DB 真实种子表对应的 JSON 文件集合（不含 manifest.json 元数据）。 */
 const EXPECTED_TABLES = [
