@@ -13,22 +13,27 @@ import { resetTenantApplications } from './handlers-extra'
 
 const PORT = Number(process.env.PORT ?? 5100)
 
-// 跨源前端 dev origin 必须进白名单（参见 multi-repo-family §6）
-const ALLOWED_ORIGINS = [
-  'http://localhost:5101', // saas-nextjs dev
-  'http://localhost:5102', // saas-react dev
-  'http://localhost:5103', // saas-vue dev
-  'http://localhost:5200', // lab-msw（saas 调 lab 跨源）
-  'http://localhost:5201', // lab-nextjs dev（lab 调 saas SSO）
-  'http://localhost:5202', // lab-react dev
-  'http://localhost:5203', // lab-vue dev
-] as const
+// CORS 白名单走 env 契约 SAAS_CORS_ALLOWED_ORIGINS（ADR-0014 全家族共享同一 key，
+// springboot/aspnetcore/nextjs middleware 同名）。2026-09-13 修复：此前硬编码 localhost
+// dev 列表，.env.production 里的 key 没有读者 —— 三前端 prod 域名跨源调 msw 全被拒。
+// 禁 env 默认值兜底（CLAUDE.md §2）：key 缺失/为空 fail-fast，不允许字面量回退。
+const rawOrigins = process.env.SAAS_CORS_ALLOWED_ORIGINS ?? ''
+const ALLOWED_ORIGINS = rawOrigins
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean)
+if (ALLOWED_ORIGINS.length === 0) {
+  console.error(
+    'SAAS_CORS_ALLOWED_ORIGINS env is required (comma-separated origin list; see .env.example)',
+  )
+  process.exit(1)
+}
 
 const app = express()
 app.use(
   cors({
     origin: (origin, cb) => {
-      if (!origin || (ALLOWED_ORIGINS as readonly string[]).includes(origin)) {
+      if (!origin || ALLOWED_ORIGINS.includes(origin)) {
         return cb(null, true)
       }
       return cb(new Error(`CORS: origin ${origin} not allowed`))
