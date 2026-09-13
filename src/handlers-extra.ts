@@ -1077,7 +1077,14 @@ export const tenantsExtraHandlers = [
 // === M01 — Members (tenant-scoped CRUD; 2026-09-08 shared 重命名 users→members) ===
 export const usersExtraHandlers = [
   http.get(`*${BASE}/tenants/:tenantId/members`, ({ params }) => {
-    const items = listUsers(String(params.tenantId));
+    // 2026-09-13 排序对齐（积压清偿）：家族约定 list = created_at DESC
+    // （nextjs ORDER BY created_at DESC / aspnetcore OrderByDescending(CreatedAt)，
+    // springboot 本 commit 补 Sort.by(DESC,"createdAt")）。msw 此前返回插入序，
+    // 运行期 POST 建新成员后与真后端列表顺序分叉。Array.sort 稳定 → 并列
+    // （seed 同租户 createdAt 相同）保持插入序，与 aspnetcore LINQ 稳定排序一致。
+    const items = listUsers(String(params.tenantId)).sort((a, b) =>
+      String(b.createdAt).localeCompare(String(a.createdAt)),
+    );
     return HttpResponse.json({
       items,
       // 2026-08-30 contract-test：msw 默认 page=1 1-indexed；其他 3 后端 0-indexed。
